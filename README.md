@@ -20,6 +20,14 @@ Build & run on macOS or any iOS Simulator. No code signing needed for local deve
 | Pan | drag | drag |
 | Zoom | scroll wheel (cursor-anchored) or trackpad pinch | pinch |
 | Iteration count | HUD slider | HUD slider |
+| Perturbation mode | HUD toggle | HUD toggle |
+| Reset view | HUD button | HUD button |
+| Replay journey | HUD button | HUD button |
+| Clear journal | HUD trash button | HUD trash button |
+
+## Persistence and replay
+
+The current view (center, scale, iteration count, perturbation toggle) is auto-saved to `UserDefaults` after every change and restored on launch. Every state change is also recorded into a **journal** of timestamped snapshots — drag deltas are coalesced (~50 ms throttle) so a long pan becomes a smooth path rather than thousands of stutters. The journal persists too, so `Replay` reanimates the entire exploration history (capped at 30 s; longer sessions are time-compressed). Scale interpolates logarithmically so zooms look natural during playback. Reset restores the default view but keeps the journal; the trash button clears the journal.
 
 ## Precision roadmap
 
