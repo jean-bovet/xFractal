@@ -5,6 +5,7 @@ struct ContentView: View {
     @State private var center = SIMD2<Double>(-0.5, 0.0)
     @State private var scale: Double = 1.5
     @State private var maxIterations: UInt32 = 512
+    @State private var usePerturbation: Bool = false
     @State private var viewSize: CGSize = .zero
 
     @State private var dragStartCenter: SIMD2<Double>? = nil
@@ -15,6 +16,7 @@ struct ContentView: View {
             MandelbrotView(center: $center,
                            scale: $scale,
                            maxIterations: $maxIterations,
+                           usePerturbation: $usePerturbation,
                            viewSize: $viewSize)
                 .gesture(
                     SimultaneousGesture(
@@ -49,6 +51,11 @@ struct ContentView: View {
                     get: { Double(maxIterations) },
                     set: { maxIterations = UInt32($0) }
                 ), in: 64...4096)
+                Toggle("Perturb", isOn: $usePerturbation)
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
+                    .foregroundStyle(.white)
+                    .fixedSize()
                 Button("Reset") {
                     center = SIMD2<Double>(-0.5, 0.0)
                     scale = 1.5

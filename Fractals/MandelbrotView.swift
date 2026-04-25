@@ -32,6 +32,7 @@ struct MandelbrotView: PlatformRepresentable {
     @Binding var center: SIMD2<Double>
     @Binding var scale: Double
     @Binding var maxIterations: UInt32
+    @Binding var usePerturbation: Bool
     @Binding var viewSize: CGSize
 
     final class Coordinator {
@@ -54,6 +55,7 @@ struct MandelbrotView: PlatformRepresentable {
         renderer?.center = center
         renderer?.scale = scale
         renderer?.maxIterations = maxIterations
+        renderer?.usePerturbation = usePerturbation
         view.delegate = renderer
         context.coordinator.renderer = renderer
 
@@ -86,6 +88,7 @@ struct MandelbrotView: PlatformRepresentable {
         context.coordinator.renderer?.center = center
         context.coordinator.renderer?.scale = scale
         context.coordinator.renderer?.maxIterations = maxIterations
+        context.coordinator.renderer?.usePerturbation = usePerturbation
         DispatchQueue.main.async {
             if viewSize != view.bounds.size { viewSize = view.bounds.size }
         }
