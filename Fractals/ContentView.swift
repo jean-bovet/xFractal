@@ -2,13 +2,13 @@ import SwiftUI
 import simd
 
 struct ContentView: View {
-    @State private var center = SIMD2<Float>(-0.5, 0.0)
-    @State private var scale: Float = 1.5
+    @State private var center = SIMD2<Double>(-0.5, 0.0)
+    @State private var scale: Double = 1.5
     @State private var maxIterations: UInt32 = 512
     @State private var viewSize: CGSize = .zero
 
-    @State private var dragStartCenter: SIMD2<Float>? = nil
-    @State private var pinchStartScale: Float? = nil
+    @State private var dragStartCenter: SIMD2<Double>? = nil
+    @State private var pinchStartScale: Double? = nil
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -21,12 +21,12 @@ struct ContentView: View {
                         DragGesture(minimumDistance: 0)
                             .onChanged { value in
                                 if dragStartCenter == nil { dragStartCenter = center }
-                                let h = max(Float(viewSize.height), 1)
+                                let h = max(Double(viewSize.height), 1)
                                 let pxToWorld = (2.0 * scale) / h
-                                let dx = Float(value.translation.width) * pxToWorld
-                                let dy = Float(value.translation.height) * pxToWorld
+                                let dx = Double(value.translation.width) * pxToWorld
+                                let dy = Double(value.translation.height) * pxToWorld
                                 if let s = dragStartCenter {
-                                    center = SIMD2<Float>(s.x - dx, s.y + dy)
+                                    center = SIMD2<Double>(s.x - dx, s.y + dy)
                                 }
                             }
                             .onEnded { _ in dragStartCenter = nil },
@@ -34,7 +34,7 @@ struct ContentView: View {
                             .onChanged { value in
                                 if pinchStartScale == nil { pinchStartScale = scale }
                                 if let s = pinchStartScale {
-                                    scale = max(1e-7, s / Float(value))
+                                    scale = max(1e-15, s / Double(value))
                                 }
                             }
                             .onEnded { _ in pinchStartScale = nil }
@@ -50,7 +50,7 @@ struct ContentView: View {
                     set: { maxIterations = UInt32($0) }
                 ), in: 64...4096)
                 Button("Reset") {
-                    center = SIMD2<Float>(-0.5, 0.0)
+                    center = SIMD2<Double>(-0.5, 0.0)
                     scale = 1.5
                     maxIterations = 512
                 }

@@ -2,10 +2,19 @@ import MetalKit
 import simd
 
 struct MandelbrotUniforms {
-    var center: SIMD2<Float>
-    var scale: Float
+    var centerHi: SIMD2<Float>
+    var centerLo: SIMD2<Float>
+    var scaleHi: Float
+    var scaleLo: Float
     var aspect: Float
     var maxIterations: UInt32
+}
+
+@inline(__always)
+private func splitDouble(_ d: Double) -> (hi: Float, lo: Float) {
+    let hi = Float(d)
+    let lo = Float(d - Double(hi))
+    return (hi, lo)
 }
 
 final class MandelbrotRenderer: NSObject, MTKViewDelegate {
@@ -13,8 +22,8 @@ final class MandelbrotRenderer: NSObject, MTKViewDelegate {
     let commandQueue: MTLCommandQueue
     var pipelineState: MTLRenderPipelineState!
 
-    var center = SIMD2<Float>(-0.5, 0.0)
-    var scale: Float = 1.5
+    var center = SIMD2<Double>(-0.5, 0.0)
+    var scale: Double = 1.5
     var maxIterations: UInt32 = 512
     var aspect: Float = 1.0
 
@@ -58,10 +67,18 @@ final class MandelbrotRenderer: NSObject, MTKViewDelegate {
               let cmd = commandQueue.makeCommandBuffer(),
               let enc = cmd.makeRenderCommandEncoder(descriptor: rpd) else { return }
 
-        var u = MandelbrotUniforms(center: center,
-                                   scale: scale,
-                                   aspect: aspect,
-                                   maxIterations: maxIterations)
+        let cx = splitDouble(center.x)
+        let cy = splitDouble(center.y)
+        let s  = splitDouble(scale)
+
+        var u = MandelbrotUniforms(
+            centerHi: SIMD2<Float>(cx.hi, cy.hi),
+            centerLo: SIMD2<Float>(cx.lo, cy.lo),
+            scaleHi: s.hi,
+            scaleLo: s.lo,
+            aspect: aspect,
+            maxIterations: maxIterations
+        )
 
         enc.setRenderPipelineState(pipelineState)
         enc.setFragmentBytes(&u, length: MemoryLayout<MandelbrotUniforms>.stride, index: 0)
