@@ -1,0 +1,17 @@
+## Xcode
+build/
+DerivedData/
+*.xcuserstate
+*.xcuserdatad/
+xcuserdata/
+
+## XcodeGen — generated, regenerate from project.yml
+Fractals.xcodeproj/
+
+## macOS
+.DS_Store
+
+## Swift Package Manager
+.swiftpm/
+.build/
+Package.resolved
