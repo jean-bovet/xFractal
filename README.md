@@ -1,12 +1,23 @@
-# Fractals
+# xFractal
 
-A SwiftUI + Metal fractal explorer for iOS and macOS. Reincarnation of the original 2008 Objective-C iOS app *xFractal*: same four families and palettes, now driven by a fragment shader that computes everything per pixel on the GPU. The CPU just uploads a small uniforms struct (and, for Mandelbrot perturbation, a reference orbit) per frame.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-iOS%2017%20%7C%20macOS%2014-blue)](#)
+[![Swift](https://img.shields.io/badge/Swift-5.10-orange)](#)
+
+A SwiftUI + Metal fractal explorer for iOS and macOS — Mandelbrot, Julia, Newton, Multibrot, with four classic palettes. The fragment shader computes everything per pixel on the GPU; the CPU just uploads a small uniforms struct (and, for Mandelbrot perturbation, a reference orbit) per frame.
+
+This is a modern reincarnation of *xFractal*, the 2008 Arizona Software iOS app: same four families, same palettes, redesigned ground-up around SwiftUI and a Metal fragment shader.
+
+## Status
+
+Source-only. There is no signed DMG, no App Store build, and no auto-update channel — clone, generate the project with [XcodeGen](https://github.com/yonaskolb/XcodeGen), and build. Code signing is disabled in `project.yml` so contributors without an Apple Developer account can still build locally.
 
 ## Build
 
 XcodeGen owns the project file — the `.xcodeproj` is generated and gitignored.
 
 ```sh
+brew install xcodegen        # if you don't have it
 xcodegen generate
 open Fractals.xcodeproj
 ```
@@ -78,6 +89,22 @@ Pick one reference pixel, compute its full orbit on the CPU, upload it as an `MT
 - `ContentView.swift` — gestures, HUD, type/palette/per-type controls.
 - `FractalsApp.swift` — `@main`.
 
-## Inspiration
+## Origins
 
-This rebuild draws from the retired 2008 Objective-C iOS app `xFractal` (Mandelbrot/Julia/Newton/Multibrot, Hot/Cold/Gray/Chromatic palettes, smooth-iteration coloring). The CPU iteration loops, palette curves, and Newton polynomials are direct ports; everything else is rewritten for SwiftUI + GPU.
+This rebuild draws from *xFractal*, the retired 2008 Arizona Software Objective-C iOS app (Mandelbrot / Julia / Newton / Multibrot families, Hot / Cold / Gray / Chromatic palettes, smooth-iteration coloring). The CPU iteration loops, palette curves, and Newton polynomials are direct ports; everything else is rewritten for SwiftUI + GPU. The Mandelbrot deep-zoom path (DD arithmetic + Pauldelbrot perturbation) is new and has no analogue in the original — the 2008 app ran on iOS hardware where any GPU compute was off the table.
+
+## Contributing
+
+Issues and pull requests are welcome. Suggested directions:
+
+- Tier-4 deep zoom: add BLA (Bivariate Linear Approximation) + Pauldelbrot/Zhuoran glitch detection for Mandelbrot perturbation
+- Iteration extension (mantissa+exponent / floatexp reference orbit) to push past ~1e-15
+- DD arithmetic for the Multibrot path (currently single-precision)
+- Bookmarks (the original app had a bookmark gallery — not yet ported)
+- More palettes; alternative coloring (orbit-trap, distance-estimator)
+
+When sending a PR, please regenerate `.xcodeproj` from `project.yml` rather than committing pbxproj edits directly.
+
+## License
+
+Released under the [MIT License](LICENSE) © 2026 Jean Bovet. The original 2008 *xFractal* iOS app was a closed-source Arizona Software product; only the algorithms (well-known math: Mandelbrot iteration, Newton's method, the four palette curves) are reused here. No code from the retired app is included verbatim.
