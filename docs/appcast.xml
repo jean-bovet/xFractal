@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+  <channel>
+    <title>xFractal</title>
+    <link>https://jean-bovet.github.io/xFractal/appcast.xml</link>
+    <description>xFractal Sparkle appcast — auto-updates for the macOS build.</description>
+    <language>en</language>
+    <!-- Items will be appended here automatically by scripts/release.sh
+         (which calls scripts/sparkle/generate_appcast). The first signed
+         release will populate this file with an <item> per published
+         version. -->
+  </channel>
+</rss>

@@ -6,7 +6,11 @@ DerivedData/
 xcuserdata/
 
 ## XcodeGen — generated, regenerate from project.yml
+xFractal.xcodeproj/
 Fractals.xcodeproj/
+
+## Release artifacts
+dist/
 
 ## macOS
 .DS_Store
