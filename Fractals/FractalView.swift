@@ -1,5 +1,6 @@
 import SwiftUI
 import MetalKit
+import simd
 
 #if os(macOS)
 typealias PlatformRepresentable = NSViewRepresentable
@@ -28,15 +29,12 @@ final class ZoomableMTKView: MTKView {
 typealias PlatformRepresentable = UIViewRepresentable
 #endif
 
-struct MandelbrotView: PlatformRepresentable {
-    @Binding var center: SIMD2<Double>
-    @Binding var scale: Double
-    @Binding var maxIterations: UInt32
-    @Binding var usePerturbation: Bool
+struct FractalView: PlatformRepresentable {
+    @Binding var state: ViewState
     @Binding var viewSize: CGSize
 
     final class Coordinator {
-        var renderer: MandelbrotRenderer?
+        var renderer: FractalRenderer?
     }
     func makeCoordinator() -> Coordinator { Coordinator() }
 
@@ -51,11 +49,8 @@ struct MandelbrotView: PlatformRepresentable {
         view.isPaused = false
         view.framebufferOnly = true
 
-        let renderer = MandelbrotRenderer(metalView: view)
-        renderer?.center = center
-        renderer?.scale = scale
-        renderer?.maxIterations = maxIterations
-        renderer?.usePerturbation = usePerturbation
+        let renderer = FractalRenderer(metalView: view)
+        renderer?.state = state
         view.delegate = renderer
         context.coordinator.renderer = renderer
 
@@ -64,19 +59,19 @@ struct MandelbrotView: PlatformRepresentable {
             guard let view, let r = context.coordinator.renderer else { return }
             _ = view
             let aspect = Double(r.aspect)
-            let s = r.scale
+            let s = r.state.scale
             let nx = (anchor.x * 2.0 - 1.0) * aspect
             let ny = (anchor.y * 2.0 - 1.0)
-            let anchorWorld = r.center + SIMD2<Double>(nx, ny) * s
+            let anchorWorld = r.state.center + SIMD2<Double>(nx, ny) * s
 
             let newScale = max(1e-15, s * factor)
             let newCenter = anchorWorld - SIMD2<Double>(nx, ny) * newScale
 
-            r.scale = newScale
-            r.center = newCenter
+            r.state.scale = newScale
+            r.state.center = newCenter
             DispatchQueue.main.async {
-                self.scale = newScale
-                self.center = newCenter
+                self.state.scale = newScale
+                self.state.center = newCenter
             }
         }
         #endif
@@ -85,10 +80,7 @@ struct MandelbrotView: PlatformRepresentable {
     }
 
     private func update(_ view: MTKView, context: Context) {
-        context.coordinator.renderer?.center = center
-        context.coordinator.renderer?.scale = scale
-        context.coordinator.renderer?.maxIterations = maxIterations
-        context.coordinator.renderer?.usePerturbation = usePerturbation
+        context.coordinator.renderer?.state = state
         DispatchQueue.main.async {
             if viewSize != view.bounds.size { viewSize = view.bounds.size }
         }
