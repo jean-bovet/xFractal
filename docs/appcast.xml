@@ -1,13 +1,22 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
-  <channel>
-    <title>xFractal</title>
-    <link>https://jean-bovet.github.io/xFractal/appcast.xml</link>
-    <description>xFractal Sparkle appcast — auto-updates for the macOS build.</description>
-    <language>en</language>
-    <!-- Items will be appended here automatically by scripts/release.sh
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+    <channel>
+        <title>xFractal</title>
+        <link>https://jean-bovet.github.io/xFractal/appcast.xml</link>
+        <description>xFractal Sparkle appcast — auto-updates for the macOS build.</description>
+        <language>en</language>
+        <!-- Items will be appended here automatically by scripts/release.sh
          (which calls scripts/sparkle/generate_appcast). The first signed
          release will populate this file with an <item> per published
          version. -->
-  </channel>
+        <item>
+            <title>1.0</title>
+            <pubDate>Sat, 25 Apr 2026 20:07:49 -0700</pubDate>
+            <sparkle:version>1</sparkle:version>
+            <sparkle:shortVersionString>1.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+            <enclosure url="https://github.com/jean-bovet/xFractal/releases/download/v1.0/xFractal-1.0.dmg" length="3654664" type="application/octet-stream" sparkle:edSignature="VWDLdr46ZLjfF9cJmPhSZVAfY9o6weanfdPkcd8g0EkFrUiVsgPMu7GS/JY01Wvv+JCMo19BeLPkzm3cW8gNAA=="/>
+        </item>
+    </channel>
 </rss>
