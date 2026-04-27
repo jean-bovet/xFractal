@@ -113,6 +113,14 @@ The release script is shared in spirit with [AudioXplorer](https://github.com/je
 
 This rebuild draws from *xFractal*, the retired 2008 Arizona Software Objective-C iOS app (Mandelbrot / Julia / Newton / Multibrot families, Hot / Cold / Gray / Chromatic palettes, smooth-iteration coloring). The CPU iteration loops, palette curves, and Newton polynomials are direct ports; everything else is rewritten for SwiftUI + GPU. The Mandelbrot deep-zoom path (DD arithmetic + Pauldelbrot perturbation) is new and has no analogue in the original — the 2008 app ran on iOS hardware where any GPU compute was off the table.
 
+Screenshots from the original 2008 iOS app:
+
+<p align="center">
+  <img src="screenshots/mandelbrot-ios-2008.png" width="240" alt="Mandelbrot zoom on iOS">
+  <img src="screenshots/julia-gallery-ios-2008.png" width="240" alt="Julia preset gallery on iOS">
+  <img src="screenshots/newton-ios-2008.png" width="240" alt="Newton fractal on iOS">
+</p>
+
 ## Contributing
 
 Issues and pull requests are welcome. Suggested directions:
