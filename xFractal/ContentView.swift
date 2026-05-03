@@ -5,12 +5,15 @@ struct ContentView: View {
     @StateObject private var store = StateStore()
     @State private var viewSize: CGSize = .zero
     @State private var dragLastLocation: CGPoint? = nil
-    @State private var pinchStartScale: Double? = nil
-    @State private var pinchAnchorWorld: SIMD2<Double>? = nil
-    @State private var pinchAnchorNDC: SIMD2<Double>? = nil
-    @State private var isPinching: Bool = false
+    @State private var pinchState: PinchState? = nil
     @State private var showingPanel: Bool = false
     @State private var showingSheet: Bool = false
+
+    private struct PinchState {
+        let startCenter: SIMD2<Double>
+        let startScale: Double
+        let anchorNDC: SIMD2<Double>
+    }
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -48,7 +51,7 @@ struct ContentView: View {
                     // While pinching, only track the finger's location; pinch
                     // owns the center. This avoids any accumulated drag delta
                     // surviving past the pinch and producing a jump.
-                    if isPinching {
+                    if pinchState != nil {
                         dragLastLocation = value.location
                         return
                     }
@@ -56,12 +59,11 @@ struct ContentView: View {
                         dragLastLocation = value.location
                         return
                     }
-                    let h = max(Double(viewSize.height), 1)
-                    let pxToWorld = (2.0 * store.state.scale) / h
-                    let dx = Double(value.location.x - last.x) * pxToWorld
-                    let dy = Double(value.location.y - last.y) * pxToWorld
-                    store.state.center = SIMD2<Double>(store.state.center.x - dx,
-                                                       store.state.center.y + dy)
+                    store.state.center = panCenter(center: store.state.center,
+                                                   scale: store.state.scale,
+                                                   viewHeight: Double(viewSize.height),
+                                                   dxPx: Double(value.location.x - last.x),
+                                                   dyPx: Double(value.location.y - last.y))
                     dragLastLocation = value.location
                 }
                 .onEnded { _ in
@@ -69,32 +71,29 @@ struct ContentView: View {
                 },
             MagnifyGesture()
                 .onChanged { value in
-                    if pinchStartScale == nil {
+                    let pinch: PinchState
+                    if let existing = pinchState {
+                        pinch = existing
+                    } else {
                         let aspect = max(Double(viewSize.width) / max(Double(viewSize.height), 1), 1e-9)
-                        // SwiftUI UnitPoint: y=0 top. Renderer uv: y=0 bottom. Flip y.
-                        let ax = Double(value.startAnchor.x)
-                        let ay = Double(value.startAnchor.y)
-                        let nx = (ax * 2.0 - 1.0) * aspect
-                        let ny = ((1.0 - ay) * 2.0 - 1.0)
-                        let ndc = SIMD2<Double>(nx, ny)
-                        pinchAnchorNDC = ndc
-                        pinchAnchorWorld = store.state.center + ndc * store.state.scale
-                        pinchStartScale = store.state.scale
-                        isPinching = true
+                        // SwiftUI UnitPoint is y-down; helpers expect y-up — flip here.
+                        let unit = SIMD2<Double>(Double(value.startAnchor.x),
+                                                 1.0 - Double(value.startAnchor.y))
+                        pinch = PinchState(startCenter: store.state.center,
+                                           startScale: store.state.scale,
+                                           anchorNDC: unitToNDC(unit, aspect: aspect))
+                        pinchState = pinch
                     }
-                    guard let s = pinchStartScale,
-                          let world = pinchAnchorWorld,
-                          let ndc = pinchAnchorNDC else { return }
                     let mag = max(Double(value.magnification), 1e-9)
-                    let newScale = max(1e-15, s / mag)
+                    let newScale = max(1e-15, pinch.startScale / mag)
                     store.state.scale = newScale
-                    store.state.center = world - ndc * newScale
+                    store.state.center = anchoredZoomCenter(center: pinch.startCenter,
+                                                            scale: pinch.startScale,
+                                                            anchorNDC: pinch.anchorNDC,
+                                                            newScale: newScale)
                 }
                 .onEnded { _ in
-                    pinchStartScale = nil
-                    pinchAnchorWorld = nil
-                    pinchAnchorNDC = nil
-                    isPinching = false
+                    pinchState = nil
                     // Force the next drag tick to rebase: DragGesture.value.location
                     // tracks the centroid of active touches, so lifting one finger
                     // creates a discontinuity (centroid → single-finger position).

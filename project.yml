@@ -46,6 +46,28 @@ targets:
       - framework: Frameworks/Sparkle.framework
         embed: true
         codeSign: true
+    scheme:
+      testTargets:
+        - xFractalTests
+
+  xFractalTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: Tests
+    dependencies:
+      - target: xFractal
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.arizonasoftware.xFractalTests
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGNING_REQUIRED: NO
+        CODE_SIGNING_ALLOWED: NO
+        FRAMEWORK_SEARCH_PATHS:
+          - $(inherited)
+          - $(SRCROOT)/Frameworks
 
   xFractal-iOS:
     type: application

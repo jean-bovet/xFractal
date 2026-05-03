@@ -129,7 +129,7 @@ struct ViewState: Codable, Equatable {
     }
 }
 
-struct Snapshot: Codable {
+struct Snapshot: Codable, Equatable {
     var state: ViewState
     var time: TimeInterval
 }
@@ -141,29 +141,37 @@ final class StateStore: ObservableObject {
     @Published private(set) var journal: [Snapshot] = []
     @Published private(set) var isReplaying: Bool = false
 
-    private var journalStart: Date = Date()
+    private let defaults: UserDefaults
+    private let now: () -> Date
+    private var journalStart: Date
     private var saveStateWork: DispatchWorkItem?
     private var saveJournalWork: DispatchWorkItem?
     private var replayTimer: Timer?
 
     // Bumped when ViewState fields changed; previous persisted blobs are ignored.
-    private static let stateKey = "fractals.viewState.v2"
-    private static let journalKey = "fractals.journal.v2"
-    private static let maxJournalCount = 4096
-    private static let maxReplayDuration: TimeInterval = 30
+    static let stateKey = "fractals.viewState.v2"
+    static let journalKey = "fractals.journal.v2"
+    static let maxJournalCount = 4096
+    static let coalesceWindow: TimeInterval = 0.05
+    static let maxReplayDuration: TimeInterval = 30
 
-    init() { load() }
+    init(defaults: UserDefaults = .standard, now: @escaping () -> Date = Date.init) {
+        self.defaults = defaults
+        self.now = now
+        self.journalStart = now()
+        load()
+    }
 
     private func load() {
-        if let data = UserDefaults.standard.data(forKey: Self.stateKey),
+        if let data = defaults.data(forKey: Self.stateKey),
            let decoded = try? JSONDecoder().decode(ViewState.self, from: data) {
             state = decoded
         }
-        if let data = UserDefaults.standard.data(forKey: Self.journalKey),
+        if let data = defaults.data(forKey: Self.journalKey),
            let decoded = try? JSONDecoder().decode([Snapshot].self, from: data) {
             journal = decoded
             let lastTime = decoded.last?.time ?? 0
-            journalStart = Date().addingTimeInterval(-lastTime)
+            journalStart = now().addingTimeInterval(-lastTime)
         }
     }
 
@@ -176,25 +184,42 @@ final class StateStore: ObservableObject {
     }
 
     private func recordSnapshot() {
-        let now = Date().timeIntervalSince(journalStart)
+        // Cheap O(1) early-out: avoid the array-equality check inside `journal(byApplying:)`
+        // for the common case where the new state matches the last recorded one.
         if let last = journal.last, last.state == state { return }
-        if let last = journal.last, now - last.time < 0.05 {
-            journal[journal.count - 1] = Snapshot(state: state, time: now)
+        let t = now().timeIntervalSince(journalStart)
+        journal = Self.journal(byApplying: state, to: journal, at: t)
+        saveJournalDebounced()
+    }
+
+    /// Pure helper: returns the journal after applying a new state at virtual time
+    /// `t`. Drops a no-op identical state, coalesces with the last entry if it is
+    /// within `coalesceWindow` seconds, otherwise appends and trims to `maxCount`.
+    static func journal(byApplying state: ViewState,
+                        to journal: [Snapshot],
+                        at t: TimeInterval,
+                        maxCount: Int = StateStore.maxJournalCount,
+                        coalesceWindow: TimeInterval = StateStore.coalesceWindow) -> [Snapshot] {
+        if let last = journal.last, last.state == state { return journal }
+        var next = journal
+        if let last = journal.last, t - last.time < coalesceWindow {
+            next[next.count - 1] = Snapshot(state: state, time: t)
         } else {
-            journal.append(Snapshot(state: state, time: now))
-            if journal.count > Self.maxJournalCount {
-                journal.removeFirst(journal.count - Self.maxJournalCount)
+            next.append(Snapshot(state: state, time: t))
+            if next.count > maxCount {
+                next.removeFirst(next.count - maxCount)
             }
         }
-        saveJournalDebounced()
+        return next
     }
 
     private func saveStateDebounced() {
         saveStateWork?.cancel()
         let snapshot = state
+        let defaults = self.defaults
         let work = DispatchWorkItem {
             if let data = try? JSONEncoder().encode(snapshot) {
-                UserDefaults.standard.set(data, forKey: Self.stateKey)
+                defaults.set(data, forKey: Self.stateKey)
             }
         }
         saveStateWork = work
@@ -204,9 +229,10 @@ final class StateStore: ObservableObject {
     private func saveJournalDebounced() {
         saveJournalWork?.cancel()
         let snapshot = journal
+        let defaults = self.defaults
         let work = DispatchWorkItem {
             if let data = try? JSONEncoder().encode(snapshot) {
-                UserDefaults.standard.set(data, forKey: Self.journalKey)
+                defaults.set(data, forKey: Self.journalKey)
             }
         }
         saveJournalWork = work
@@ -241,8 +267,8 @@ final class StateStore: ObservableObject {
     func clearJournal() {
         stopReplay()
         journal = []
-        journalStart = Date()
-        UserDefaults.standard.removeObject(forKey: Self.journalKey)
+        journalStart = now()
+        defaults.removeObject(forKey: Self.journalKey)
     }
 
     func replay() {

@@ -19,13 +19,6 @@ struct FractalUniforms {
     var juliaC: SIMD2<Float>
 }
 
-@inline(__always)
-private func splitDouble(_ d: Double) -> (hi: Float, lo: Float) {
-    let hi = Float(d)
-    let lo = Float(d - Double(hi))
-    return (hi, lo)
-}
-
 private struct OrbitCache {
     var center: SIMD2<Double>
     var scale: Double
@@ -88,41 +81,6 @@ final class FractalRenderer: NSObject, MTKViewDelegate {
         aspect = size.height > 0 ? Float(size.width / size.height) : 1.0
     }
 
-    private func pickReference() -> SIMD2<Double> {
-        let aspectD = Double(aspect)
-        let n = Int(state.maxIterations)
-        let probes = 5
-        var best = state.center
-        var bestIter = -1
-
-        for j in 0..<probes {
-            for i in 0..<probes {
-                let u = (Double(i) / Double(probes - 1)) * 2.0 - 1.0
-                let v = (Double(j) / Double(probes - 1)) * 2.0 - 1.0
-                let cx = state.centerX + u * aspectD * state.scale
-                let cy = state.centerY + v * state.scale
-
-                var zx: Double = 0
-                var zy: Double = 0
-                var iter = n
-                for k in 0..<n {
-                    let zx2 = zx * zx
-                    let zy2 = zy * zy
-                    if zx2 + zy2 > 4.0 { iter = k; break }
-                    let nx = zx2 - zy2 + cx
-                    let ny = 2.0 * zx * zy + cy
-                    zx = nx; zy = ny
-                }
-                if iter > bestIter {
-                    bestIter = iter
-                    best = SIMD2<Double>(cx, cy)
-                    if iter == n { return best }
-                }
-            }
-        }
-        return best
-    }
-
     private func ensureOrbit() -> (MTLBuffer, UInt32, SIMD2<Float>) {
         guard state.type == .mandelbrot, state.usePerturbation else {
             return (dummyOrbit, 0, .zero)
@@ -136,29 +94,15 @@ final class FractalRenderer: NSObject, MTKViewDelegate {
             return (c.buffer, c.length, c.refOffset)
         }
 
-        let refC = pickReference()
+        let refC = pickMandelbrotReference(center: state.center,
+                                           scale: state.scale,
+                                           aspect: Double(aspect),
+                                           maxIterations: Int(state.maxIterations))
         let refOffset = SIMD2<Float>(Float(state.centerX - refC.x),
                                      Float(state.centerY - refC.y))
 
-        let cx = refC.x
-        let cy = refC.y
-        var zx: Double = 0
-        var zy: Double = 0
-        let n = Int(state.maxIterations)
-        var orbit: [SIMD2<Float>] = []
-        orbit.reserveCapacity(n + 1)
-        orbit.append(SIMD2<Float>(0, 0))
-
-        for _ in 0..<n {
-            let zx2 = zx * zx
-            let zy2 = zy * zy
-            if zx2 + zy2 > 4.0 { break }
-            let nx = zx2 - zy2 + cx
-            let ny = 2.0 * zx * zy + cy
-            zx = nx; zy = ny
-            orbit.append(SIMD2<Float>(Float(zx), Float(zy)))
-        }
-
+        let orbit = mandelbrotOrbit(referenceC: refC,
+                                    maxIterations: Int(state.maxIterations))
         let length = orbit.count * MemoryLayout<SIMD2<Float>>.stride
         let buf = orbit.withUnsafeBytes { raw -> MTLBuffer? in
             guard let base = raw.baseAddress else { return nil }

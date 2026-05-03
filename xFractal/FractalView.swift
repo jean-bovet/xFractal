@@ -58,15 +58,13 @@ struct FractalView: PlatformRepresentable {
         view.onScrollZoom = { [weak view] factor, anchor in
             guard let view, let r = context.coordinator.renderer else { return }
             _ = view
-            let aspect = Double(r.aspect)
-            let s = r.state.scale
-            let nx = (anchor.x * 2.0 - 1.0) * aspect
-            let ny = (anchor.y * 2.0 - 1.0)
-            let anchorWorld = r.state.center + SIMD2<Double>(nx, ny) * s
-
-            let newScale = max(1e-15, s * factor)
-            let newCenter = anchorWorld - SIMD2<Double>(nx, ny) * newScale
-
+            // Cocoa locationInWindow is y-up, so anchor is already y-up: no flip.
+            let ndc = unitToNDC(anchor, aspect: Double(r.aspect))
+            let newScale = max(1e-15, r.state.scale * factor)
+            let newCenter = anchoredZoomCenter(center: r.state.center,
+                                               scale: r.state.scale,
+                                               anchorNDC: ndc,
+                                               newScale: newScale)
             r.state.scale = newScale
             r.state.center = newCenter
             DispatchQueue.main.async {
