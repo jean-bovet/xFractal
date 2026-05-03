@@ -13,6 +13,7 @@ struct ContentView: View {
             FractalView(state: $store.state, viewSize: $viewSize)
                 .gesture(viewGestures)
                 .allowsHitTesting(!store.isReplaying)
+                .ignoresSafeArea()
 
             VStack(spacing: 10) {
                 if showingPanel { paramPanel }
@@ -21,7 +22,6 @@ struct ContentView: View {
             .padding(.horizontal, 16)
             .padding(.bottom, 16)
         }
-        .ignoresSafeArea()
     }
 
     private var viewGestures: some Gesture {
@@ -84,7 +84,11 @@ struct ContentView: View {
             }
             .disabled(store.journal.isEmpty || store.isReplaying)
         }
+        #if os(macOS)
         .labelStyle(.titleAndIcon)
+        #else
+        .labelStyle(.iconOnly)
+        #endif
         .controlSize(.small)
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
@@ -121,7 +125,11 @@ struct ContentView: View {
                 get: { Double(store.state.maxIterations) },
                 set: { store.state.maxIterations = UInt32($0) }
             ), in: 32...4096)
+            #if os(macOS)
                 .frame(minWidth: 140, idealWidth: 200)
+            #else
+                .frame(minWidth: 80)
+            #endif
         }
     }
 

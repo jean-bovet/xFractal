@@ -3,6 +3,7 @@ options:
   bundleIdPrefix: com.arizonasoftware
   deploymentTarget:
     macOS: "14.0"
+    iOS: "17.0"
   createIntermediateGroups: true
 
 settings:
@@ -18,6 +19,8 @@ targets:
     platform: macOS
     sources:
       - path: xFractal
+        excludes:
+          - "Info-iOS.plist"
     settings:
       base:
         PRODUCT_NAME: xFractal
@@ -39,3 +42,20 @@ targets:
       - framework: Frameworks/Sparkle.framework
         embed: true
         codeSign: true
+
+  xFractal-iOS:
+    type: application
+    platform: iOS
+    sources:
+      - path: xFractal
+        excludes:
+          - "Info.plist"
+    settings:
+      base:
+        PRODUCT_NAME: xFractal
+        PRODUCT_BUNDLE_IDENTIFIER: com.arizonasoftware.xFractal
+        INFOPLIST_FILE: xFractal/Info-iOS.plist
+        CODE_SIGN_STYLE: Automatic
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SUPPORTS_MACCATALYST: NO
