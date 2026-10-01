@@ -79,7 +79,7 @@ targets:
     settings:
       base:
         PRODUCT_NAME: xFractal
-        PRODUCT_BUNDLE_IDENTIFIER: com.arizonasoftware.xFractal
+        PRODUCT_BUNDLE_IDENTIFIER: ch.arizonasoftware.xfractal  # bundle ID of the 2008 App Store app, so this ships as its update
         INFOPLIST_FILE: xFractal/Info-iOS.plist
         CODE_SIGN_STYLE: Automatic
         CODE_SIGN_IDENTITY: "iPhone Developer"

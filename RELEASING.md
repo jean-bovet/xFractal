@@ -1,6 +1,6 @@
 # Releasing xFractal
 
-Public-safe runbook for shipping a signed, notarized macOS DMG with Sparkle auto-updates. iOS builds are unaffected — there is no iOS distribution channel.
+Public-safe runbook for shipping a signed, notarized macOS DMG with Sparkle auto-updates. iOS builds go through the App Store instead — see [iOS (App Store)](#ios-app-store) at the end.
 
 ## Prerequisites (one-time)
 
@@ -92,3 +92,23 @@ xFractal is a SwiftUI + XcodeGen project, not a legacy `.xcodeproj`. So:
 - No `autorelease` / manual retain dance — modern Swift, ARC.
 - Sandbox was never enabled, so there's no sandbox-removal cleanup.
 - iOS support is preserved: Sparkle is wrapped in `#if os(macOS)` and only embedded for macOS via a XcodeGen `platforms: [macOS]` filter on the dependency.
+
+## iOS (App Store)
+
+The `xFractal-iOS` target ships as an update to the original 2008 App Store app, so it must keep that app's bundle ID, `ch.arizonasoftware.xfractal`, and its version must be higher than the last 1.x release (1.6, build 160).
+
+```sh
+# 1. Bump version in xFractal/Info-iOS.plist:
+#    - CFBundleShortVersionString  (e.g. 2.1)
+#    - CFBundleVersion             (e.g. 201, must increase every upload)
+
+# 2. Archive and upload
+xcodegen generate
+open xFractal.xcodeproj
+#    Scheme xFractal-iOS → Any iOS Device → Product → Archive
+#    Organizer → Distribute App → App Store Connect
+```
+
+Signing uses Xcode's automatic signing with the team in `project.yml`. Certificates and App Store Connect credentials stay in your keychain and Xcode accounts, never in this repo.
+
+`xFractal/PrivacyInfo.xcprivacy` declares the one required-reason API the app uses (`UserDefaults`, reason `CA92.1`). Update it if new required-reason APIs are added.
