@@ -100,3 +100,15 @@ func mandelbrotOrbit(referenceC c: SIMD2<Double>, maxIterations: Int) -> [SIMD2<
     }
     return orbit
 }
+
+/// Smooth (fractional) escape count for zₙ₊₁ = zₙ^exponent + c with bailout |z| > 2.
+/// Mirrors `smoothCount` in Shaders.metal; keep the two in sync.
+///
+/// nu = iter + 1 − log_n(log|z| / log 2). The log base must be the exponent: with
+/// base 2, z⁵ overshoots drive the count negative, which the palette paints as
+/// "inside the set". Clamped at 0 for points far outside the bailout circle.
+func smoothEscapeCount(iter: Int, zMag2: Double, exponent: Int) -> Double {
+    let n = Double(max(exponent, 2))
+    let nu = Double(iter) + 1.0 - log2(0.5 * log2(max(zMag2, 1.000001))) / log2(n)
+    return max(nu, 0.0)
+}

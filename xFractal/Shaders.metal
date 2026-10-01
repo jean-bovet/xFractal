@@ -134,10 +134,12 @@ inline float4 paletteColor(uint kind, float count) {
     }
 }
 
-inline float smoothCount(uint iter, float zMag2, uint useSmooth) {
+inline float smoothCount(uint iter, float zMag2, uint useSmooth, uint exponent) {
     if (useSmooth == 0u) return float(iter);
-    // Standard smooth-iteration formula: nu = iter + 1 - log2(log2(|z|))
-    return float(iter) + 1.0 - log2(0.5 * log2(max(zMag2, 1.000001)));
+    // Smooth-iteration formula for z^n + c: nu = iter + 1 - log_n(log2(|z|)).
+    // Mirrors smoothEscapeCount in FractalMath.swift (tested there); keep in sync.
+    float nu = float(iter) + 1.0 - log2(0.5 * log2(max(zMag2, 1.000001))) / log2(float(max(exponent, 2u)));
+    return max(nu, 0.0);
 }
 
 // ---- Float complex helpers -------------------------------------------------
@@ -188,7 +190,7 @@ inline float iterateMandelbrotDD(constant Uniforms &u, float2 p) {
         if (zMag2 > 4.0) { iter = i; escaped = true; break; }
     }
     if (!escaped) return -1.0;
-    return smoothCount(iter, zMag2, u.smooth);
+    return smoothCount(iter, zMag2, u.smooth, 2u);
 }
 
 inline float iterateMandelbrotPerturbation(constant Uniforms &u, float2 p,
@@ -220,7 +222,7 @@ inline float iterateMandelbrotPerturbation(constant Uniforms &u, float2 p,
         if (zMag2 > 4.0) { iter = i + 1u; escaped = true; break; }
     }
     if (!escaped) return -1.0;
-    return smoothCount(iter, zMag2, u.smooth);
+    return smoothCount(iter, zMag2, u.smooth, 2u);
 }
 
 inline float iterateJuliaDD(constant Uniforms &u, float2 p) {
@@ -249,7 +251,7 @@ inline float iterateJuliaDD(constant Uniforms &u, float2 p) {
         if (zMag2 > 4.0) { iter = i; escaped = true; break; }
     }
     if (!escaped) return -1.0;
-    return smoothCount(iter, zMag2, u.smooth);
+    return smoothCount(iter, zMag2, u.smooth, 2u);
 }
 
 inline float iterateMultibrot(constant Uniforms &u, float2 p) {
@@ -268,7 +270,7 @@ inline float iterateMultibrot(constant Uniforms &u, float2 p) {
         if (zMag2 > 4.0) { iter = i; escaped = true; break; }
     }
     if (!escaped) return -1.0;
-    return smoothCount(iter, zMag2, u.smooth);
+    return smoothCount(iter, zMag2, u.smooth, n);
 }
 
 inline float iterateNewton(constant Uniforms &u, float2 p) {
