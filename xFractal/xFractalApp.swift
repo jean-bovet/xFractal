@@ -1,5 +1,6 @@
 import SwiftUI
-#if os(macOS)
+// SPARKLE is set only by the GitHub DMG target; the Mac App Store build updates through the store.
+#if SPARKLE
 import Sparkle
 
 final class UpdaterHost {
@@ -19,7 +20,7 @@ struct xFractalApp: App {
         WindowGroup {
             ContentView()
         }
-        #if os(macOS)
+        #if SPARKLE
         .commands {
             CommandGroup(after: .appInfo) {
                 Button("Check for Updates…") {
