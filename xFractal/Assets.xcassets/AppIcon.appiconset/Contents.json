@@ -10,7 +10,7 @@
     { "size": "256x256",   "idiom": "mac",       "scale": "2x", "filename": "icon_512.png"  },
     { "size": "512x512",   "idiom": "mac",       "scale": "1x", "filename": "icon_512.png"  },
     { "size": "512x512",   "idiom": "mac",       "scale": "2x", "filename": "icon_1024.png" },
-    { "size": "1024x1024", "idiom": "universal", "platform": "ios", "filename": "icon_1024.png" }
+    { "size": "1024x1024", "idiom": "universal", "platform": "ios", "filename": "icon_ios_1024.png" }
   ],
   "info": {
     "author": "xcode",
