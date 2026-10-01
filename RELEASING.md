@@ -95,12 +95,12 @@ xFractal is a SwiftUI + XcodeGen project, not a legacy `.xcodeproj`. So:
 
 ## iOS (App Store)
 
-The `xFractal-iOS` target ships as an update to the original 2008 App Store app, so it must keep that app's bundle ID, `ch.arizonasoftware.xfractal`, and its version must be higher than the last 1.x release (1.6, build 160).
+The `xFractal-iOS` target ships as an update to the original 2008 App Store app, so it must keep that app's bundle ID, `ch.arizonasoftware.xfractal`, and its version must be higher than the last release (1.6, build 160), and the build number must be higher than any earlier upload (2.0 builds 1, 200 and 201 were uploaded to TestFlight in 2015).
 
 ```sh
 # 1. Bump version in xFractal/Info-iOS.plist:
 #    - CFBundleShortVersionString  (e.g. 2.1)
-#    - CFBundleVersion             (e.g. 201, must increase every upload)
+#    - CFBundleVersion             (e.g. 203, must increase every upload)
 
 # 2. Archive and upload
 xcodegen generate
