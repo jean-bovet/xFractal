@@ -111,7 +111,7 @@ The release script is shared in spirit with [AudioXplorer](https://github.com/je
 
 ## Origins
 
-This rebuild draws from *xFractal*, the retired 2008 Arizona Software Objective-C iOS app (Mandelbrot / Julia / Newton / Multibrot families, Hot / Cold / Gray / Chromatic palettes, smooth-iteration coloring). The CPU iteration loops, palette curves, and Newton polynomials are direct ports; everything else is rewritten for SwiftUI + GPU. The Mandelbrot deep-zoom path (DD arithmetic + Pauldelbrot perturbation) is new and has no analogue in the original — the 2008 app ran on iOS hardware where any GPU compute was off the table.
+This rebuild draws from *xFractal*, the retired 2008 Arizona Software Objective-C iOS app (Mandelbrot / Julia / Newton / Multibrot families, Hot / Cold / Gray / Chromatic palettes, smooth-iteration coloring). The CPU iteration loops, palette curves, and Newton polynomials are direct ports; everything else is rewritten for SwiftUI + GPU. The Mandelbrot deep-zoom path (double-float arithmetic + K. I. Martin's perturbation method) is new and has no analogue in the original — the 2008 app ran on iOS hardware where any GPU compute was off the table.
 
 Screenshots from the original 2008 iOS app:
 
@@ -132,6 +132,19 @@ Issues and pull requests are welcome. Suggested directions:
 - More palettes; alternative coloring (orbit-trap, distance-estimator)
 
 When sending a PR, please regenerate `.xcodeproj` from `project.yml` rather than committing pbxproj edits directly.
+
+## Credits
+
+The fractals themselves are classical mathematics; the rendering techniques beyond plain iteration come from:
+
+- **Perturbation for deep zoom** — K. I. Martin, *SuperFractalThing* (2013): iterate one reference orbit at high precision on the CPU, then iterate only each pixel's small delta from it on the GPU. (Pauldelbrot's glitch-detection criterion, the usual companion, is not implemented yet — see Contributing.)
+- **Double-float arithmetic** — T. J. Dekker, *A floating-point technique for extending the available precision* (1971), and D. E. Knuth, *The Art of Computer Programming*, vol. 2: the error-free `twoSum` / `twoProd` transforms behind the shader's `dd` type.
+- **Smooth iteration count** — the normalized escape count popularized by Linas Vepstas (1997).
+- **Fractal families** — Benoît Mandelbrot (1980) for the Mandelbrot set; Gaston Julia and Pierre Fatou (1918) for Julia sets; Newton's method for the Newton fractals.
+
+The palettes, Newton polynomials and CPU iteration loops are ported from the original 2008 *xFractal* (see Origins).
+
+The macOS app embeds [Sparkle](https://sparkle-project.org) (MIT License) for updates; its license and the notices for the code it bundles are in [`Licenses/Sparkle-LICENSE.txt`](Licenses/Sparkle-LICENSE.txt) and ship inside the app at `Contents/Resources/Licenses/`. The iOS app contains no third-party code.
 
 ## License
 

@@ -25,6 +25,10 @@ targets:
       - path: xFractal
         excludes:
           - "Info-iOS.plist"
+      # Third-party license notices for frameworks embedded in the macOS app (Sparkle).
+      - path: Licenses
+        type: folder
+        buildPhase: resources
     settings:
       base:
         PRODUCT_NAME: xFractal
