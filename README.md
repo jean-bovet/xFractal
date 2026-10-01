@@ -28,7 +28,7 @@ open xFractal.xcodeproj
 
 Build & run on macOS. No code signing needed for local Debug builds — `project.yml` sets `CODE_SIGNING_ALLOWED = NO` for the development configuration so contributors without an Apple Developer account can still build.
 
-The `xFractal-iOS` target (iPhone/iPad, no Sparkle) shares the same sources. It uses the bundle ID of the original 2008 App Store app (`ch.arizonasoftware.xfractal`), so it ships as version 2.0 of that listing rather than as a new app. Favorites saved by the 1.x app are not imported.
+The `xFractal-iOS` target (iPhone/iPad, no Sparkle) shares the same sources. It uses the bundle ID of the original 2008 App Store app (`ch.arizonasoftware.xfractal`), so it ships as version 2.0 of that listing rather than as a new app. Favorites saved by the 1.x app are not imported. The `xFractal-MAS` target is the Mac App Store build of the macOS app: sandboxed, without Sparkle, and on the same listing as a universal purchase.
 
 ## Fractal families
 

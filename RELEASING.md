@@ -112,3 +112,18 @@ open xFractal.xcodeproj
 Signing uses Xcode's automatic signing with the team in `project.yml`. Certificates and App Store Connect credentials stay in your keychain and Xcode accounts, never in this repo.
 
 `xFractal/PrivacyInfo.xcprivacy` declares the one required-reason API the app uses (`UserDefaults`, reason `CA92.1`). Update it if new required-reason APIs are added.
+
+## Mac App Store
+
+The `xFractal-MAS` target is the macOS app built for the App Store. It shares the iOS bundle ID (`ch.arizonasoftware.xfractal`), so Mac, iPhone and iPad are one universal purchase on the same listing. It is sandboxed and contains no Sparkle: Sparkle code is compiled only when the `SPARKLE` condition is set, which only the DMG target (`xFractal`) does.
+
+```sh
+# 1. Bump CFBundleShortVersionString / CFBundleVersion in xFractal/Info-MAS.plist
+# 2. Archive and upload
+xcodegen generate
+open xFractal.xcodeproj
+#    Scheme xFractal-MAS → Any Mac → Product → Archive
+#    Organizer → Distribute App → App Store Connect
+```
+
+If an export fails with "Copy failed" and the distribution log shows `rsync … --extended-attributes: unknown option`, a Homebrew `rsync` is first on `PATH`; run the export with `PATH=/usr/bin:/bin:/usr/sbin:/sbin`.
