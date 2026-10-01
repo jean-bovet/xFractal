@@ -69,7 +69,7 @@ The Mandelbrot set is a precision sink: every order of magnitude of zoom eats ro
 |---|---|---|---|
 | 1 | Single-precision `float` | ~1e-6 | superseded |
 | 2 | Double-float ("DD") emulation in MSL — pair of `float`s `(hi, lo)` per coordinate, ~14 decimal digits | ~1e-13 | shipped (default for Mandelbrot/Julia) |
-| 3 | CPU reference orbit + per-pixel `float` perturbation deltas (Pauldelbrot, 2013) | with `Double` reference: ~1e-15. With future bignum reference: effectively unlimited | shipped — Mandelbrot only, toggleable |
+| 3 | CPU reference orbit + per-pixel `float` perturbation deltas (K. I. Martin, 2013) | with `Double` reference: ~1e-15. With future bignum reference: effectively unlimited | shipped — Mandelbrot only, toggleable |
 | 4 | BLA (Bivariate Linear Approximation) + Pauldelbrot/Zhuoran glitch detection on top of tier 3 | same floor, 10–100× faster | future |
 
 Multibrot/Newton run in single-precision `float` — the original xFractal used double on CPU and was much slower; for these families typical exploration depth doesn't need DD.
