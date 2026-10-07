@@ -1,4 +1,4 @@
-# xFractal — working notes for Codex
+# xFractal — working notes for coding agents
 
 ## Use TDD by default
 
