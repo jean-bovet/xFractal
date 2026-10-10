@@ -19,3 +19,6 @@ dist/
 .swiftpm/
 .build/
 Package.resolved
+
+# Per-machine signing team (see Signing.xcconfig)
+Signing.local.xcconfig
