@@ -32,6 +32,8 @@ typealias PlatformRepresentable = UIViewRepresentable
 struct FractalView: PlatformRepresentable {
     @Binding var state: ViewState
     @Binding var viewSize: CGSize
+    /// False while the app is in the background: rendering stops and GPU buffers are freed.
+    var isActive: Bool = true
 
     final class Coordinator {
         var renderer: FractalRenderer?
@@ -46,7 +48,7 @@ struct FractalView: PlatformRepresentable {
         #endif
         view.preferredFramesPerSecond = 60
         view.enableSetNeedsDisplay = false
-        view.isPaused = false
+        view.isPaused = !isActive
         view.framebufferOnly = true
 
         let renderer = FractalRenderer(metalView: view)
@@ -79,6 +81,13 @@ struct FractalView: PlatformRepresentable {
 
     private func update(_ view: MTKView, context: Context) {
         context.coordinator.renderer?.state = state
+        if view.isPaused == isActive {
+            view.isPaused = !isActive
+            if !isActive {
+                context.coordinator.renderer?.releaseTransientResources()
+                view.releaseDrawables()
+            }
+        }
         DispatchQueue.main.async {
             if viewSize != view.bounds.size { viewSize = view.bounds.size }
         }

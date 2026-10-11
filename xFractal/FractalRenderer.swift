@@ -81,6 +81,11 @@ final class FractalRenderer: NSObject, MTKViewDelegate {
         aspect = size.height > 0 ? Float(size.width / size.height) : 1.0
     }
 
+    /// Drops GPU memory that the next frame can rebuild (the reference orbit buffer).
+    func releaseTransientResources() {
+        orbitCache = nil
+    }
+
     private func ensureOrbit() -> (MTLBuffer, UInt32, SIMD2<Float>) {
         guard state.type == .mandelbrot, state.usePerturbation else {
             return (dummyOrbit, 0, .zero)

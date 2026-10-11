@@ -316,4 +316,16 @@ final class StateStore: ObservableObject {
         replayTimer = nil
         isReplaying = false
     }
+
+    /// Called when the app leaves the screen: stops the 60 Hz replay timer and writes
+    /// any debounced save now, since a suspended app may be killed before it fires.
+    func enterBackground() {
+        stopReplay()
+        saveStateWork?.perform()
+        saveStateWork?.cancel()
+        saveStateWork = nil
+        saveJournalWork?.perform()
+        saveJournalWork?.cancel()
+        saveJournalWork = nil
+    }
 }

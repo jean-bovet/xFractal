@@ -3,6 +3,7 @@ import simd
 
 struct ContentView: View {
     @StateObject private var store = StateStore()
+    @Environment(\.scenePhase) private var scenePhase
     @State private var viewSize: CGSize = .zero
     @State private var dragLastLocation: CGPoint? = nil
     @State private var pinchState: PinchState? = nil
@@ -17,7 +18,8 @@ struct ContentView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            FractalView(state: $store.state, viewSize: $viewSize)
+            FractalView(state: $store.state, viewSize: $viewSize,
+                        isActive: scenePhase != .background)
                 .gesture(viewGestures)
                 .allowsHitTesting(!store.isReplaying)
                 .ignoresSafeArea()
@@ -42,6 +44,9 @@ struct ContentView: View {
                 .presentationBackgroundInteraction(.enabled(upThrough: .height(260)))
         }
         #endif
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .background { store.enterBackground() }
+        }
     }
 
     private var viewGestures: some Gesture {

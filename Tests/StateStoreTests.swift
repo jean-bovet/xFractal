@@ -113,4 +113,29 @@ final class StateStoreTests: XCTestCase {
         let s = makeStore()
         XCTAssertEqual(s.journal, snaps)
     }
+
+    // MARK: - background
+
+    func testEnterBackgroundFlushesPendingStateAndJournal() {
+        let s = makeStore()
+        s.state.scale = 1e-6
+        s.enterBackground()
+        // No run-loop turn: the debounced saves would not have fired yet.
+        let reloaded = makeStore()
+        XCTAssertEqual(reloaded.state.scale, 1e-6, accuracy: 1e-18)
+        XCTAssertEqual(reloaded.journal, s.journal)
+    }
+
+    func testEnterBackgroundStopsReplay() {
+        var zoomed = ViewState.defaultState
+        zoomed.scale = 0.25
+        let snaps = [Snapshot(state: ViewState.defaultState, time: 0),
+                     Snapshot(state: zoomed, time: 1)]
+        defaults.set(try! JSONEncoder().encode(snaps), forKey: StateStore.journalKey)
+        let r = makeStore()
+        r.replay()
+        XCTAssertTrue(r.isReplaying)
+        r.enterBackground()
+        XCTAssertFalse(r.isReplaying)
+    }
 }
