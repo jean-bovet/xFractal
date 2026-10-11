@@ -7,3 +7,6 @@ printf 'DEVELOPMENT_TEAM = %s\n' "$CI_TEAM_ID" > "$CI_PRIMARY_REPOSITORY_PATH/Si
 brew install xcodegen
 cd "$CI_PRIMARY_REPOSITORY_PATH"
 xcodegen generate
+# Shaders.metal needs the Metal Toolchain, a separate download that Xcode Cloud's image lacks
+# ("cannot execute tool 'metal' due to missing Metal Toolchain").
+xcodebuild -downloadComponent MetalToolchain
