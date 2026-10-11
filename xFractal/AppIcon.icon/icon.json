@@ -1,12 +1,34 @@
 {
-  "fill" : {
-    "solid" : "extended-srgb:0.50000,0.00000,0.00000,1.00000"
-  },
+  "fill-specializations" : [
+    {
+      "value" : {
+        "solid" : "extended-srgb:0.50000,0.00000,0.00000,1.00000"
+      }
+    },
+    {
+      "appearance" : "dark",
+      "value" : {
+        "solid" : "extended-srgb:0.10000,0.01500,0.02000,1.00000"
+      }
+    }
+  ],
   "groups" : [
     {
       "layers" : [
         {
-          "image-name" : "fractal.png",
+          "image-name-specializations" : [
+            {
+              "value" : "fractal.png"
+            },
+            {
+              "appearance" : "dark",
+              "value" : "fractal-dark.png"
+            },
+            {
+              "appearance" : "tinted",
+              "value" : "fractal-tinted.png"
+            }
+          ],
           "name" : "fractal"
         }
       ]
