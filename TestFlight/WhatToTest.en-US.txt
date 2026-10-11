@@ -1,0 +1,7 @@
+- xFractal now stops drawing and frees graphics memory when it goes to the background, so it no longer uses battery or GPU time while you are in another app (on the Mac: when the window is minimized or the app is hidden).
+
+- Your current view and history are saved the moment the app goes to the background, so they are still there if the system closes the app.
+
+- A replay that is running stops when the app goes to the background.
+
+Please verify: leave the app and come back (iPhone/iPad: go to the Home Screen; Mac: minimize or hide) and check that the fractal redraws right away, that your zoom and position are kept, and that a replay in progress stops cleanly.
