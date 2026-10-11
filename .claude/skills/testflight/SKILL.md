@@ -69,8 +69,8 @@ change**, and keep the answer:
   skip §4–§6, and continue at §7 (pushing `main` again is a no-op).
 - **Nothing new** if the range is empty: say "nothing new since the last build (`<sha>`)" and stop,
   unless Jean says a step of §9 is still pending for that build (then continue at §9). If he
-  explicitly wants the same commit rebuilt, make no empty commit; tell him to use "Start Build" in
-  App Store Connect ▸ Xcode Cloud (or `~/GitHub/maestro/bin/xcode-cloud rebuild <number>`).
+  explicitly wants the same commit rebuilt, make no empty commit: the `xcode-cloud` tool's
+  `rebuild <number>` (see §11) starts it again, or "Start Build" in App Store Connect ▸ Xcode Cloud.
 - Otherwise it is a **new release** of that range.
 
 ## 3. Preconditions
@@ -109,20 +109,22 @@ Stop on failure.
 ## 6. What to Test
 
 Read the subjects and bodies of the §2 range. Drop what no tester can see: docs, skills, planning,
-tests, refactors, tooling, project and scheme churn, CI scripts. Write the rest from the tester's
-side:
+tests, refactors, tooling, CI scripts, project and scheme churn, String Catalog housekeeping. Write
+the rest from the tester's side:
 
 - What they can do or will notice, not what was implemented. No ticket ids, no file names, no
   internal type names, no "fix for #…".
 - Plain text, at most 4000 characters per file, no emoji (App Store Connect rejected a 🔒 as
   "invalid characters"; `•`, `« »` and accented letters pass).
 - The What to Test file is **replaced** every build, not appended; its history is its `git log`.
+- If nothing in the range is visible to a tester, write one line saying so (e.g. "No visible
+  changes: build and stability work.") rather than leaving the file stale or empty.
 
 One file, English: `TestFlight/WhatToTest.en-US.txt`, read by the internal testers on iPhone, iPad
 and Mac. Bullets starting with `- `, separated by a blank line (TestFlight shows the text verbatim),
 then one `Please verify: ...` sentence naming the two or three behaviors to exercise. Say when an
-item concerns only iPhone/iPad or only the Mac. If nothing in the range is visible to a tester,
-write one line saying so (e.g. "- No visible changes: build and stability work.").
+item concerns only iPhone/iPad or only the Mac. The one-line "no visible changes" file is a bullet
+too (e.g. "- No visible changes: build and stability work.").
 
 Show Jean every notes file in full, with the commit list it came from, and ask
 (`AskUserQuestion`) for a yes or his edits. Apply edits and show again until approved. **Do not
@@ -139,6 +141,8 @@ git commit -m "TestFlight <version>: <one-line summary>"
 git push origin main
 ```
 
+No tag: `v<version>` tags belong to the Sparkle DMG release (RELEASING.md).
+
 ## 8. Start the build: fast-forward `testflight`
 
 ```bash
@@ -152,8 +156,7 @@ that is Jean's to resolve. Never `--force`, never push anything but `main` to `t
 ## 9. After the build starts
 
 Jean installs from TestFlight on iPhone or iPad and on the Mac. Nothing more: submitting to the
-App Store is a separate step (RELEASING.md, `~/GitHub/maestro/bin/app-store`), done only when he
-asks.
+App Store is a separate step (RELEASING.md, the `app-store` tool), done only when he asks.
 
 ## 10. The 90-day expiry reminder
 
@@ -171,17 +174,19 @@ rather than guessing a date.
 
 ## 11. Report
 
-Once Xcode Cloud has finished the build, read it — every action, not only the archive:
+Once Xcode Cloud has finished the build, read it — every action, not only the archive — with the
+`xcode-cloud` tool (its path is in the global working agreement; it loads its own credentials,
+never open or source them):
 
 ```bash
-~/GitHub/maestro/bin/xcode-cloud builds xFractal-iOS --limit 3        # find the run this push started
-~/GitHub/maestro/bin/xcode-cloud report xFractal-iOS <build number>   # warnings, errors, failed tests per action
+xcode-cloud builds xFractal-iOS --limit 3        # find the run this push started
+xcode-cloud report xFractal-iOS <build number>   # warnings, errors, failed tests per action (also takes a build URL)
 ```
 
 List its warnings (grouped by file) and any failed test action, even when the run says SUCCEEDED,
-and offer to fix them in a follow-up commit. If it is still running, say so and how to ask later
-("report Xcode Cloud build <n>"). For a failed action, `report … --logs DIR` downloads the logs;
-`ci_post_clone.log` holds the post-clone script's output.
+and offer to fix them in a follow-up commit. For a failed action, `report … --logs DIR` downloads
+its logs; `ci_post_clone.log` holds the post-clone script's output. If it is still running, say so
+and how to ask later ("report Xcode Cloud build <n>").
 
 The release commit's sha, the range that went out, the version, and where to look: App Store
 Connect ▸ the app ▸ Xcode Cloud ▸ Builds shows the run and its build number (read it there, never
