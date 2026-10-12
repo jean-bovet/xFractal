@@ -1,0 +1,21 @@
+{
+  "reference": "../../xFractal/AppIcon.icon/Assets/fractal.png",
+  "background": {
+    "dark": "extended-srgb:0.03500,0.01200,0.02200,1.00000"
+  },
+  "layers": [
+    {
+      "name": "fractal",
+      "image": "../../xFractal/AppIcon.icon/Assets/fractal.png",
+      "dark_image": "../../xFractal/AppIcon.icon/Assets/fractal-dark.png",
+      "mono_image": "../../xFractal/AppIcon.icon/Assets/fractal-tinted.png",
+      "material": "native"
+    }
+  ],
+  "dark": {
+    "label": "Strong glow",
+    "shadow_lift": 0.38,
+    "highlight_range": 0.65,
+    "expression": "zz=max(0,min(1,g/0.65)); ww=zz*zz*(3-2*zz); vv=max(0,min(1,g/0.12)); kk=vv*(0.38+(1-0.38)*ww); channel(0.035+(r-0.035)*kk,0.012+(min(1,g*1.22)-0.012)*kk,0.022+(b-0.022)*kk)"
+  }
+}
