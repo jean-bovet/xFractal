@@ -37,6 +37,8 @@ Facts this skill relies on:
   `main`. A request for a TestFlight build is a request for this skill, never a hand push of the
   branch. Never `--force`.
 - It runs in the main conversation: git, a few files, a check or two — no subagent.
+- It ends when `testflight` is pushed (§10). Processing, the build report and the expiry reminder
+  are Jean's to ask for later (§11); never wait on Xcode Cloud after the push.
 - Stop on the first failure, say which step failed and why, and leave the rest undone. Never fake
   a check that is Jean's to make.
 
@@ -68,7 +70,7 @@ change**, and keep the answer:
   it: an earlier run committed, then stopped before the build started. Keep its version and notes,
   skip §4–§6, and continue at §7 (pushing `main` again is a no-op).
 - **Nothing new** if the range is empty: say "nothing new since the last build (`<sha>`)" and stop,
-  unless Jean says a step of §9 is still pending for that build (then continue at §9). If he
+  unless Jean asks for a §11 step for that build (then do only that). If he
   explicitly wants the same commit rebuilt, make no empty commit: the `xcode-cloud` tool's
   `rebuild <number>` (see §11) starts it again, or "Start Build" in App Store Connect ▸ Xcode Cloud.
 - Otherwise it is a **new release** of that range.
@@ -158,39 +160,41 @@ that is Jean's to resolve. Never `--force`, never push anything but `main` to `t
 Jean installs from TestFlight on iPhone or iPad and on the Mac. Nothing more: submitting to the
 App Store is a separate step (RELEASING.md, the `app-store` tool), done only when he asks.
 
-## 10. The 90-day expiry reminder
+## 10. Report — and stop
 
-A push resets nothing; only a processed build does. Once Jean confirms (or App Store Connect ▸
-TestFlight shows) that the build has processed and reached the testers — every platform's build,
-when there are several — read each build's actual expiry date, take the earliest, and ask him once
-whether to create the reminder:
+The skill is **done once `testflight` is pushed**. Do not wait for Xcode Cloud: no polling, no
+background watcher, no "still running" check-ins. Report right away:
 
-```bash
-osascript -e 'tell application "Reminders" to make new reminder with properties {name:"<App> <version or date> (<build>) TestFlight build expires on <earliest expiry> — run /<this skill>", remind me date:date "<earliest expiry − 10 days>"}'
-```
+- the release commit's sha, the range that went out, the version;
+- that pushing `testflight` started the archive, and where to follow it: App Store Connect ▸ the
+  app ▸ Xcode Cloud ▸ Builds shows the run and its build number (never predict it); the
+  TestFlight group gets the build when processing ends, with the notes as "What to Test";
+- if the CloudKit gate of §3 fired, that Jean confirmed the Production deploy;
+- how to ask for §11 later ("report Xcode Cloud build <n>", "remind me about <App>'s expiry").
 
-If he is not there when processing ends, tell him to ask later ("remind me about <App>'s expiry")
-rather than guessing a date.
+## 11. Later, only when Jean asks
 
-## 11. Report
-
-Once Xcode Cloud has finished the build, read it — every action, not only the archive — with the
+**Build report.** Read the finished run — every action, not only the archive — with the
 `xcode-cloud` tool (its path is in the global working agreement; it loads its own credentials,
 never open or source them):
 
 ```bash
-xcode-cloud builds xFractal-iOS --limit 3        # find the run this push started
+xcode-cloud builds xFractal-iOS --limit 3        # find the run the push started
 xcode-cloud report xFractal-iOS <build number>   # warnings, errors, failed tests per action (also takes a build URL)
 ```
 
 List its warnings (grouped by file) and any failed test action, even when the run says SUCCEEDED,
 and offer to fix them in a follow-up commit. For a failed action, `report … --logs DIR` downloads
-its logs; `ci_post_clone.log` holds the post-clone script's output. If it is still running, say so
-and how to ask later ("report Xcode Cloud build <n>").
+its logs; `ci_post_clone.log` holds the post-clone script's output. Report the iOS and the Mac
+archive separately: one can upload while the other fails. A run still in progress: say so and
+stop; do not wait for it.
 
-The release commit's sha, the range that went out, the version, and where to look: App Store
-Connect ▸ the app ▸ Xcode Cloud ▸ Builds shows the run and its build number (read it there, never
-predict it); the TestFlight group gets the build when processing ends, with the notes as "What to
-Test". If the CloudKit gate of §3 fired, repeat that Jean confirmed the Production deploy.
+**The 90-day expiry reminder.** A push resets nothing; only a processed build does. Once the build
+has processed and reached the testers — every platform's build, when there are several — read each
+build's actual expiry date, take the earliest, and ask Jean once whether to create the reminder:
 
-Report the iOS and the Mac archive separately: one can upload while the other fails.
+```bash
+osascript -e 'tell application "Reminders" to make new reminder with properties {name:"<App> <version or date> (<build>) TestFlight build expires on <earliest expiry> — run /<this skill>", remind me date:date "<earliest expiry − 10 days>"}'
+```
+
+Never guess a date from the push.
