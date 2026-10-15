@@ -86,7 +86,7 @@ final class FractalRenderer: NSObject, MTKViewDelegate {
         orbitCache = nil
     }
 
-    private func ensureOrbit() -> (MTLBuffer, UInt32, SIMD2<Float>) {
+    private func ensureOrbit(state: ViewState, aspect: Float) -> (MTLBuffer, UInt32, SIMD2<Float>) {
         guard state.type == .mandelbrot, state.usePerturbation else {
             return (dummyOrbit, 0, .zero)
         }
@@ -125,13 +125,29 @@ final class FractalRenderer: NSObject, MTKViewDelegate {
         return (buf, UInt32(orbit.count), refOffset)
     }
 
+    /// Test hook, nil in the app: called right before a frame is presented and committed, with the command
+    /// buffer, the drawable and the state that frame encoded. The preview gallery uses it to prove a frame.
+    var frameObserver: ((MTLCommandBuffer, MTLDrawable, ViewState) -> Void)?
+
     func draw(in view: MTKView) {
         guard let drawable = view.currentDrawable,
               let rpd = view.currentRenderPassDescriptor,
-              let cmd = commandQueue.makeCommandBuffer(),
-              let enc = cmd.makeRenderCommandEncoder(descriptor: rpd) else { return }
+              let cmd = commandQueue.makeCommandBuffer() else { return }
 
-        let (orbitBuf, orbitLen, refOffset) = ensureOrbit()
+        guard encodeFrame(state: state, aspect: aspect, into: rpd, commandBuffer: cmd) else { return }
+
+        frameObserver?(cmd, drawable, state)
+        cmd.present(drawable)
+        cmd.commit()
+    }
+
+    /// Encodes one frame of `state` into the render pass. Shared by `draw(in:)` and the gallery's reference render.
+    @discardableResult
+    func encodeFrame(state: ViewState, aspect: Float, into rpd: MTLRenderPassDescriptor,
+                     commandBuffer cmd: MTLCommandBuffer) -> Bool {
+        guard let enc = cmd.makeRenderCommandEncoder(descriptor: rpd) else { return false }
+
+        let (orbitBuf, orbitLen, refOffset) = ensureOrbit(state: state, aspect: aspect)
 
         let cx = splitDouble(state.centerX)
         let cy = splitDouble(state.centerY)
@@ -160,8 +176,6 @@ final class FractalRenderer: NSObject, MTKViewDelegate {
         enc.setFragmentBuffer(orbitBuf, offset: 0, index: 1)
         enc.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 3)
         enc.endEncoding()
-
-        cmd.present(drawable)
-        cmd.commit()
+        return true
     }
 }

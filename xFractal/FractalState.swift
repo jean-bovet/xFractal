@@ -147,6 +147,8 @@ final class StateStore: ObservableObject {
     private var saveStateWork: DispatchWorkItem?
     private var saveJournalWork: DispatchWorkItem?
     private var replayTimer: Timer?
+    /// True while `load()` assigns what was persisted: loading must neither record a snapshot nor schedule a save.
+    private var isHydrating = false
 
     // Bumped when ViewState fields changed; previous persisted blobs are ignored.
     static let stateKey = "fractals.viewState.v2"
@@ -163,6 +165,8 @@ final class StateStore: ObservableObject {
     }
 
     private func load() {
+        isHydrating = true
+        defer { isHydrating = false }
         if let data = defaults.data(forKey: Self.stateKey),
            let decoded = try? JSONDecoder().decode(ViewState.self, from: data) {
             state = decoded
@@ -176,7 +180,7 @@ final class StateStore: ObservableObject {
     }
 
     private func onStateChanged(oldValue: ViewState) {
-        guard oldValue != state else { return }
+        guard !isHydrating, oldValue != state else { return }
         saveStateDebounced()
         if !isReplaying {
             recordSnapshot()

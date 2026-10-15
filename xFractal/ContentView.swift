@@ -2,13 +2,24 @@ import SwiftUI
 import simd
 
 struct ContentView: View {
-    @StateObject private var store = StateStore()
+    @StateObject private var store: StateStore
     @Environment(\.scenePhase) private var scenePhase
     @State private var viewSize: CGSize = .zero
     @State private var dragLastLocation: CGPoint? = nil
     @State private var pinchState: PinchState? = nil
     @State private var showingPanel: Bool = false
-    @State private var showingSheet: Bool = false
+    @State private var showingSheet: Bool
+    /// Preview-gallery hook, nil in the app: a view drawn (zero size) inside the controls sheet.
+    private let sheetProbe: AnyView?
+
+    /// The store is an autoclosure so it is built once per view identity (StateObject's own autoclosure), not on
+    /// every initialisation of this struct.
+    init(store: @autoclosure @escaping () -> StateStore = StateStore(), showingSheet: Bool = false,
+         sheetProbe: AnyView? = nil) {
+        _store = StateObject(wrappedValue: store())
+        _showingSheet = State(initialValue: showingSheet)
+        self.sheetProbe = sheetProbe
+    }
 
     private struct PinchState {
         let startCenter: SIMD2<Double>
@@ -39,6 +50,7 @@ struct ContentView: View {
         #if os(iOS)
         .sheet(isPresented: $showingSheet) {
             iOSControlsSheet
+                .background { if let sheetProbe { sheetProbe.frame(width: 0, height: 0) } }
                 .presentationDetents([.height(260), .medium, .large])
                 .presentationDragIndicator(.visible)
                 .presentationBackgroundInteraction(.enabled(upThrough: .height(260)))

@@ -114,6 +114,41 @@ final class StateStoreTests: XCTestCase {
         XCTAssertEqual(s.journal, snaps)
     }
 
+    // MARK: - load must not rewrite what it loaded
+
+    private func seedPersistedJulia() -> (state: Data, journal: Data, snaps: [Snapshot]) {
+        let persisted = ViewState.defaults(for: .julia)
+        // Two distinct snapshots: a journal of identical states would be dropped as no-ops.
+        var zoomed = ViewState.defaults(for: .mandelbrot)
+        zoomed.scale = 0.75
+        let journal = [Snapshot(state: ViewState.defaults(for: .mandelbrot), time: 0),
+                       Snapshot(state: zoomed, time: 5)]
+        let stateData = try! JSONEncoder().encode(persisted)
+        let journalData = try! JSONEncoder().encode(journal)
+        defaults.set(stateData, forKey: StateStore.stateKey)
+        defaults.set(journalData, forKey: StateStore.journalKey)
+        return (stateData, journalData, journal)
+    }
+
+    func testLoadPreservesPersistedJournalAfterDebounce() {
+        let seed = seedPersistedJulia()
+        let s = makeStore()
+        // Past both debounces (0.2 s state, 0.5 s journal).
+        RunLoop.main.run(until: Date().addingTimeInterval(0.7))
+        XCTAssertEqual(defaults.data(forKey: StateStore.journalKey), seed.journal)
+        XCTAssertEqual(defaults.data(forKey: StateStore.stateKey), seed.state)
+        XCTAssertEqual(s.journal, seed.snaps)
+    }
+
+    func testLoadPreservesPersistedJournalAfterImmediateBackground() {
+        let seed = seedPersistedJulia()
+        let s = makeStore()
+        s.enterBackground()   // performs any pending save now
+        XCTAssertEqual(defaults.data(forKey: StateStore.journalKey), seed.journal)
+        XCTAssertEqual(defaults.data(forKey: StateStore.stateKey), seed.state)
+        XCTAssertEqual(s.journal, seed.snaps)
+    }
+
     // MARK: - background
 
     func testEnterBackgroundFlushesPendingStateAndJournal() {

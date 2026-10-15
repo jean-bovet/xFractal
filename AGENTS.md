@@ -31,3 +31,23 @@ The `*.xcodeproj` is generated from `project.yml` by XcodeGen and is gitignored.
 ## Platforms
 
 Two app targets share the `xFractal/` source tree: `xFractal` (macOS, with Sparkle) and `xFractal-iOS` (iPhone/iPad, no Sparkle). Use `#if os(macOS)` / `#if os(iOS)` for platform-specific UI; keep math platform-agnostic.
+
+## Preview gallery (no `#Preview`)
+
+The iOS app has no `#Preview`: every screen state is a scenario in `GalleryTests/GalleryFixtures.swift` and
+`GalleryScenarios.swift`, rendered light and dark by one hosted snapshot test (`SnapshotGalleryTests`, skipped unless
+`XFRACTAL_SNAPSHOT_DIR` is set, so normal runs and Xcode Cloud skip it). Never add a `#Preview`. A new or changed screen
+needs a scenario; the `/preview-gallery` skill has the rules, the limits and the calibrated checks.
+
+```sh
+scripts/snapshot-gallery.sh                 # all 17 scenarios -> previews/index.html (gitignored), then CHECK OK
+scripts/snapshot-gallery.sh --only "julia"  # a subset
+python3 -m unittest discover -s scripts -p 'test_preview_gallery.py'   # page and check contract tests
+scripts/test_snapshot_gallery.sh                                      # lifecycle tests with a stub simulator
+```
+
+- `GalleryTests/` is the **iOS** test target (`xFractalGalleryTests`, hosted by the app); `Tests/` stays the macOS logic tests
+  (`xcodebuild test -scheme xFractal`, 68 tests). The plain gallery tests run with every gallery run.
+- The script owns the **xFractal Agent** simulator (iPhone 17 Pro, iOS 27.0) and shuts it down at the end.
+- iPhone and English only; the "Regular width" cards are an 834 x 1210 pt phone-simulator approximation, not iPad coverage.
+- The plan and its outcome (measurements, thresholds, findings): `planning/gallery-scenarios-plan.md`.

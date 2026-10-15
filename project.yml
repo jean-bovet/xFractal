@@ -99,7 +99,25 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         TARGETED_DEVICE_FAMILY: "1,2"
         SUPPORTS_MACCATALYST: NO
-    scheme: {}
+    scheme:
+      testTargets:
+        - xFractalGalleryTests
+
+  # Preview gallery (iOS, hosted by the app): scenarios, harness and snapshot test.
+  xFractalGalleryTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: GalleryTests
+    dependencies:
+      - target: xFractal-iOS
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.arizonasoftware.xFractalGalleryTests
+        CODE_SIGN_STYLE: Automatic
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/xFractal.app/xFractal
+        BUNDLE_LOADER: $(TEST_HOST)
 
   # Mac App Store build: same app without Sparkle, sandboxed, sharing the iOS
   # bundle ID so both platforms are one universal purchase. The DMG target
