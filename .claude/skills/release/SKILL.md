@@ -6,8 +6,8 @@ allowed-tools: Read, Edit, Write, Bash, AskUserQuestion
 
 # /release — publish the tested TestFlight build of xFractal to the App Store
 
-- App: **xFractal**, bundle ID `ch.arizonasoftware.xfractal` (the 2008 App Store app; its last
-  version there is 1.6, build 160), App Store product `xFractal-iOS` (the Xcode Cloud product, passed
+- App: **xFractal**, bundle ID `ch.arizonasoftware.xfractal` (the 2008 App Store app; the rewrite
+  shipped as 2.0 on iOS and the Mac, uploaded from Xcode before this skill, untagged), App Store product `xFractal-iOS` (the Xcode Cloud product, passed
   as `--app xFractal-iOS` to every `app-store` call). The Xcode Cloud product builds both apps.
 - Platforms: iPhone and iPad (`xFractal-iOS`, App Store platform `IOS`, families `iphone,ipad`) and
   the Mac (`xFractal-MAS`, platform `MAC_OS`, family `mac`). They share one App Store listing (one
@@ -64,7 +64,7 @@ git show <candidate>:xFractal/Info-iOS.plist | grep -A1 CFBundleShortVersionStri
 git show <candidate>:xFractal/Info-MAS.plist | grep -A1 CFBundleShortVersionString   # must match
 ```
 
-It must be above 1.6, the last App Store version of the 2008 app.
+It must be above the live App Store version (`app-store status`; 2.0 on both platforms).
 
 Read the candidate's version, then:
 
@@ -154,10 +154,8 @@ locale, which Jean decides whether to translate). Plain text: a one-line lead, t
 match the previous file's tone once there is one (`app-store status` shows the live notes). Say when an
 item concerns only iPhone/iPad or only the Mac.
 
-The first App Store release of the rewrite goes to people who have 1.6, the 2008 app: write it for
-them, not from the commit range alone — a redesigned app (SwiftUI and Metal, the same four families
-and palettes), now also on the Mac as the same purchase — and say plainly what they lose: favorites
-saved by the 1.x app are not imported.
+The listing has one locale, en-US. The rewrite already shipped as 2.0, so What's New describes the
+changes since the live version; `app-store status` shows its notes.
 
 Show Jean every notes file in full, with the commit list it came from, and ask for a yes or his
 edits. Apply edits and show again until approved. **Do not commit before that.**
@@ -186,8 +184,8 @@ app-store check --app xFractal-iOS --platform IOS --version <version> --families
 app-store check --app xFractal-iOS --platform MAC_OS --version <version> --families mac         # must report 0 problems
 ```
 
-The Mac's first App Store version is new to the listing: if App Store Connect refuses a step for it
-(What's New on a first version, the phased release), stop and report the error to Jean.
+If App Store Connect refuses a step for one platform (What's New, the phased release), stop and
+report the error to Jean.
 
 Then list Jean's manual steps:
 

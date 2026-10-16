@@ -92,7 +92,7 @@ Ask the version question of §4 now, in one `AskUserQuestion` call, unless `$ARG
 The version lives in `CFBundleShortVersionString` of both `xFractal/Info-iOS.plist` and
 `xFractal/Info-MAS.plist`, which always carry the same value. Offer "keep <current>" and the next
 minor (e.g. 2.0 → 2.1). On a bump, change both plists and `MARKETING_VERSION` in `project.yml`
-(read by the release checks) together, and nothing else (not `CFBundleVersion`). It must stay above the last App Store release, 1.6.
+(read by the release checks) together, and nothing else (not `CFBundleVersion`). It must stay above the live App Store version (2.0 on both platforms).
 
 State the version in your first message after the answer.
 

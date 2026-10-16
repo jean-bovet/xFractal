@@ -11,7 +11,7 @@ Nothing is archived, signed or uploaded from a local Mac: Xcode Cloud archives b
 The `/testflight` skill (`.claude/skills/testflight/SKILL.md`) is the only path to TestFlight. In short:
 
 - the version lives in `CFBundleShortVersionString` of both `xFractal/Info-iOS.plist` and `xFractal/Info-MAS.plist`
-  (always the same value, above the last 2008-era App Store release, 1.6);
+  (always the same value, above the live App Store version, 2.0 on iOS and the Mac);
 - the macOS logic tests must pass (see "Running the tests" in `AGENTS.md`);
 - the tester notes go in `TestFlight/WhatToTest.en-US.txt`;
 - pushing `main` to the `testflight` branch makes Xcode Cloud archive both apps (`Archive - iOS`,
