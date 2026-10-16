@@ -53,11 +53,15 @@ needs a scenario; the `/preview-gallery` skill has the rules, the limits and the
 scripts/snapshot-gallery.sh                 # all 17 scenarios -> previews/index.html (gitignored), then CHECK OK
 scripts/snapshot-gallery.sh --only "julia"  # a subset
 python3 -m unittest discover -s scripts -p 'test_preview_gallery.py'   # page and check contract tests
-scripts/test_snapshot_gallery.sh                                      # lifecycle tests with a stub simulator
+scripts/test_snapshot_gallery.sh                                      # lifecycle tests with stub simctl, simpool and buildlock
 ```
 
 - `GalleryTests/` is the **iOS** test target (`xFractalGalleryTests`, hosted by the app); `Tests/` stays the macOS logic tests
   (`xcodebuild test -scheme xFractal-MAS`, 68 tests). The plain gallery tests run with every gallery run.
-- The script owns the **xFractal Agent** simulator (iPhone 17 Pro, iOS 27.0) and shuts it down at the end.
+- The simulator is leased from the machine-wide pool (`simpool acquire --spec iphone`: iPhone 17 Pro, iOS 27.0) and given
+  back with `simpool release` when the script ends, on success, failure or interrupt; both `xcodebuild` commands run under
+  `buildlock`. The script never boots or shuts down a simulator itself. Without `simpool`/`buildlock` on PATH (a
+  contributor's Mac) it falls back to its own **xFractal Agent** simulator, which it creates, boots and shuts down.
+- An `--only` run checks every scenario: in a fresh checkout run the whole gallery once first.
 - iPhone and English only; the "Regular width" cards are an 834 x 1210 pt phone-simulator approximation, not iPad coverage.
 - The plan and its outcome (measurements, thresholds, findings): `planning/gallery-scenarios-plan.md`.

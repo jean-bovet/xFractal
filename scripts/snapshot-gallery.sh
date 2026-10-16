@@ -7,13 +7,21 @@
 #
 # --only PATTERN   comma-separated substrings of scenario names or slugs; renders just those (the check covers all)
 # --lang en        the languages to render (the app ships English only; another language is one more test run later)
-# --keep-booted    leave the simulator running for the next run (shut it down later with --shutdown)
+# --keep-booted    fallback only: leave the simulator running for the next run (shut it down later with --shutdown)
 # --no-open        do not open the page
 # --verbose        also print the test's per-render timing lines
-# --shutdown       shut down the simulator this script booted, and nothing else; never creates or boots one
+# --shutdown       fallback only: shut down the simulator this script booted, and nothing else; never creates or boots one
 #
-# One run at a time (a lock in the shared git directory, held across worktrees) and one simulator at a time
-# (global rule): the simulator is "xFractal Agent"; a simulator of anyone else is never touched. At the start the script
+# One run at a time (a lock in the shared git directory, held across worktrees).
+#
+# The simulator comes from the machine-wide pool when `simpool` and `buildlock` are on PATH: `simpool acquire --spec
+# iphone` (iPhone 17 Pro, iOS 27.0) leases a booted simulator to this script, waiting when the pool is full, and the
+# cleanup gives it back with `simpool release` (still booted) on success, failure and INT/TERM/HUP. The script then
+# never boots, shuts down, creates or erases a simulator, and both xcodebuild commands run under `buildlock` on the
+# DerivedData folder (the test without a build slot).
+#
+# Fallback, without those tools: one simulator at a time; the script's own simulator is "xFractal Agent" (created when
+# missing) and a simulator of anyone else is never touched. At the start the script
 # waits up to 10 minutes for another simulator to go away; right before the boot, the build and the test it fails if
 # one has appeared. Ownership is a marker file written the moment the boot is accepted ("pending", then
 # "<source>:<identity>" once readable): only that boot is ever shut down, a pending one always. An "xFractal Agent"
@@ -84,7 +92,12 @@ if [ -z "${XFRACTAL_GALLERY_LOCKED:-}" ]; then
     exit "$STATUS"
 fi
 
-# --- simulator queries (one `simctl list devices -j` each) ---
+# The machine-wide simulator pool and build lock, when installed.
+POOL=0
+if command -v simpool > /dev/null && command -v buildlock > /dev/null; then POOL=1; fi
+APP_BUNDLE_ID="ch.arizonasoftware.xfractal"
+
+# --- simulator queries (fallback) (one `simctl list devices -j` each) ---
 # The listing is captured first and validated: a failed `simctl list` (inside `$(...)` errexit does not fire) must
 # fail the script and never read as "no simulator booted".
 sim_list() {
@@ -168,6 +181,10 @@ shutdown_ours() {
 }
 
 if [ "$SHUTDOWN_ONLY" = 1 ]; then
+    if [ "$POOL" = 1 ]; then
+        echo "--shutdown: simulators come from the pool (simpool), which shuts them down itself; nothing done" >&2
+        exit 0
+    fi
     shutdown_ours
     exit $?
 fi
@@ -176,14 +193,7 @@ now() { python3 -c 'import time; print(time.time())'; }
 elapsed() { python3 -c "print(f'{$2 - $1:.1f} s')"; }
 T0=$(now)
 
-# Our simulator, created when missing (never another project's).
-UDID="$(sim_query udid "$SIM_NAME")" || exit 1
-if [ -z "$UDID" ]; then
-    UDID="$(xcrun simctl create "$SIM_NAME" "$DEVICE_TYPE" "$RUNTIME")"
-    echo "created simulator $SIM_NAME ($UDID)"
-fi
-
-# One simulator at a time: wait for anybody else's to go away, never touch it.
+# One simulator at a time (fallback): wait for anybody else's to go away, never touch it.
 wait_for_others() {
     local i others
     for i in $(seq 1 40); do
@@ -197,20 +207,53 @@ wait_for_others() {
 # Right before the boot, the build and the test: a lock wait, a readiness wait or a build can take long enough for
 # another session to boot its own. Fails rather than waits.
 fail_if_others() {
+    [ "$POOL" = 1 ] && return 0    # the pool keeps to the host's budget
     local others
     others="$(sim_query others "$UDID")" || exit 1
     [ -z "$others" ] || { echo "another simulator appeared ($others); not $1" >&2; exit 1; }
 }
-wait_for_others
+UDID=""
+if [ "$POOL" = 0 ]; then
+    # Our simulator, created when missing (never another project's).
+    UDID="$(sim_query udid "$SIM_NAME")" || exit 1
+    if [ -z "$UDID" ]; then
+        UDID="$(xcrun simctl create "$SIM_NAME" "$DEVICE_TYPE" "$RUNTIME")"
+        echo "created simulator $SIM_NAME ($UDID)"
+    fi
+    wait_for_others
+elif [ "$KEEP_BOOTED" = 1 ]; then
+    echo "--keep-booted: the pool keeps its simulators booted anyway" >&2
+fi
 
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/xfractal-gallery.XXXXXX")"
 CHILD=""
+LEASE_OUT=""    # the file a running `simpool acquire` prints its UDID to (read by the cleanup too)
+LEASED=""       # the pool simulator to give back
 
 # A foreground command that a signal can interrupt: run in the background, wait, and stop it from the cleanup.
 run_logged() {   # $1 = log file, rest = command
     local log="$1" rc=0
     shift
     "$@" > "$log" 2>&1 &
+    CHILD=$!
+    wait "$CHILD" || rc=$?
+    CHILD=""
+    return "$rc"
+}
+
+# xcodebuild, under buildlock on the DerivedData folder with the pool (a build takes a build slot, a test does not),
+# its output in $1. Run in the background like run_logged, so the cleanup can stop it (buildlock passes the signal on).
+run_xcodebuild() {   # $1 = log file, $2 = build|test, rest = xcodebuild arguments
+    local log="$1" kind="$2" rc=0 lock
+    shift 2
+    if [ "$POOL" = 1 ]; then
+        lock=(--folder "$DD" --log "$log")
+        [ "$kind" = test ] && lock+=(--no-slot)
+        : > "$log"
+        buildlock "${lock[@]}" -- xcodebuild "$@" < /dev/null &
+    else
+        xcodebuild "$@" > "$log" 2>&1 < /dev/null &
+    fi
     CHILD=$!
     wait "$CHILD" || rc=$?
     CHILD=""
@@ -230,9 +273,18 @@ cleanup() {
         if kill -0 "$CHILD" 2>/dev/null; then kill -KILL "$CHILD" 2>/dev/null || true; fi
         wait "$CHILD" 2>/dev/null || true
     fi
+    if [ "$POOL" = 1 ]; then
+        # A lease granted while the script was being signalled is given back too.
+        if [ -n "$LEASE_OUT" ]; then LEASED="$(cat "$LEASE_OUT" 2>/dev/null || true)"; fi
+        if [ -n "$LEASED" ]; then
+            simpool release "$LEASED" --app "$APP_BUNDLE_ID" \
+                || { echo "could not give simulator $LEASED back to the pool (simpool status)" >&2; status=1; }
+        fi
     # A pending marker is ours whatever --keep-booted says: an identity that could not be read must not leave a
     # simulator nobody can account for.
-    if [ "$KEEP_BOOTED" = 0 ] || [ "$(sed -n 2p "$MARKER" 2>/dev/null)" = pending ]; then shutdown_ours || status=1; fi
+    elif [ "$KEEP_BOOTED" = 0 ] || [ "$(sed -n 2p "$MARKER" 2>/dev/null)" = pending ]; then
+        shutdown_ours || status=1
+    fi
     # The logs of a failed run stay; the message names the directory.
     [ "$status" = 0 ] && rm -rf "$WORK"
     exit "$status"
@@ -250,41 +302,60 @@ if [ ! -d xFractal.xcodeproj ] || [ project.yml -nt xFractal.xcodeproj/project.p
 fi
 
 T_BOOT0=$(now)
-STATE="$(sim_query state "$UDID")" || exit 1
-# A marker whose simulator is not running, or whose identity is no longer the one recorded, is stale.
-if [ -f "$MARKER" ] && [ "$STATE" != Booted ]; then rm -f "$MARKER"; fi
-if [ -f "$MARKER" ] && [ "$STATE" = Booted ] && [ "$(sed -n 2p "$MARKER")" != pending ]; then
-    rec="$(sed -n 2p "$MARKER")"; now_id="$(identity_from "$UDID" "${rec%%:*}")" || exit 1
-    [ -z "$now_id" ] || [ "$now_id" = "$rec" ] || rm -f "$MARKER"
-fi
-if [ "$STATE" != Booted ]; then
-    fail_if_others "booting"
-    xcrun simctl boot "$UDID"
-    # Ownership is written the moment the boot is accepted: pending, then the identity with its source once it can be
-    # read. Without an identity the run fails, and the pending marker makes the cleanup shut this boot down.
-    printf '%s\npending\n' "$UDID" > "$MARKER"
-    IDENT=""
-    for _ in 1 2 3 4 5 6 7 8 9 10; do
-        if [ "$(sim_query state "$UDID" 2>/dev/null)" = Booted ]; then
-            IDENT="$(current_identity "$UDID" 2>/dev/null)" || IDENT=""
-            [ -n "$IDENT" ] && break
-        fi
-        sleep "${XFRACTAL_SNAPSHOT_IDENT_WAIT:-1}"
-    done
-    if [ -z "$IDENT" ]; then
-        echo "booted $UDID but cannot identify the boot; the marker stays pending and the boot is shut down" >&2
+if [ "$POOL" = 1 ]; then
+    # Leased to this script's process ($$): waits, interruptibly, while the pool is full.
+    LEASE_OUT="$WORK/lease"
+    : > "$LEASE_OUT"
+    rc=0
+    simpool acquire --spec iphone --pid $$ > "$LEASE_OUT" < /dev/null &
+    CHILD=$!
+    wait "$CHILD" || rc=$?
+    CHILD=""
+    LEASED="$(cat "$LEASE_OUT")"; LEASE_OUT=""
+    UDID="$LEASED"
+    if [ "$rc" != 0 ] || [ -z "$UDID" ]; then
+        # Not simpool's 75 (a wait that ran out): the wrapper reads 75 as its own lock wait.
+        echo "no iphone simulator from the pool (simpool exit $rc; simpool status shows who holds them)" >&2
         exit 1
     fi
-    printf '%s\n%s\n' "$UDID" "$IDENT" > "$MARKER"
-    run_logged "$WORK/bootstatus.log" xcrun simctl bootstatus "$UDID"    # interruptible: the cleanup stops it
-elif [ ! -f "$MARKER" ]; then
-    echo "$SIM_NAME was booted by someone else: borrowing it, it stays running" >&2
+    echo "leased simulator $UDID from the pool"
+else
+    STATE="$(sim_query state "$UDID")" || exit 1
+    # A marker whose simulator is not running, or whose identity is no longer the one recorded, is stale.
+    if [ -f "$MARKER" ] && [ "$STATE" != Booted ]; then rm -f "$MARKER"; fi
+    if [ -f "$MARKER" ] && [ "$STATE" = Booted ] && [ "$(sed -n 2p "$MARKER")" != pending ]; then
+        rec="$(sed -n 2p "$MARKER")"; now_id="$(identity_from "$UDID" "${rec%%:*}")" || exit 1
+        [ -z "$now_id" ] || [ "$now_id" = "$rec" ] || rm -f "$MARKER"
+    fi
+    if [ "$STATE" != Booted ]; then
+        fail_if_others "booting"
+        xcrun simctl boot "$UDID"
+        # Ownership is written the moment the boot is accepted: pending, then the identity with its source once it can be
+        # read. Without an identity the run fails, and the pending marker makes the cleanup shut this boot down.
+        printf '%s\npending\n' "$UDID" > "$MARKER"
+        IDENT=""
+        for _ in 1 2 3 4 5 6 7 8 9 10; do
+            if [ "$(sim_query state "$UDID" 2>/dev/null)" = Booted ]; then
+                IDENT="$(current_identity "$UDID" 2>/dev/null)" || IDENT=""
+                [ -n "$IDENT" ] && break
+            fi
+            sleep "${XFRACTAL_SNAPSHOT_IDENT_WAIT:-1}"
+        done
+        if [ -z "$IDENT" ]; then
+            echo "booted $UDID but cannot identify the boot; the marker stays pending and the boot is shut down" >&2
+            exit 1
+        fi
+        printf '%s\n%s\n' "$UDID" "$IDENT" > "$MARKER"
+        run_logged "$WORK/bootstatus.log" xcrun simctl bootstatus "$UDID"    # interruptible: the cleanup stops it
+    elif [ ! -f "$MARKER" ]; then
+        echo "$SIM_NAME was booted by someone else: borrowing it, it stays running" >&2
+    fi
 fi
 T_BOOT1=$(now)
 
 T_BUILD0=$(now)
 fail_if_others "building"    # after readiness: another session may have booted meanwhile
-run_logged "$WORK/build.log" xcodebuild build-for-testing -project xFractal.xcodeproj -scheme xFractal-iOS \
+run_xcodebuild "$WORK/build.log" build build-for-testing -project xFractal.xcodeproj -scheme xFractal-iOS \
     -destination "id=$UDID" -derivedDataPath "$DD" \
     || { tail -30 "$WORK/build.log"; echo "build failed (log: $WORK/build.log)" >&2; exit 1; }
 T_BUILD1=$(now)
@@ -295,7 +366,7 @@ for lang in "${LANGS[@]}"; do
     T_TEST0=$(now)
     # TEST_RUNNER_<name> in xcodebuild's environment reaches the test process as <name>.
     TEST_RUNNER_XFRACTAL_SNAPSHOT_DIR="$WORK/png-$lang" TEST_RUNNER_XFRACTAL_SNAPSHOT_ONLY="$ONLY" \
-    run_logged "$WORK/test-$lang.log" xcodebuild test-without-building -project xFractal.xcodeproj -scheme xFractal-iOS \
+    run_xcodebuild "$WORK/test-$lang.log" test test-without-building -project xFractal.xcodeproj -scheme xFractal-iOS \
         -destination "id=$UDID" -derivedDataPath "$DD" \
         -only-testing:xFractalGalleryTests \
         -parallel-testing-enabled NO -enableCodeCoverage NO \

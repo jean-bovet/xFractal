@@ -45,33 +45,43 @@ a `#Preview` to the app.
 ## Run: `scripts/snapshot-gallery.sh`
 
 ```
-scripts/snapshot-gallery.sh                     # every scenario, then the simulator is shut down
+scripts/snapshot-gallery.sh                     # every scenario; the simulator goes back to the pool
 scripts/snapshot-gallery.sh --only "settings,list" # a subset: comma-separated substrings of names or slugs
-scripts/snapshot-gallery.sh --keep-booted       # a series of runs (during a /develop plan: first gate on)
-scripts/snapshot-gallery.sh --shutdown          # then shut it down (never creates a simulator)
 ```
 
 - **Done = `CHECK OK [<lang>]: <n> cards, light and dark complete and correctly lit`** for every language
-  rendered. Then read the new or changed PNGs in both appearances (see Report) and make sure the simulator is
-  shut down.
+  rendered. Then read the new or changed PNGs in both appearances (see Report). `simpool status` shows nothing
+  leased by the run.
 - Costs measured on a proven repo (24 GB Mac, iOS 27 simulator): booting the simulator about **6 GB** of RAM;
   a run on a booted one about **0.25 GB**; build tools under 0.3 GB. Warm run: about 1 s per scenario plus a
   fixed 20–25 s (xcodebuild installs and launches the host app), so ~50 scenarios take 1.5–2.5 min and
-  `--only` one scenario about 25 s. From a shut-down simulator add 1–3 min (a fresh boot keeps iOS busy).
-  Keep it booted only for a series of runs; always end with it shut down.
+  `--only` one scenario about 25 s. From a shut-down simulator add 1–3 min (a fresh boot keeps iOS busy). The
+  pool normally keeps a released simulator warm for the next run (within the host's budget) and shuts it
+  down after 30 idle minutes.
 
 <!-- repo-specific: script -->
-`scripts/snapshot-gallery.sh [--only P] [--keep-booted] [--no-open] [--verbose] | --shutdown`. Snapshot test
-`xFractalGalleryTests/SnapshotGalleryTests`, variables `XFRACTAL_SNAPSHOT_DIR` and `XFRACTAL_SNAPSHOT_ONLY`. Simulator
-**xFractal Agent** (iPhone 17 Pro, iOS 27.0, 402 x 874 pt at 2x), DerivedData `${XFRACTAL_SNAPSHOT_DD:-~/Library/Developer/Xcode/DerivedData/xFractal-snapshots}`,
-marker `${TMPDIR}/xfractal-snapshot-gallery.booted`. The run builds once and runs the whole gallery target, so the plain
-harness tests gate every render. Lifecycle (tested by `scripts/test_snapshot_gallery.sh` with a stub simulator, 10 mutation checks):
-one run at a time (`lockf` in the shared git directory, 10 minutes, then exit 75); one simulator at a time (waits at the start,
-fails if another one appears right before the boot, the build or the test); an ownership marker (`pending`, then the boot's
-identity); every child tracked and reaped; INT, TERM and HUP exit 130, 143 and 129 after the cleanup; a failed `simctl list`
-fails the run; a failed final shutdown keeps the marker and fails the run. Limits: the gallery lock serialises gallery runs
-only, another session's `xcodebuild` of xFractal is not serialised with it (it uses its own DerivedData), and a simulator booted
-after the last re-check is noticed by the next run. `xcodebuild` can hang after a failed test: stop the process the script
+`scripts/snapshot-gallery.sh [--only P] [--no-open] [--verbose]` (fallback only: `[--keep-booted] | --shutdown`). Snapshot
+test `xFractalGalleryTests/SnapshotGalleryTests`, variables `XFRACTAL_SNAPSHOT_DIR` and `XFRACTAL_SNAPSHOT_ONLY`. Simulator:
+a lease from the pool, `simpool acquire --spec iphone --pid $$` (iPhone 17 Pro, iOS 27.0, 402 x 874 pt at 2x), given back
+with `simpool release <udid> --app ch.arizonasoftware.xfractal` by the exit trap on success, failure and INT/TERM/HUP; the
+script never boots, shuts down, creates or erases one. Both `xcodebuild` commands run under `buildlock --folder <DerivedData>`
+(the test with `--no-slot`), DerivedData `${XFRACTAL_SNAPSHOT_DD:-~/Library/Developer/Xcode/DerivedData/xFractal-snapshots}`.
+The run builds once and runs the whole gallery target, so the plain harness tests gate every render. An `--only` run in a
+fresh checkout fails the check (it covers every scenario): run the whole gallery once first.
+
+Fallback (public repo: `simpool` or `buildlock` not on PATH): its own **xFractal Agent** simulator (created if missing),
+booted and shut down by the script, marker `${TMPDIR}/xfractal-snapshot-gallery.booted`, `xcodebuild` without `buildlock`;
+`--keep-booted` and `--shutdown` apply to it only (with the pool they do nothing).
+
+Lifecycle (tested by `scripts/test_snapshot_gallery.sh` with stub `xcrun`, `xcodebuild`, `simpool` and `buildlock`, PATH
+limited to the stubs and the system directories): one run at a time (`lockf` in the shared git directory, 10 minutes, then
+exit 75); with the pool, the lease is released on success, failure and every signal, an interrupted `simpool acquire` is
+stopped, and no `simctl` lifecycle call is made; in the fallback, one simulator at a time (waits at the start, fails if another
+one appears right before the boot, the build or the test), an ownership marker (`pending`, then the boot's identity), a failed
+`simctl list` fails the run, a failed final shutdown keeps the marker and fails the run; in both, every child tracked and
+reaped, INT, TERM and HUP exit 130, 143 and 129 after the cleanup. Limits: the gallery lock serialises gallery runs only; in
+the fallback another session's `xcodebuild` of xFractal is not serialised with it, and a simulator booted after the last
+re-check is noticed by the next run. `xcodebuild` can hang after a failed test: stop the process the script
 started, never one it did not. Measured (shared Mac): cold run about 195 s (boot 71, build 35, test 76), warm run about 70 s
 for 34 renders, `--only` four renders about 44 s; `ready` per render 61 to 975 ms (the spike's sleeps were 1.0 s each).
 <!-- /repo-specific -->
@@ -114,10 +124,13 @@ One entry in the scenario list, and nothing in the app:
 3. **`scripts/preview-gallery.py`**: `--import DIR [--partial]` (replace the gallery, or only the files of an
    `--only` run), `--check`, `--coverage`; with `scripts/preview-luminance.swift` for the lit check.
 4. **`scripts/snapshot-gallery.sh`**:
-   - `xcrun simctl list devices booted` first: one simulator at a time. Wait (up to 10 min) for another one,
-     then stop with a message; never touch a simulator it did not boot. A marker file records the one it
-     booted; a `trap` shuts that one down on any exit unless `--keep-booted`.
-   - Its own agent simulator (created if missing), booted with `simctl boot` (no Simulator.app window).
+   - The simulator from the machine-wide pool: `simpool acquire --spec iphone --pid $$`, and `simpool release`
+     in the exit trap. Every `xcodebuild` runs under `buildlock --folder <DerivedData>`. Never boots or shuts
+     down a simulator itself.
+   - A repo that may run without the pool (a public repo, a fresh clone): when `simpool` is not on PATH, its
+     own agent simulator (created if missing, booted with `simctl boot`, no Simulator.app window) under the
+     old rule: `xcrun simctl list devices booted` first, wait (up to 10 min) for another one, never touch one
+     it did not boot, a `trap` shuts down the one it booted.
    - Persistent DerivedData; `-skipPackageUpdates -disableAutomaticPackageResolution` once the packages are
      resolved (otherwise every run resolves remote packages: 75 s measured).
    - `build-for-testing` once, then per language one `test-without-building -only-testing:<snapshot class>

@@ -1,6 +1,8 @@
 #!/bin/bash
 # Lifecycle checks for scripts/snapshot-gallery.sh (planning/gallery-scenarios-plan.md): a stub `xcrun`, `xcodebuild` and
-# `xcodegen` first on PATH answer from a state file, so no real simulator is touched.
+# `xcodegen` first on PATH answer from a state file, so no real simulator is touched. PATH is the stubs plus the system
+# directories only, so a real `simpool` / `buildlock` is never reached: the fallback cases run without them, the pool_*
+# cases add stubs of both (pool_setup).
 #
 #   scripts/test_snapshot_gallery.sh [case ...]                 # all cases, or the named ones
 #   SNAPSHOT_GALLERY_SCRIPT=/path/to/copy scripts/test_snapshot_gallery.sh   # test a mutated copy (mutation checks)
@@ -19,7 +21,7 @@ setup() {   # $1 = state ("Booted"|"Shutdown"|"missing"), $2 = lastBootedAt
         PREVIEW_GALLERY_OUT="$T/previews"
     unset STUB_OTHER_GONE_AFTER STUB_OTHER_AFTER STUB_PGREP STUB_LSTART STUB_NO_IDENT STUB_OTHER_ON_BOOTSTATUS \
         STUB_BOOTSTATUS_BLOCK STUB_BUILD_BLOCK STUB_TEST_BLOCK STUB_BUILD_FAIL STUB_TEST_MODE STUB_OTHER_DURING_BUILD \
-        STUB_IDENT_AFTER STUB_BOOT_NOOP STUB_SHUTDOWN_FAIL_AFTER_TEST STUB_IGNORE_TERM
+        STUB_IDENT_AFTER STUB_BOOT_NOOP STUB_SHUTDOWN_FAIL_AFTER_TEST STUB_IGNORE_TERM STUB_ACQUIRE_FAIL STUB_ACQUIRE_BLOCK
     : > "$STUB_LOG"
     if [ "$1" = missing ]; then
         echo '{"devices": {"iOS 27.0": []}}' > "$STUB_STATE"
@@ -133,7 +135,7 @@ STUB
     printf '#!/bin/bash\n[ -n "$STUB_PGREP" ] && echo 4242 || exit 1\n' > "$T/bin/pgrep"
     printf '#!/bin/bash\necho "$STUB_LSTART"\n' > "$T/bin/ps"
     chmod +x "$T/bin/"*
-    export PATH="$T/bin:$PATH"
+    export PATH="$T/bin:/usr/bin:/bin:/usr/sbin:/sbin"
     MARKER="$T/xfractal-snapshot-gallery.booted"
     # The script resolves its project from its own location: a scratch tree holds the script under test, the real
     # project.yml and a generated-looking project, so the stub xcodegen is not needed unless a case removes it.
@@ -142,6 +144,37 @@ STUB
     cp "$ROOT/scripts/preview-gallery.py" "$ROOT/scripts/preview-luminance.swift" "$TREE/scripts/"
     cp "$ROOT/project.yml" "$TREE/project.yml"
     mkdir -p "$TREE/xFractal.xcodeproj"; touch "$TREE/xFractal.xcodeproj/project.pbxproj"
+}
+
+POOL_UDID="77777777-0000-0000-0000-000000000000"
+
+# The pool tools: `simpool acquire` prints POOL_UDID (or fails with 75, or blocks), `buildlock` runs the command after
+# `--`, its output appended to --log. Every call is logged.
+pool_setup() {
+    setup Shutdown
+    cat > "$T/bin/simpool" <<'STUB'
+#!/bin/bash
+echo "simpool $*" >> "$STUB_LOG"
+case "$1" in
+    acquire)
+        [ -n "${STUB_ACQUIRE_FAIL:-}" ] && { echo "simpool: no simulator within the wait" >&2; exit 75; }
+        [ -n "${STUB_ACQUIRE_BLOCK:-}" ] && { echo $$ > "$TMPDIR/acquire.pid"; exec sleep 60; }
+        echo "77777777-0000-0000-0000-000000000000" ;;
+    release) ;;
+    *) exit 2 ;;
+esac
+STUB
+    cat > "$T/bin/buildlock" <<'STUB'
+#!/bin/bash
+echo "buildlock $*" >> "$STUB_LOG"
+log=""
+while [ "$1" != -- ]; do
+    case "$1" in --log) log="$2"; shift 2 ;; --folder|--wait) shift 2 ;; *) shift ;; esac
+done
+shift
+if [ -n "$log" ]; then exec "$@" >> "$log" 2>&1; else exec "$@"; fi
+STUB
+    chmod +x "$T/bin/simpool" "$T/bin/buildlock"
 }
 
 expect() {   # $1 = case name, $2 = condition description, rest = test command
@@ -490,12 +523,114 @@ generates_project() {   # a fresh worktree has no project: xcodegen runs first
     expect generates_project "without xcodegen: no build" not_called xcodebuild
 }
 
+# --- the pool: a lease from simpool, builds under buildlock, never a simulator of its own ---
+
+no_simctl_lifecycle() {   # $1 = case
+    expect "$1" "no simctl boot" not_called "simctl boot"
+    expect "$1" "no simctl shutdown" not_called "simctl shutdown"
+    expect "$1" "no simctl create" not_called "simctl create"
+    expect "$1" "no simctl erase" not_called "simctl erase"
+    expect "$1" "no marker written" marker_absent
+}
+
+pool_run() {
+    pool_setup
+    gallery --no-open; local status=$?
+    expect pool_run "exits zero" [ "$status" = 0 ]
+    expect pool_run "reached CHECK OK" grep -q "CHECK OK" "$T/out.log"
+    expect pool_run "leased an iphone for its own process" called "simpool acquire --spec iphone --pid "
+    expect pool_run "built under buildlock on the DerivedData folder" called "buildlock --folder $T/dd --log .*build.log -- xcodebuild build-for-testing"
+    expect pool_run "tested under buildlock without a build slot" called "buildlock --folder $T/dd --log .*test-en.log --no-slot -- xcodebuild test-without-building"
+    expect pool_run "on the leased simulator" called "xcodebuild test-without-building .*-destination id=$POOL_UDID"
+    expect pool_run "no parallel testing" called "test-without-building .*-parallel-testing-enabled NO"
+    expect pool_run "released the lease" called "simpool release $POOL_UDID --app ch.arizonasoftware.xfractal"
+    expect pool_run "released after the test" bash -c 'grep -n "test-without-building\|simpool release" "$0" | tail -1 | grep -q "simpool release"' "$STUB_LOG"
+    no_simctl_lifecycle pool_run
+}
+
+pool_keep_booted() {   # --keep-booted changes nothing with the pool: released, nothing shut down
+    pool_setup
+    gallery --keep-booted --no-open; local status=$?
+    expect pool_keep_booted "exits zero" [ "$status" = 0 ]
+    expect pool_keep_booted "released the lease" called "simpool release $POOL_UDID"
+    no_simctl_lifecycle pool_keep_booted
+}
+
+pool_stale_marker() {   # a marker left by a fallback run is never acted on with the pool, not even by --shutdown
+    pool_setup
+    printf '%s\nlist:boot-2\n' "$UDID" > "$MARKER"
+    gallery --no-open; local status=$?
+    expect pool_stale_marker "exits zero" [ "$status" = 0 ]
+    gallery --shutdown; status=$?
+    expect pool_stale_marker "--shutdown exits zero" [ "$status" = 0 ]
+    expect pool_stale_marker "no simctl call at all" not_called "simctl"
+}
+
+pool_acquire_fails() {   # no simulator within simpool's wait: fails, nothing built, nothing released
+    pool_setup
+    STUB_ACQUIRE_FAIL=1 gallery --no-open; local status=$?
+    expect pool_acquire_fails "exits 1 (not the lock wait's 75)" [ "$status" = 1 ]
+    expect pool_acquire_fails "says so" grep -q "no iphone simulator from the pool" "$T/out.log"
+    expect pool_acquire_fails "no build started" not_called xcodebuild
+    expect pool_acquire_fails "nothing to release" not_called "simpool release"
+    no_simctl_lifecycle pool_acquire_fails
+}
+
+pool_failed_expects() {   # $1 = case, $2 = status
+    expect "$1" "exits non-zero" [ "$2" != 0 ]
+    expect "$1" "released the lease" called "simpool release $POOL_UDID"
+    expect "$1" "the log directory is kept" bash -c 'ls -d "$0"/xfractal-gallery.* >/dev/null 2>&1' "$T"
+    no_simctl_lifecycle "$1"
+}
+pool_build_fails() { pool_setup; STUB_BUILD_FAIL=1 gallery --no-open; pool_failed_expects pool_build_fails $?
+    expect pool_build_fails "no test started" not_called "xcodebuild test-without-building"; }
+pool_test_fails() { pool_setup; STUB_TEST_MODE=fail gallery --no-open; pool_failed_expects pool_test_fails $?; }
+pool_check_fails() { pool_setup; STUB_TEST_MODE=badcheck gallery --no-open; pool_failed_expects pool_check_fails $?
+    expect pool_check_fails "said CHECK FAILED" grep -q "CHECK FAILED" "$T/out.log"; }
+
+pool_signalled() {   # $1 = signal, $2 = phase (acquire|build|test)
+    local sig="$1" phase="$2" want block pidfile name="pool_signalled_$(echo "$1" | tr A-Z a-z)_$2"
+    case "$sig" in INT) want=130 ;; TERM) want=143 ;; HUP) want=129 ;; esac
+    pool_setup
+    pidfile="$T/xcb.pid"
+    case "$phase" in acquire) block=STUB_ACQUIRE_BLOCK; pidfile="$T/acquire.pid" ;; build) block=STUB_BUILD_BLOCK ;; test) block=STUB_TEST_BLOCK ;; esac
+    env "$block=1" python3 -c 'import os, signal, sys; signal.signal(signal.SIGINT, signal.SIG_DFL); os.execv(sys.argv[1], sys.argv[1:])' \
+        "$TREE/scripts/snapshot-gallery.sh" --no-open > "$T/out.log" 2>&1 &
+    local pid=$! i
+    for i in $(seq 1 100); do [ -s "$pidfile" ] && break; sleep 0.1; done
+    kill -"$sig" "$pid"
+    for i in $(seq 1 30); do kill -0 "$pid" 2>/dev/null || break; sleep 0.1; done
+    expect "$name" "ended within 3 s of the signal" bash -c '! kill -0 "$0" 2>/dev/null' "$pid"
+    expect "$name" "the blocking child was stopped" dead "$pidfile"
+    kill -KILL "$pid" 2>/dev/null; [ -s "$pidfile" ] && kill -KILL "$(cat "$pidfile")" 2>/dev/null
+    wait "$pid"; local status=$?
+    expect "$name" "exits $want" [ "$status" = "$want" ]
+    if [ "$phase" = acquire ]; then
+        expect "$name" "no lease granted: nothing released" not_called "simpool release"
+        expect "$name" "no build started" not_called xcodebuild
+    else
+        expect "$name" "released the lease" called "simpool release $POOL_UDID"
+    fi
+    no_simctl_lifecycle "$name"
+}
+pool_signalled_int_acquire() { pool_signalled INT acquire; }
+pool_signalled_int_build() { pool_signalled INT build; }
+pool_signalled_int_test() { pool_signalled INT test; }
+pool_signalled_term_build() { pool_signalled TERM build; }
+pool_signalled_term_test() { pool_signalled TERM test; }
+pool_signalled_hup_test() { pool_signalled HUP test; }
+
+POOL_CASES="pool_run pool_keep_booted pool_stale_marker pool_acquire_fails pool_build_fails pool_test_fails pool_check_fails
+pool_signalled_int_acquire pool_signalled_int_build pool_signalled_int_test pool_signalled_term_build pool_signalled_term_test
+pool_signalled_hup_test"
+
 ALL="pending_marker interrupted_retry delayed_identity boot_not_booted fallback_identity identity_source_change
 stale_marker borrowed borrowed_run owned no_create keep_booted owned_run failed_list_shutdown failed_list_run waits_for_other
 appears_before_boot appears_before_build appears_before_test build_fails test_fails import_fails check_fails
 interrupted_readiness signalled_int_bootstatus signalled_int_build signalled_int_test signalled_term_bootstatus signalled_term_build
 signalled_term_test signalled_hup_bootstatus signalled_hup_build signalled_hup_test signalled_term_bootstatus_ignoring_term
-signalled_term_build_ignoring_term signalled_term_test_ignoring_term lock_held failed_shutdown failed_final_shutdown generates_project"
+signalled_term_build_ignoring_term signalled_term_test_ignoring_term lock_held failed_shutdown failed_final_shutdown generates_project
+$POOL_CASES"
 for c in ${@:-$ALL}; do
     if declare -F "$c" > /dev/null; then "$c"; else echo "FAIL unknown case: $c"; FAILED=1; fi
 done
