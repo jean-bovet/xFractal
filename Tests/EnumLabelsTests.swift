@@ -24,7 +24,7 @@ final class EnumLabelsTests: XCTestCase {
 
     func testAllPalettesHaveNonEmptyLabel() {
         for p in Palette.allCases {
-            XCTAssertFalse(p.label.isEmpty, "\(p) label is empty")
+            XCTAssertFalse(String(localized: p.label).isEmpty, "\(p) label is empty")
         }
     }
 

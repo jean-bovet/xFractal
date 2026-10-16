@@ -24,7 +24,7 @@ buildlock --folder "$PWD/.build/DerivedData" -- \
   -destination 'platform=macOS' -derivedDataPath "$PWD/.build/DerivedData"
 ```
 
-The `xFractal-MAS` scheme's test action runs `xFractalTests` (68 tests, hosted by the Mac app; no simulator). Tests must
+The `xFractal-MAS` scheme's test action runs `xFractalTests` (71 tests, hosted by the Mac app; no simulator). Tests must
 pass before any commit. Without a signing team the app is signed ad hoc and the tests still run; if signing fails
 anyway, add `CODE_SIGNING_ALLOWED=NO`. Without `buildlock` on `PATH`, run the `xcodebuild` part alone.
 
@@ -42,6 +42,19 @@ them. Use `#if os(macOS)` / `#if os(iOS)` for platform-specific UI; keep math pl
 There is no Sparkle and no DMG any more. `docs/appcast.xml` is frozen for the installed 1.0 DMG copies: never edit it
 (see `RELEASING.md`).
 
+## Languages
+
+English (source), French, German and Italian, as Departure. Every user-facing string goes in
+`xFractal/Localizable.xcstrings` (one catalog for both apps) with all three translations; `LocalizationTests` fails on a
+key that misses one, and on a stale key. Math notation and bare numbers use `Text(verbatim:)` so they stay out of the
+catalog. After adding or changing strings, sync the catalog headless and translate the new keys:
+
+```sh
+~/GitHub/maestro/bin/catalog-sync              # builds both apps, adds new keys, marks unused ones stale
+~/GitHub/maestro/bin/catalog-sync --delete-stale
+~/GitHub/maestro/bin/catalog-sync --check --skip-build   # "catalog unchanged" before committing
+```
+
 ## Preview gallery (no `#Preview`)
 
 The iOS app has no `#Preview`: every screen state is a scenario in `GalleryTests/GalleryFixtures.swift` and
@@ -57,7 +70,7 @@ scripts/test_snapshot_gallery.sh                                      # lifecycl
 ```
 
 - `GalleryTests/` is the **iOS** test target (`xFractalGalleryTests`, hosted by the app); `Tests/` stays the macOS logic tests
-  (`xcodebuild test -scheme xFractal-MAS`, 68 tests). The plain gallery tests run with every gallery run.
+  (`xcodebuild test -scheme xFractal-MAS`, 71 tests). The plain gallery tests run with every gallery run.
 - The simulator is leased from the machine-wide pool (`simpool acquire --spec iphone`: iPhone 17 Pro, iOS 27.0) and given
   back with `simpool release` when the script ends, on success, failure or interrupt; both `xcodebuild` commands run under
   `buildlock`. The script never boots or shuts down a simulator itself. Without `simpool`/`buildlock` on PATH (a

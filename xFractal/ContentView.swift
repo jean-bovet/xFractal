@@ -252,7 +252,7 @@ struct ContentView: View {
     private var juliaControls: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text("c.re")
+                Text(verbatim: "c.re")
                     .font(.caption)
                     .frame(width: 36, alignment: .leading)
                 Slider(value: $store.state.juliaCx, in: -1.5...1.5)
@@ -262,7 +262,7 @@ struct ContentView: View {
                     .frame(width: 64, alignment: .trailing)
             }
             HStack {
-                Text("c.im")
+                Text(verbatim: "c.im")
                     .font(.caption)
                     .frame(width: 36, alignment: .leading)
                 Slider(value: $store.state.juliaCy, in: -1.5...1.5)
@@ -272,25 +272,17 @@ struct ContentView: View {
                     .frame(width: 64, alignment: .trailing)
             }
             HStack(spacing: 8) {
-                ForEach(juliaPresets, id: \.label) { preset in
-                    Button(preset.label) {
+                ForEach(JuliaPreset.all) { preset in
+                    Button {
                         store.state.juliaCx = preset.c.x
                         store.state.juliaCy = preset.c.y
+                    } label: {
+                        Text(preset.name)
                     }
                     .buttonStyle(.bordered)
                 }
             }
         }
-    }
-
-    private var juliaPresets: [(label: String, c: SIMD2<Double>)] {
-        [
-            ("Dendrite",   SIMD2<Double>( 0.0,    1.0)),
-            ("Spiral",     SIMD2<Double>(-0.7,    0.27015)),
-            ("Rabbit",     SIMD2<Double>(-0.123,  0.745)),
-            ("Galaxy",     SIMD2<Double>(-0.8,    0.156)),
-            ("San Marco",  SIMD2<Double>(-0.75,   0.0)),
-        ]
     }
 
     private var multibrotControls: some View {
@@ -301,7 +293,7 @@ struct ContentView: View {
                 get: { Int(store.state.multibrotExponent) },
                 set: { store.state.multibrotExponent = UInt32(max(2, min(8, $0))) }
             ), in: 2...8) {
-                Text("n = \(store.state.multibrotExponent)")
+                Text(verbatim: "n = \(store.state.multibrotExponent)")
                     .monospacedDigit()
                     .font(.caption)
             }
@@ -318,9 +310,9 @@ struct ContentView: View {
                 get: { Int(store.state.newtonFlavor) },
                 set: { store.state.newtonFlavor = UInt32($0) }
             )) {
-                Text("z³ − 1").tag(0)
-                Text("z³ − 2z + 2").tag(1)
-                Text("z⁸ + 15z⁴ − 16").tag(2)
+                Text(verbatim: "z³ − 1").tag(0)
+                Text(verbatim: "z³ − 2z + 2").tag(1)
+                Text(verbatim: "z⁸ + 15z⁴ − 16").tag(2)
             }
             .pickerStyle(.menu)
             .labelsHidden()
@@ -340,9 +332,9 @@ struct ContentView: View {
                 HStack(spacing: 8) {
                     Text(store.state.type.label)
                         .font(.subheadline.weight(.semibold))
-                    Text("·")
+                    Text(verbatim: "·")
                         .foregroundStyle(.secondary)
-                    Text("\(store.state.maxIterations)")
+                    Text(verbatim: "\(store.state.maxIterations)")
                         .font(.subheadline)
                         .monospacedDigit()
                         .foregroundStyle(.secondary)
@@ -395,7 +387,7 @@ struct ContentView: View {
                         HStack {
                             Text("Iterations")
                             Spacer()
-                            Text("\(store.state.maxIterations)")
+                            Text(verbatim: "\(store.state.maxIterations)")
                                 .monospacedDigit()
                                 .foregroundStyle(.secondary)
                         }
@@ -485,10 +477,12 @@ struct ContentView: View {
                 }
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
-                        ForEach(juliaPresets, id: \.label) { preset in
-                            Button(preset.label) {
+                        ForEach(JuliaPreset.all) { preset in
+                            Button {
                                 store.state.juliaCx = preset.c.x
                                 store.state.juliaCy = preset.c.y
+                            } label: {
+                                Text(preset.name)
                             }
                             .buttonStyle(.bordered)
                         }
@@ -504,7 +498,7 @@ struct ContentView: View {
                     HStack {
                         Text("Exponent")
                         Spacer()
-                        Text("n = \(store.state.multibrotExponent)")
+                        Text(verbatim: "n = \(store.state.multibrotExponent)")
                             .monospacedDigit()
                             .foregroundStyle(.secondary)
                     }
@@ -516,9 +510,9 @@ struct ContentView: View {
                     get: { Int(store.state.newtonFlavor) },
                     set: { store.state.newtonFlavor = UInt32($0) }
                 )) {
-                    Text("z³ − 1").tag(0)
-                    Text("z³ − 2z + 2").tag(1)
-                    Text("z⁸ + 15z⁴ − 16").tag(2)
+                    Text(verbatim: "z³ − 1").tag(0)
+                    Text(verbatim: "z³ − 2z + 2").tag(1)
+                    Text(verbatim: "z⁸ + 15z⁴ − 16").tag(2)
                 }
             }
         case .mandelbrot:

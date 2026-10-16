@@ -33,7 +33,7 @@ enum Palette: Int, Codable, CaseIterable, Identifiable {
 
     var id: Int { rawValue }
 
-    var label: String {
+    var label: LocalizedStringResource {
         switch self {
         case .hot:       return "Hot"
         case .cold:      return "Cold"
@@ -41,6 +41,22 @@ enum Palette: Int, Codable, CaseIterable, Identifiable {
         case .chromatic: return "Chromatic"
         }
     }
+}
+
+/// A named Julia constant offered as a one-tap preset.
+struct JuliaPreset: Identifiable {
+    let name: LocalizedStringResource
+    let c: SIMD2<Double>
+
+    var id: SIMD2<Double> { c }
+
+    static let all: [JuliaPreset] = [
+        JuliaPreset(name: "Dendrite",  c: SIMD2( 0.0,    1.0)),
+        JuliaPreset(name: "Spiral",    c: SIMD2(-0.7,    0.27015)),
+        JuliaPreset(name: "Rabbit",    c: SIMD2(-0.123,  0.745)),
+        JuliaPreset(name: "Galaxy",    c: SIMD2(-0.8,    0.156)),
+        JuliaPreset(name: "San Marco", c: SIMD2(-0.75,   0.0)),
+    ]
 }
 
 struct ViewState: Codable, Equatable {
