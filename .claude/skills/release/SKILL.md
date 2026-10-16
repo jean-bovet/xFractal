@@ -57,7 +57,7 @@ Changes you did not make: never stash, commit, discard or include them. Name the
 ## 2. The candidate — new, resumed or nothing
 
 The marketing version is `CFBundleShortVersionString` in both Info plists, which must carry the same
-value (`MARKETING_VERSION` in `project.yml` is not used):
+value (`/testflight` keeps `MARKETING_VERSION` in `project.yml` equal to it):
 
 ```bash
 git show <candidate>:xFractal/Info-iOS.plist | grep -A1 CFBundleShortVersionString

@@ -91,8 +91,8 @@ Ask the version question of §4 now, in one `AskUserQuestion` call, unless `$ARG
 
 The version lives in `CFBundleShortVersionString` of both `xFractal/Info-iOS.plist` and
 `xFractal/Info-MAS.plist`, which always carry the same value. Offer "keep <current>" and the next
-minor (e.g. 2.0 → 2.1). On a bump, change both plists together and nothing else (not
-`CFBundleVersion`). It must stay above the last App Store release, 1.6.
+minor (e.g. 2.0 → 2.1). On a bump, change both plists and `MARKETING_VERSION` in `project.yml`
+(read by the release checks) together, and nothing else (not `CFBundleVersion`). It must stay above the last App Store release, 1.6.
 
 State the version in your first message after the answer.
 
@@ -139,7 +139,7 @@ Stage only the files this skill changed — never `git add -A` — and end the c
 the session's attribution trailer.
 
 ```bash
-git add TestFlight/WhatToTest.en-US.txt xFractal/Info-iOS.plist xFractal/Info-MAS.plist   # the plists only on a bump
+git add TestFlight/WhatToTest.en-US.txt xFractal/Info-iOS.plist xFractal/Info-MAS.plist project.yml   # the version files only on a bump
 git commit -m "TestFlight <version>: <one-line summary>"
 git push origin main
 ```
