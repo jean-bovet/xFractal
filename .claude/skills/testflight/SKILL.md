@@ -18,8 +18,8 @@ Facts this skill relies on:
 - A push to `main` runs a build-only workflow (Build - iOS, Build - macOS). A push to `testflight`
   runs the archive workflow (Archive - iOS, Archive - macOS) and its "TestFlight Internal Testing"
   actions.
-- `xFractal.xcodeproj` is git-ignored: `ci_scripts/ci_post_clone.sh` installs XcodeGen, generates
-  it, writes `Signing.local.xcconfig` from `$CI_TEAM_ID`, and makes sure the Metal Toolchain runs.
+- `xFractal.xcodeproj` is checked in; `ci_scripts/ci_post_clone.sh` writes `Signing.local.xcconfig`
+  from `$CI_TEAM_ID` and makes sure the Metal Toolchain runs.
 - Xcode Cloud reads tester notes from `TestFlight/WhatToTest.en-US.txt`.
 - No git tag: this skill makes none; the App Store release tags `v<version>` (RELEASING.md).
 
@@ -104,8 +104,8 @@ buildlock --folder "$PWD/.build/DerivedData" -- \
   -destination 'platform=macOS' -derivedDataPath "$PWD/.build/DerivedData"
 ```
 
-macOS unit tests (68), no simulator. Run `xcodegen generate` first if `project.yml` changed or the
-project is missing. Must end with `** TEST SUCCEEDED **`.
+macOS unit tests (68), no simulator. Run `xcodegen generate` first if `project.yml` changed (and commit
+the regenerated project). Must end with `** TEST SUCCEEDED **`.
 
 Stop on failure.
 

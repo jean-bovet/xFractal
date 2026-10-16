@@ -5,8 +5,7 @@ DerivedData/
 *.xcuserdatad/
 xcuserdata/
 
-## XcodeGen — generated, regenerate from project.yml
-xFractal.xcodeproj/
+## Old project name
 Fractals.xcodeproj/
 
 ## Release artifacts

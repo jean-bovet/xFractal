@@ -30,7 +30,7 @@ anyway, add `CODE_SIGNING_ALLOWED=NO`. Without `buildlock` on `PATH`, run the `x
 
 ## Project regeneration
 
-The `*.xcodeproj` is generated from `project.yml` by XcodeGen and is gitignored. After editing `project.yml`, run `xcodegen generate`. If Xcode applies new build settings (e.g. "Update to Recommended Settings"), bake them into `project.yml` so they survive regeneration.
+`xFractal.xcodeproj` is generated from `project.yml` by XcodeGen and is checked into git. After editing `project.yml`, run `xcodegen generate` and commit the regenerated project with it; never edit the project in Xcode without carrying the change into `project.yml`. If Xcode applies new build settings (e.g. "Update to Recommended Settings"), bake them into `project.yml` so they survive regeneration.
 
 ## Platforms
 

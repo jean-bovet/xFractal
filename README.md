@@ -16,12 +16,15 @@ Version 1.0 of the Mac app was also published as a direct-download DMG (the `v1.
 
 ## Build from source
 
-XcodeGen owns the project file — the `.xcodeproj` is generated and gitignored.
+```sh
+open xFractal.xcodeproj
+```
+
+XcodeGen owns the project file: `xFractal.xcodeproj` is generated from `project.yml` and checked in. After changing `project.yml`, regenerate it and commit both:
 
 ```sh
 brew install xcodegen      # a recent one: 2.44 does not handle the Icon Composer AppIcon.icon
 xcodegen generate
-open xFractal.xcodeproj
 ```
 
 Two app targets share the `xFractal/` sources: `xFractal-MAS` (the Mac app, sandboxed) and `xFractal-iOS` (iPhone/iPad). Both use the bundle ID of the original 2008 App Store app (`ch.arizonasoftware.xfractal`), so they ship as updates of that listing, one universal purchase, rather than as a new app. Favorites saved by the 1.x iOS app are not imported.

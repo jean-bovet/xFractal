@@ -124,8 +124,8 @@ replace it.
   then refactor with the suite green. A bug fix starts with a test that reproduces it. Logic that seems
   untestable (gestures, Metal) is first checked for pure math that can move into `FractalMath.swift`;
   what truly is not testable is named in the plan and verified by hand (an owed check).
-- **Project:** `xcodegen generate` after any `project.yml` change and in a fresh worktree (the
-  `.xcodeproj` is git-ignored; nothing to commit). Settings Xcode applies go into `project.yml`.
+- **Project:** `xcodegen generate` after any `project.yml` change, and commit the regenerated
+  `xFractal.xcodeproj` with it (the project is checked in). Settings Xcode applies go into `project.yml`.
 - **Test gate:** the command of `AGENTS.md` § Running the tests, with `<dd>` as the build folder:
 
   ```sh
