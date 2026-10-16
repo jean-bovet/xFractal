@@ -20,17 +20,20 @@ The `/testflight` skill (`.claude/skills/testflight/SKILL.md`) is the only path 
 Xcode Cloud numbers the builds; `CFBundleVersion` is never bumped by hand. `ci_scripts/ci_post_clone.sh` generates the
 git-ignored `xFractal.xcodeproj` with XcodeGen and writes the signing team from `$CI_TEAM_ID`.
 
-## 2. App Store
+## 2. App Store (`/release`)
 
-Once a TestFlight build has been checked on iPhone, iPad and Mac, submit that build for review in App Store Connect
-(version, What's New, screenshots). When the version is released, tag the commit it was built from:
+The `/release` skill (`.claude/skills/release/SKILL.md`) publishes the build testers already have: the commit
+`origin/testflight` points to, once it has been checked on iPhone, iPad and Mac. It audits the App Store page, writes
+What's New (`ReleaseNotes/<version>-en-US.txt`), prepares one App Store version per platform (iOS and macOS) and,
+once App Review approved them, tags that commit:
 
 ```sh
-git tag -a v<version> -m "xFractal <version>"
+git tag v<version> <candidate>
 git push origin v<version>
 ```
 
-`/testflight` makes no tag; the App Store release does.
+Attaching each build and submitting it for review stay manual, in App Store Connect. `/testflight` makes no tag; the
+App Store release does.
 
 `xFractal/PrivacyInfo.xcprivacy` declares the one required-reason API the app uses (`UserDefaults`, reason `CA92.1`).
 Update it if new required-reason APIs are added.
