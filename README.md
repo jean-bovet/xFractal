@@ -1,34 +1,38 @@
 # xFractal
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/Platform-macOS%2014-blue)](#)
+[![Platform](https://img.shields.io/badge/Platform-macOS%2014%20%7C%20iOS%2017-blue)](#)
 [![Swift](https://img.shields.io/badge/Swift-5.10-orange)](#)
 
-A SwiftUI + Metal fractal explorer for macOS — Mandelbrot, Julia, Newton, Multibrot, with four classic palettes. The fragment shader computes everything per pixel on the GPU; the CPU just uploads a small uniforms struct (and, for Mandelbrot perturbation, a reference orbit) per frame.
+A SwiftUI + Metal fractal explorer for macOS, iPhone and iPad — Mandelbrot, Julia, Newton, Multibrot, with four classic palettes. The fragment shader computes everything per pixel on the GPU; the CPU just uploads a small uniforms struct (and, for Mandelbrot perturbation, a reference orbit) per frame.
 
 This is a modern reincarnation of *xFractal*, the 2008 Arizona Software iOS app: same four families, same palettes, redesigned ground-up around SwiftUI and a Metal fragment shader.
 
 ## Install
 
-The macOS app ships as a signed, notarized DMG with [Sparkle 2](https://sparkle-project.org) auto-updates:
+xFractal ships through the App Store for Mac, iPhone and iPad, as one universal purchase (search for *xFractal*); the App Store keeps it up to date.
 
-→ [**Download the latest macOS DMG**](https://github.com/jean-bovet/xFractal/releases/latest)
-
-Once installed, the app checks for updates automatically and notifies you via the standard Sparkle UI (or you can trigger it manually from `xFractal → Check for Updates…`).
+Version 1.0 of the Mac app was also published as a direct-download DMG (the `v1.0` GitHub release). That channel is closed: it gets no further updates, so install the App Store version instead.
 
 ## Build from source
 
 XcodeGen owns the project file — the `.xcodeproj` is generated and gitignored.
 
 ```sh
-brew install xcodegen
+brew install xcodegen      # a recent one: 2.44 does not handle the Icon Composer AppIcon.icon
 xcodegen generate
 open xFractal.xcodeproj
 ```
 
-Build & run on macOS. No code signing needed for local Debug builds — `project.yml` sets `CODE_SIGNING_ALLOWED = NO` for the development configuration so contributors without an Apple Developer account can still build.
+Two app targets share the `xFractal/` sources: `xFractal-MAS` (the Mac app, sandboxed) and `xFractal-iOS` (iPhone/iPad). Both use the bundle ID of the original 2008 App Store app (`ch.arizonasoftware.xfractal`), so they ship as updates of that listing, one universal purchase, rather than as a new app. Favorites saved by the 1.x iOS app are not imported.
 
-The `xFractal-iOS` target (iPhone/iPad, no Sparkle) shares the same sources. It uses the bundle ID of the original 2008 App Store app (`ch.arizonasoftware.xfractal`), so it ships as version 2.0 of that listing rather than as a new app. Favorites saved by the 1.x app are not imported. The `xFractal-MAS` target is the Mac App Store build of the macOS app: sandboxed, without Sparkle, and on the same listing as a universal purchase.
+No Apple Developer account is needed to build and run locally: without a team (see `Signing.local.xcconfig.example`) Xcode signs the Mac app ad hoc ("Sign to Run Locally"). If signing still gets in the way, pass `CODE_SIGNING_ALLOWED=NO` to `xcodebuild`.
+
+The macOS logic tests:
+
+```sh
+xcodebuild test -project xFractal.xcodeproj -scheme xFractal-MAS -destination 'platform=macOS'
+```
 
 ## Fractal families
 
@@ -93,21 +97,11 @@ Pick one reference pixel, compute its full orbit on the CPU, upload it as an `MT
 - `FractalView.swift` — `MTKView` wrapped for SwiftUI on both platforms via `PlatformRepresentable` typealias. Custom `ZoomableMTKView` subclass on macOS handles cursor-anchored scroll-wheel zoom.
 - `FractalState.swift` — `ViewState` (Codable), per-type defaults, journal, replay, debounced persistence.
 - `ContentView.swift` — gestures, HUD, type/palette/per-type controls.
-- `xFractalApp.swift` — `@main`. Wires `SPUStandardUpdaterController` (macOS-only, `#if os(macOS)`) and adds a "Check for Updates…" menu item via SwiftUI's `Commands` API.
+- `xFractalApp.swift` — `@main`, one `WindowGroup` hosting `ContentView`.
 
 ## Releasing (maintainers)
 
-See [`RELEASING.md`](RELEASING.md) for the full release runbook. The short version:
-
-```sh
-# 1. Bump version in xFractal/Info.plist
-# 2. Build, sign, notarize, staple, regenerate appcast:
-./scripts/release.sh
-# 3. Commit, tag vX.Y, push.
-# 4. gh release create vX.Y dist/xFractal-X.Y.dmg
-```
-
-The release script is shared in spirit with [AudioXplorer](https://github.com/jean-bovet/AudioXplorer) and [GraphClick](https://github.com/jean-bovet/GraphClick), which also ship signed DMGs with the same Sparkle EdDSA keypair.
+See [`RELEASING.md`](RELEASING.md). Both apps are archived by Xcode Cloud, go to TestFlight first and then to the App Store; nothing is signed or uploaded from a local Mac.
 
 ## Origins
 
@@ -144,7 +138,7 @@ The fractals themselves are classical mathematics; the rendering techniques beyo
 
 The palettes, Newton polynomials and CPU iteration loops are ported from the original 2008 *xFractal* (see Origins).
 
-The macOS app embeds [Sparkle](https://sparkle-project.org) (MIT License) for updates; its license and the notices for the code it bundles are in [`Licenses/Sparkle-LICENSE.txt`](Licenses/Sparkle-LICENSE.txt) and ship inside the app at `Contents/Resources/Licenses/`. The iOS app contains no third-party code.
+The apps contain no third-party code.
 
 ## License
 

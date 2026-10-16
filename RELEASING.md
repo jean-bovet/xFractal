@@ -1,129 +1,53 @@
 # Releasing xFractal
 
-Public-safe runbook for shipping a signed, notarized macOS DMG with Sparkle auto-updates. iOS builds go through the App Store instead — see [iOS (App Store)](#ios-app-store) at the end.
+xFractal ships only through Apple: the iPhone/iPad app (`xFractal-iOS`) and the Mac app (`xFractal-MAS`) go to
+TestFlight first, then to the App Store. Both targets share the bundle ID of the original 2008 App Store app,
+`ch.arizonasoftware.xfractal`, so iPhone, iPad and Mac are one universal purchase on the same listing.
 
-## Prerequisites (one-time)
+Nothing is archived, signed or uploaded from a local Mac: Xcode Cloud archives both apps.
 
-You need on the build machine:
+## 1. TestFlight (`/testflight`)
 
-1. **Apple Developer ID Application** certificate in the login keychain.
-2. **`notarytool` keychain profile** named `XF_NOTARY` (or override via `NOTARY_PROFILE=…`):
-   ```sh
-   xcrun notarytool store-credentials XF_NOTARY \
-       --apple-id YOUR_APPLE_ID \
-       --team-id YOUR_TEAM_ID
-   ```
-3. **Sparkle EdDSA private key** in the login keychain (the same key shared across AudioXplorer / GraphClick / xFractal — public key `ijYZbNO2D7RbgXYIWrGejviM8zBBc4A/b0b2KbAKQx8=`). `generate_appcast` finds it automatically.
-4. Tools:
-   ```sh
-   brew install xcodegen create-dmg
-   ```
-   Sparkle's CLI tools (`generate_appcast`, `sign_update`, `generate_keys`) are vendored at `scripts/sparkle/` — no install needed.
+The `/testflight` skill (`.claude/skills/testflight/SKILL.md`) is the only path to TestFlight. In short:
 
-## Steady-state release flow
+- the version lives in `CFBundleShortVersionString` of both `xFractal/Info-iOS.plist` and `xFractal/Info-MAS.plist`
+  (always the same value, above the last 2008-era App Store release, 1.6);
+- the macOS logic tests must pass (see "Running the tests" in `AGENTS.md`);
+- the tester notes go in `TestFlight/WhatToTest.en-US.txt`;
+- pushing `main` to the `testflight` branch makes Xcode Cloud archive both apps (`Archive - iOS`,
+  `Archive - macOS`) and hand them to the internal testers.
 
-```sh
-# 1. Bump version in xFractal/Info.plist:
-#    - CFBundleShortVersionString  (e.g. 1.1)
-#    - CFBundleVersion             (e.g. 2)
+Xcode Cloud numbers the builds; `CFBundleVersion` is never bumped by hand. `ci_scripts/ci_post_clone.sh` generates the
+git-ignored `xFractal.xcodeproj` with XcodeGen and writes the signing team from `$CI_TEAM_ID`.
 
-# 2. Build, sign, notarize, staple, regenerate appcast.
-./scripts/release.sh
+## 2. App Store
 
-# 3. Commit + tag.
-git add xFractal/Info.plist docs/appcast.xml
-git commit -m "Release 1.1"
-git tag -a v1.1 -m "xFractal 1.1"
-git push origin main --tags
-
-# 4. Create GitHub Release with the DMG.
-#    The asset filename + tag must match the URL baked into the appcast:
-#    https://github.com/jean-bovet/xFractal/releases/download/v1.1/xFractal-1.1.dmg
-gh release create v1.1 dist/xFractal-1.1.dmg \
-    --title "xFractal 1.1" \
-    --notes "Release notes…"
-```
-
-Existing installs see the new appcast on their next launch and prompt the user to update. Sparkle handles download, signature verification, atomic replacement, and relaunch.
-
-## Fast iteration
+Once a TestFlight build has been checked on iPhone, iPad and Mac, submit that build for review in App Store Connect
+(version, What's New, screenshots). When the version is released, tag the commit it was built from:
 
 ```sh
-SKIP_NOTARIZE=1 ./scripts/release.sh
+git tag -a v<version> -m "xFractal <version>"
+git push origin v<version>
 ```
 
-Builds, signs, packages a DMG, but skips the ~3-minute notary roundtrip and the appcast regeneration. Useful when iterating on the build pipeline itself.
+`/testflight` makes no tag; the App Store release does.
 
-## Verifying an end-to-end release
+`xFractal/PrivacyInfo.xcprivacy` declares the one required-reason API the app uses (`UserDefaults`, reason `CA92.1`).
+Update it if new required-reason APIs are added.
 
-After the first full release:
+## The frozen appcast (`docs/appcast.xml`)
 
-1. **Public access**: `curl -I https://jean-bovet.github.io/xFractal/appcast.xml` → `HTTP 200`, `Content-Type: application/xml`.
-2. **Signed enclosure**: open `appcast.xml` and confirm each `<enclosure>` has both `url=` and `sparkle:edSignature="…"`.
-3. **End-to-end update**: bump local `Info.plist` to a version *lower* than the published one, build a Debug app, launch, click "Check for Updates…". Sparkle should prompt with the release notes from the GitHub Release body.
+Version 1.0 of the Mac app was also published as a direct-download DMG (the `v1.0` tag and its GitHub release) that
+updated itself with Sparkle from `https://jean-bovet.github.io/xFractal/appcast.xml`. The DMG and Sparkle are gone;
+the Mac app now ships only through the Mac App Store.
 
-## File layout
-
-```
-Frameworks/Sparkle.framework      vendored 2.9.1 runtime, embed-and-signed by Xcode
-scripts/sparkle/                  generate_appcast, sign_update, generate_keys (vendored)
-scripts/release.sh                build → sign → notarize → staple → appcast
-docs/index.html                   GitHub Pages landing page
-docs/appcast.xml                  generated by release.sh; commit after each release
-xFractal/Info.plist               Sparkle keys (SUFeedURL / SUPublicEDKey / SUEnableAutomaticChecks)
-xFractal.entitlements             disable-library-validation (required for Sparkle's framework)
-```
+`docs/appcast.xml` stays published exactly as it is: installed 1.0 copies keep checking it quietly, find no newer
+version and show nothing. Do not edit it, add items to it or delete it: those copies must keep finding a valid feed with
+nothing newer in it. Users of the DMG move to the App Store by installing the app from there.
 
 ## Troubleshooting
 
 | Symptom | Likely cause |
 |---|---|
-| `notarytool` says "Invalid Bundle Structure" | Sparkle XPC services not re-signed. The release script handles nested signing; if you've modified it, ensure each `*.framework` / `*.app` / `*.xpc` under `Frameworks/` is re-signed before the outer `--deep` pass. |
-| App launches but crashes "image not found" | `LD_RUNPATH_SEARCH_PATHS` doesn't include `@executable_path/../Frameworks`. Fixed in `project.yml`; if you regenerated and dropped it, check the value. |
-| `generate_appcast` complains "no private key found" | Sparkle key isn't in the login keychain. Restore it from 1Password: see INSTRUCTIONS.md §3.3 in the private playbook. |
-| First-launch update check fails silently | `SUFeedURL` in `xFractal/Info.plist` doesn't match the published appcast URL, or GitHub Pages isn't enabled for `main` / `/docs`. |
-
-## Why this differs from AudioXplorer / GraphClick
-
-xFractal is a SwiftUI + XcodeGen project, not a legacy `.xcodeproj`. So:
-
-- No pbxproj surgery — `project.yml` declares the Sparkle framework as a `macOS`-only embedded dependency, and XcodeGen generates the right build phases.
-- No nib editing — the "Check for Updates…" menu item is added via SwiftUI's `Commands` API in `xFractal/xFractalApp.swift`, after the About item.
-- No `autorelease` / manual retain dance — modern Swift, ARC.
-- Sandbox was never enabled, so there's no sandbox-removal cleanup.
-- iOS support is preserved: Sparkle is wrapped in `#if os(macOS)` and only embedded for macOS via a XcodeGen `platforms: [macOS]` filter on the dependency.
-
-## iOS (App Store)
-
-The `xFractal-iOS` target ships as an update to the original 2008 App Store app, so it must keep that app's bundle ID, `ch.arizonasoftware.xfractal`, and its version must be higher than the last release (1.6, build 160), and the build number must be higher than any earlier upload (2.0 builds 1, 200 and 201 were uploaded to TestFlight in 2015).
-
-```sh
-# 1. Bump version in xFractal/Info-iOS.plist:
-#    - CFBundleShortVersionString  (e.g. 2.1)
-#    - CFBundleVersion             (e.g. 203, must increase every upload)
-
-# 2. Archive and upload
-xcodegen generate
-open xFractal.xcodeproj
-#    Scheme xFractal-iOS → Any iOS Device → Product → Archive
-#    Organizer → Distribute App → App Store Connect
-```
-
-Signing uses Xcode's automatic signing with the team in `project.yml`. Certificates and App Store Connect credentials stay in your keychain and Xcode accounts, never in this repo.
-
-`xFractal/PrivacyInfo.xcprivacy` declares the one required-reason API the app uses (`UserDefaults`, reason `CA92.1`). Update it if new required-reason APIs are added.
-
-## Mac App Store
-
-The `xFractal-MAS` target is the macOS app built for the App Store. It shares the iOS bundle ID (`ch.arizonasoftware.xfractal`), so Mac, iPhone and iPad are one universal purchase on the same listing. It is sandboxed and contains no Sparkle: Sparkle code is compiled only when the `SPARKLE` condition is set, which only the DMG target (`xFractal`) does.
-
-```sh
-# 1. Bump CFBundleShortVersionString / CFBundleVersion in xFractal/Info-MAS.plist
-# 2. Archive and upload
-xcodegen generate
-open xFractal.xcodeproj
-#    Scheme xFractal-MAS → Any Mac → Product → Archive
-#    Organizer → Distribute App → App Store Connect
-```
-
-If an export fails with "Copy failed" and the distribution log shows `rsync … --extended-attributes: unknown option`, a Homebrew `rsync` is first on `PATH`; run the export with `PATH=/usr/bin:/bin:/usr/sbin:/sbin`.
+| A Mac export fails with "Copy failed" and the distribution log shows `rsync … --extended-attributes: unknown option` | A Homebrew `rsync` is first on `PATH`; run the export with `PATH=/usr/bin:/bin:/usr/sbin:/sbin`. |
+| `cannot execute tool 'metal' due to missing Metal Toolchain` | Run `xcodebuild -downloadComponent MetalToolchain` (`ci_post_clone.sh` does it on Xcode Cloud). |

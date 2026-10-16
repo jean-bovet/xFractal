@@ -1,6 +1,6 @@
 ---
 name: testflight
-description: Ship main to TestFlight through Xcode Cloud — the iPhone/iPad app (xFractal-iOS) and the Mac App Store app (xFractal-MAS) for the internal testers. Use when the user asks for a TestFlight build, to ship or push to TestFlight, or to send a build to testers. Not for the Sparkle DMG (that is scripts/release.sh, RELEASING.md).
+description: Ship main to TestFlight through Xcode Cloud — the iPhone/iPad app (xFractal-iOS) and the Mac App Store app (xFractal-MAS) for the internal testers. Use when the user asks for a TestFlight build, to ship or push to TestFlight, or to send a build to testers.
 argument-hint: "[version, e.g. 2.1 — optional; asked when omitted]"
 allowed-tools: Read, Edit, Write, Bash, AskUserQuestion
 ---
@@ -9,8 +9,8 @@ allowed-tools: Read, Edit, Write, Bash, AskUserQuestion
 
 Xcode Cloud (product `xFractal-iOS`) builds both App Store apps from this repo and hands them to
 the internal TestFlight testers: `xFractal-iOS` (iPhone/iPad) and `xFractal-MAS` (Mac App Store).
-Both share the bundle ID of the 2008 App Store app, `ch.arizonasoftware.xfractal`. The Sparkle DMG
-(`xFractal` target, `scripts/release.sh`) is a separate release and is not touched here.
+Both share the bundle ID of the 2008 App Store app, `ch.arizonasoftware.xfractal`; they are the only
+apps this repo ships.
 `$ARGUMENTS` is the version to ship, when given (§4).
 
 Facts this skill relies on:
@@ -21,7 +21,7 @@ Facts this skill relies on:
 - `xFractal.xcodeproj` is git-ignored: `ci_scripts/ci_post_clone.sh` installs XcodeGen, generates
   it, writes `Signing.local.xcconfig` from `$CI_TEAM_ID`, and makes sure the Metal Toolchain runs.
 - Xcode Cloud reads tester notes from `TestFlight/WhatToTest.en-US.txt`.
-- No git tag: `v<version>` tags belong to the Sparkle DMG release (RELEASING.md).
+- No git tag: this skill makes none; the App Store release tags `v<version>` (RELEASING.md).
 
 ## How a build reaches TestFlight
 
@@ -92,18 +92,19 @@ Ask the version question of §4 now, in one `AskUserQuestion` call, unless `$ARG
 The version lives in `CFBundleShortVersionString` of both `xFractal/Info-iOS.plist` and
 `xFractal/Info-MAS.plist`, which always carry the same value. Offer "keep <current>" and the next
 minor (e.g. 2.0 → 2.1). On a bump, change both plists together and nothing else (not
-`CFBundleVersion`, not `xFractal/Info.plist`, which is the Sparkle DMG's). It must stay above the
-last App Store release, 1.6.
+`CFBundleVersion`). It must stay above the last App Store release, 1.6.
 
 State the version in your first message after the answer.
 
 ## 5. Test gate
 
 ```bash
-xcodebuild test -project xFractal.xcodeproj -scheme xFractal -configuration Debug
+buildlock --folder "$PWD/.build/DerivedData" -- \
+  xcodebuild test -project xFractal.xcodeproj -scheme xFractal-MAS -configuration Debug \
+  -destination 'platform=macOS' -derivedDataPath "$PWD/.build/DerivedData"
 ```
 
-macOS unit tests, no simulator. Run `xcodegen generate` first if `project.yml` changed or the
+macOS unit tests (68), no simulator. Run `xcodegen generate` first if `project.yml` changed or the
 project is missing. Must end with `** TEST SUCCEEDED **`.
 
 Stop on failure.
@@ -143,7 +144,7 @@ git commit -m "TestFlight <version>: <one-line summary>"
 git push origin main
 ```
 
-No tag: `v<version>` tags belong to the Sparkle DMG release (RELEASING.md).
+No tag: the App Store release tags `v<version>` (RELEASING.md), not this skill.
 
 ## 8. Start the build: fast-forward `testflight`
 

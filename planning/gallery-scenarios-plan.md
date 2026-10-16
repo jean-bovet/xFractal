@@ -61,8 +61,8 @@ Decisions already made (not re-asked): the scenario list in the test target is t
 the existing `.agents/skills -> ../.claude/skills` symlink; the Mac app is out of scope (below, "Mac").
 
 Languages the app ships: **English only.** `xFractal/Info-iOS.plist` has `CFBundleDevelopmentRegion` `en`, and
-`xFractal/` holds no `.xcstrings`, `.strings` or `.lproj` (the localisations under `Frameworks/Sparkle.framework`
-belong to Sparkle, which is macOS only). One pass, `-testLanguage en`. The page script keeps its per-language
+`xFractal/` holds no `.xcstrings`, `.strings` or `.lproj` (the localisations then under `Frameworks/Sparkle.framework`
+belonged to Sparkle, macOS only, since removed). One pass, `-testLanguage en`. The page script keeps its per-language
 layout (below), so a second language is one more test run later, not a redesign.
 
 ## Problem with evidence

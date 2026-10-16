@@ -316,7 +316,7 @@ for lang in "${LANGS[@]}"; do
     fi
 done
 
-echo "network: none"    # the iOS app has no network client (Sparkle is macOS only)
+echo "network: none"    # the iOS app has no network client
 echo "timings: boot $(elapsed "$T_BOOT0" "$T_BOOT1"), build $(elapsed "$T_BUILD0" "$T_BUILD1"), total $(elapsed "$T0" "$(now)")"
 [ "$OPEN_PAGE" = 1 ] && open "$FIRST_PAGE"
 exit 0
