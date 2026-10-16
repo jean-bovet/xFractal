@@ -1,0 +1,14 @@
+Entdecken Sie die unendliche Schönheit der Fraktale mit Ihren Fingerspitzen. Zum Zoomen die Finger spreizen, zum Verschieben ziehen — und tauchen Sie ein in die endlosen Details der Mandelbrot-Menge und ihrer Verwandten, in Echtzeit berechnet von der GPU Ihres Geräts.
+
+xFractal, erstmals 2008 erschienen, ist zurück — von Grund auf neu entwickelt für das iPhone und iPad von heute.
+
+FUNKTIONEN:
+• Mandelbrot-, Julia-, Newton- und Multibrot-Fraktale
+• Tiefenzoom: Vergrößern Sie die Mandelbrot- und Julia-Menge mehr als eine Billion Mal
+• Vier klassische Paletten — Heiß, Kalt, Grau und Chromatisch — mit weichen Farbverläufen
+• Julia-Vorlagen (Dendrit, Spirale, Hase, Galaxie, San Marco), Multibrot-Exponenten 2–8, drei Newton-Polynome
+• Wiedergabe: Sehen Sie Ihre ganze Erkundung als kurzen Film noch einmal
+• Macht genau dort weiter, wo Sie aufgehört haben
+• Kostenlos und Open Source
+
+Der Tiefenzoom nutzt die Störungstechnik (Perturbation) von K. I. Martin.

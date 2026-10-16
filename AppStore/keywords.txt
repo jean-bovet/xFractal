@@ -1,0 +1,4 @@
+en-US=fractal,mandelbrot,julia,newton,multibrot,zoom,math,chaos,complex,mathematics,art,infinite
+fr-FR=fractale,mandelbrot,julia,newton,multibrot,zoom,maths,chaos,complexe,mathématiques,art,infini
+de-DE=Fraktal,Mandelbrot,Julia,Newton,Multibrot,Zoom,Mathe,Chaos,komplex,Mathematik,Kunst,unendlich
+it=frattale,mandelbrot,julia,newton,multibrot,zoom,mate,caos,complesso,matematica,arte,infinito

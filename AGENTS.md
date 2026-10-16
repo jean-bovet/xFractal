@@ -55,6 +55,9 @@ catalog. After adding or changing strings, sync the catalog headless and transla
 ~/GitHub/maestro/bin/catalog-sync --check --skip-build   # "catalog unchanged" before committing
 ```
 
+The App Store page has the same four languages: descriptions, keywords and names in `AppStore/` (the `/release`
+skill loads them).
+
 ## Preview gallery (no `#Preview`)
 
 The iOS app has no `#Preview`: every screen state is a scenario in `GalleryTests/GalleryFixtures.swift` and

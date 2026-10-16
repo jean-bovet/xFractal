@@ -1,0 +1,14 @@
+Explorez la beauté infinie des fractales sur votre Mac. Faites défiler ou pincez pour zoomer, faites glisser pour vous déplacer et plongez dans les détails sans fin de l'ensemble de Mandelbrot et de ses cousins — calculés en temps réel par la puce graphique de votre Mac.
+
+xFractal, sorti pour l'iPhone en 2008, est de retour — entièrement reconstruit pour Mac, iPhone et iPad. Achetez-le une fois, utilisez-le sur tous vos appareils.
+
+FONCTIONNALITÉS :
+• Fractales de Mandelbrot, Julia, Newton et Multibrot
+• Zoom profond : agrandissez les ensembles de Mandelbrot et de Julia plus de mille milliards de fois
+• Quatre palettes classiques — Chaud, Froid, Gris et Chromatique — avec un dégradé lissé
+• Préréglages de Julia (Dendrite, Spirale, Lapin, Galaxie, San Marco), exposants de Multibrot de 2 à 8, trois polynômes de Newton
+• Rejouer : revoyez toute votre exploration défiler comme un court film
+• Reprend exactement là où vous vous étiez arrêté
+• Gratuit et open source
+
+Le zoom profond utilise la technique de perturbation de K. I. Martin.

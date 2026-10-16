@@ -24,7 +24,8 @@ git-ignored `xFractal.xcodeproj` with XcodeGen and writes the signing team from 
 
 The `/release` skill (`.claude/skills/release/SKILL.md`) publishes the build testers already have: the commit
 `origin/testflight` points to, once it has been checked on iPhone, iPad and Mac. It audits the App Store page, writes
-What's New (`ReleaseNotes/<version>-en-US.txt`), prepares one App Store version per platform (iOS and macOS) and,
+What's New in English, French, German and Italian (`ReleaseNotes/<version>-<locale>.txt`), loads the translated
+page from `AppStore/`, prepares one App Store version per platform (iOS and macOS) and,
 once App Review approved them, tags that commit:
 
 ```sh

@@ -1,0 +1,6 @@
+# App Store name and subtitle per locale (at most 30 characters each): app-store metadata --name / --subtitle
+# locale|name|subtitle (no subtitle yet)
+en-US|xFractal|
+fr-FR|xFractal|
+de-DE|xFractal|
+it|xFractal|
