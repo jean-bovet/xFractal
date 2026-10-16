@@ -77,6 +77,7 @@
 		624D960B2BE8153113C4A221 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		66EEC0CFE1007A82D1645218 /* AnchoredZoomTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnchoredZoomTests.swift; sourceTree = "<group>"; };
 		6899CD604DE924F1255B6D85 /* FractalState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FractalState.swift; sourceTree = "<group>"; };
+		7240E1E851289E520DA03939 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 		84E7A541E95A714A53CD1CC0 /* ContentViewInitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentViewInitTests.swift; sourceTree = "<group>"; };
 		8E4F250BA890F0473F017527 /* JournalCoalesceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalCoalesceTests.swift; sourceTree = "<group>"; };
 		931F74212051D95D80727DE9 /* FractalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FractalView.swift; sourceTree = "<group>"; };
@@ -95,7 +96,6 @@
 		E23F36C516A8B84E3A387846 /* xFractalGalleryTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = xFractalGalleryTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5A090F2699AEE4C4849083A /* xFractalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = xFractalTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FEA2B529E890F0DBDCF514D0 /* xFractal-MAS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "xFractal-MAS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		"TEMP_66420225-A6E7-4642-AADF-98F5A4568363" /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -134,6 +134,7 @@
 				EDECFAE17B784BAF364ADA86 /* GalleryTests */,
 				2355CD5DC4F9BCE7157D5B4F /* Tests */,
 				86A17FE74F3285F9C740D3F6 /* xFractal */,
+				BCE1FB66414D96D56906D368 /* xFractal */,
 				4063203829F357D0FC235E19 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -157,6 +158,15 @@
 			path = xFractal;
 			sourceTree = "<group>";
 		};
+		BCE1FB66414D96D56906D368 /* xFractal */ = {
+			isa = PBXGroup;
+			children = (
+				7240E1E851289E520DA03939 /* Signing.xcconfig */,
+			);
+			name = xFractal;
+			path = .;
+			sourceTree = "<group>";
+		};
 		EDECFAE17B784BAF364ADA86 /* GalleryTests */ = {
 			isa = PBXGroup;
 			children = (
@@ -167,14 +177,6 @@
 				4516510095466BAC66F4112B /* SnapshotGalleryTests.swift */,
 			);
 			path = GalleryTests;
-			sourceTree = "<group>";
-		};
-		"TEMP_1DA11C76-C57A-44B4-A7D4-7CFFB81D746A" /* xFractal */ = {
-			isa = PBXGroup;
-			children = (
-				"TEMP_66420225-A6E7-4642-AADF-98F5A4568363" /* Signing.xcconfig */,
-			);
-			path = xFractal;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -453,7 +455,7 @@
 		};
 		5620D3E027047859508E78DB /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_66420225-A6E7-4642-AADF-98F5A4568363" /* Signing.xcconfig */;
+			baseConfigurationReference = 7240E1E851289E520DA03939 /* Signing.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -524,7 +526,7 @@
 		};
 		7C20FB888BF9AC7212E0DFB6 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_66420225-A6E7-4642-AADF-98F5A4568363" /* Signing.xcconfig */;
+			baseConfigurationReference = 7240E1E851289E520DA03939 /* Signing.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;

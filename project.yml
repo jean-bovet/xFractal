@@ -4,7 +4,9 @@ options:
   deploymentTarget:
     macOS: "14.0"
     iOS: "17.0"
-  createIntermediateGroups: true
+  # false: with true, XcodeGen puts Signing.xcconfig in an extra group with a random TEMP_ ID,
+  # so every run changes the checked-in project.
+  createIntermediateGroups: false
   xcodeVersion: "27.0"
 
 # Signing team comes from Signing.xcconfig -> git-ignored Signing.local.xcconfig (public repo).
