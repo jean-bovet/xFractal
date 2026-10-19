@@ -68,7 +68,9 @@ change**, and keep the answer:
 
 - **Resume** if `HEAD` is this skill's own release commit (§7) and `origin/testflight` is behind
   it: an earlier run committed, then stopped before the build started. Keep its version and notes,
-  skip §4–§6, and continue at §7 (pushing `main` again is a no-op).
+  skip §4–§6, and continue at §7 **after its commit**: the commit already exists, so never run
+  `git add` or `git commit` again; push `main` (a no-op if it is already pushed), tag if the repo tags,
+  then §8.
 - **Nothing new** if the range is empty: say "nothing new since the last build (`<sha>`)" and stop,
   unless Jean asks for a §11 step for that build (then do only that). If he
   explicitly wants the same commit rebuilt, make no empty commit: the `xcode-cloud` tool's
@@ -136,7 +138,8 @@ commit before that.**
 ## 7. Commit and push `main`
 
 Stage only the files this skill changed — never `git add -A` — and end the commit message with
-the session's attribution trailer.
+the session's attribution trailer. On a resume (§2) the commit already exists: skip straight to the
+push.
 
 ```bash
 git add TestFlight/WhatToTest.en-US.txt xFractal/Info-iOS.plist xFractal/Info-MAS.plist project.yml   # the version files only on a bump
