@@ -10,7 +10,8 @@
 # --only PATTERN   comma-separated substrings of scenario names or slugs; renders just those (the check covers all)
 #                  A full run (or one whose PATTERN names "artwork") also renders GalleryFixtures.artwork, the App
 #                  Store creative-asset backgrounds, into previews/artwork/ at full size.
-# --lang en        the languages to render (the app ships English only; another language is one more test run later)
+# --lang en,fr     the languages to render, each one more test run (en, fr, de, it): English into previews/ (or
+#                  previews/ipad/), another language into its own folder below it (previews/fr/, previews/ipad/fr/)
 # --keep-booted    fallback only: leave the simulator running for the next run (shut it down later with --shutdown)
 # --no-open        do not open the page
 # --verbose        also print the test's per-render timing lines
@@ -57,7 +58,7 @@ while [ $# -gt 0 ]; do
         --lang)
             IFS=',' read -r -a LANGS <<< "${2:?--lang needs a list such as en}"
             for l in "${LANGS[@]}"; do
-                case "$l" in en) ;; *) echo "--lang supports en only (got '$l')" >&2; exit 2 ;; esac
+                case "$l" in en|fr|de|it) ;; *) echo "--lang is en, fr, de or it (got '$l')" >&2; exit 2 ;; esac
             done
             shift 2 ;;
         --keep-booted) KEEP_BOOTED=1; shift ;;
@@ -381,6 +382,8 @@ T_BUILD1=$(now)
 ARTWORK_DIR=""
 [ "$DEVICE" = iphone ] && case ",$ONLY," in ,,|*artwork*) ARTWORK_DIR="$ROOT/previews/artwork" ;; esac
 
+region() { case "$1" in en) echo US ;; *) echo "$1" | tr a-z A-Z ;; esac; }   # fr -> FR, de -> DE, it -> IT
+
 FIRST_PAGE=""
 for lang in "${LANGS[@]}"; do
     fail_if_others "testing"    # immediately before the test command
@@ -392,7 +395,7 @@ for lang in "${LANGS[@]}"; do
         -destination "id=$UDID" -derivedDataPath "$DD" \
         -only-testing:xFractalGalleryTests \
         -parallel-testing-enabled NO -enableCodeCoverage NO \
-        -testLanguage "$lang" -testRegion US \
+        -testLanguage "$lang" -testRegion "$(region "$lang")" \
         || { grep -E "^gallery: |: error: |✘" "$WORK/test-$lang.log" | sed 's/^/  /' || true
              echo "snapshot test failed [$lang] (log: $WORK/test-$lang.log)" >&2; exit 1; }
     T_TEST1=$(now)

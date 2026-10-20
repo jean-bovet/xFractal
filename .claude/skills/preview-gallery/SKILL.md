@@ -30,8 +30,8 @@ outcome (measurements, thresholds, findings) are in `planning/gallery-scenarios-
 <!-- /repo-specific -->
 
 <!-- repo-specific: platforms-and-languages -->
-iPhone only, English only (`CFBundleDevelopmentRegion` `en`, no string catalog: one pass, `-testLanguage en`; a second
-language is one more test run). 19 scenarios, 38 images. **Regular width is an approximation**: an 834 x 1210 pt window on the
+English by default (`-testLanguage en`); `--lang fr,de,it` adds one test run per language (`-testLanguage fr -testRegion
+FR`), each into `previews/<lang>/` (`previews/ipad/<lang>/` with `--device ipad`), for the localized App Store screenshots. 19 scenarios, 38 images. **Regular width is an approximation**: an 834 x 1210 pt window on the
 phone simulator with a regular horizontal size class (window, hosting controller and presented sheet carry the override).
 Idiom, safe areas and presentation adaptation stay the phone's: those cards are not iPad coverage. The real iPad pass is
 `scripts/snapshot-gallery.sh --device ipad` (the pool's iPad Pro 13-inch (M5), every scenario, into `previews/ipad/`;

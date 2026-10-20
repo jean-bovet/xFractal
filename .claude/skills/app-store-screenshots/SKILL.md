@@ -13,8 +13,9 @@ The screenshots are rendered, never hand-made: the app's preview gallery capture
 The app: xFractal, App Store product `xFractal-iOS` (`--app xFractal-iOS`). The captures come from
 `scripts/snapshot-gallery.sh` (the `/preview-gallery` skill) and land in `previews/`. The slides file covers the iPhone
 6.9" set (`APP_IPHONE_67`, 1320 x 2868). Store languages, in order: en-US, fr-FR, de-DE, it. What the captures cannot
-show: the gallery renders English only, so the Controls sheet is English in every language; there are no iPad or Mac
-captures, so those sets come from elsewhere; the captures are 2x (804 px wide).
+show: the app's own text is in the store language only when the gallery ran in it (`scripts/snapshot-gallery.sh --lang
+fr,de,it`, also with `--device ipad`, and `scripts/snapshot-mac.sh --lang fr,de,it`: `previews/fr/`, `previews/ipad/fr/`,
+`previews/mac/fr/`), else English; the captures are 2x (804 px wide).
 
 ## 1. Captures
 

@@ -69,6 +69,7 @@ needs a scenario; the `/preview-gallery` skill has the rules, the limits and the
 scripts/snapshot-gallery.sh                 # all 19 scenarios -> previews/index.html (gitignored), then CHECK OK
 scripts/snapshot-gallery.sh --only "julia"  # a subset
 scripts/snapshot-gallery.sh --device ipad   # the same scenarios on the iPad Pro 13-inch -> previews/ipad/
+scripts/snapshot-gallery.sh --lang fr,de,it # also French, German, Italian -> previews/fr/, de/, it/
 scripts/snapshot-mac.sh                     # the Mac window (Tests/MacWindowSnapshotTests, off screen, 2x) -> previews/mac/
 python3 -m unittest discover -s scripts -p 'test_preview_gallery.py'   # page and check contract tests
 scripts/test_snapshot_gallery.sh                                      # lifecycle tests with stub simctl, simpool and buildlock
@@ -81,7 +82,7 @@ scripts/test_snapshot_gallery.sh                                      # lifecycl
   `buildlock`. The script never boots or shuts down a simulator itself. Without `simpool`/`buildlock` on PATH (a
   contributor's Mac) it falls back to its own **xFractal Agent** simulator, which it creates, boots and shuts down.
 - An `--only` run checks every scenario: in a fresh checkout run the whole gallery once first.
-- English only. iPhone by default; `--device ipad` renders every scenario on the pool's iPad Pro 13-inch (M5) into its own
+- English by default; `--lang fr,de,it` renders those languages too, each into its own folder (`previews/fr/`). iPhone by default; `--device ipad` renders every scenario on the pool's iPad Pro 13-inch (M5) into its own
   gallery (`previews/ipad/`, its own simulator without the pool). The "Regular width" cards on the phone are an 834 x
   1210 pt approximation.
 - The Mac app has no simulator: `scripts/snapshot-mac.sh` runs `MacWindowSnapshotTests` (skipped in normal runs), which
@@ -105,7 +106,8 @@ app-store-screenshots                # -> .build/app-store-screenshots/<locale>/
 
 - 1320 x 2868 (`APP_IPHONE_67`), at most 10 per language; files are numbered in display order, and a pair
   (`"panels": 2`) must stay adjacent.
-- The captures are English and 2x (804 px wide): the Controls sheet shows English UI in every language.
+- The captures are 2x (804 px wide). Each store language shows the app in its own language when the gallery was run in it
+  (`--lang fr,de,it`; the Mac: `scripts/snapshot-mac.sh --lang fr,de,it`), else in English.
 - iPad: `app-store-screenshots --config AppStore/screenshots-ipad.json --captures previews/ipad` (2048 x 2732,
   `APP_IPAD_PRO_3GEN_129`, the same slides and headlines in iPad frames). Mac: `--config AppStore/screenshots-mac.json`
   (2880 x 1800, `APP_DESKTOP`: the real window under a centred one-line headline; the hero says "scroll", not "pinch").

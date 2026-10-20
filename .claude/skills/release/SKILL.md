@@ -208,8 +208,8 @@ app-store check --app xFractal-iOS --platform MAC_OS --version <version> --famil
 `metadata` gets the keywords from `AppStore/keywords.txt` (one `--keywords` per line) and the names
 from `AppStore/app-info.txt` (plus `--subtitle` once a line has one). `--add-locale` does nothing for a
 locale the version already has, so the same commands serve every release; `metadata` only matters
-when `AppStore/` changed or `check` reports a locale missing something. The added locales show the
-English screenshots (a locale without its own screenshots falls back to en-US).
+when `AppStore/` changed or `check` reports a locale missing something. Each added locale then gets
+its own screenshots (`/app-store-screenshots`: the headlines and the app in that language).
 
 If App Store Connect refuses a step for one platform (What's New, the phased release), stop and
 report the error to Jean.
