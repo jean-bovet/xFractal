@@ -18,12 +18,14 @@
   "slides": [
     {
       "id": "universal",
-      "background": "#000",
-      "backgroundImage": "artwork/julia-cold",
+      "background": "#f5b630",
+      "backgroundImage": "artwork/mandelbrot-yellow",
       "phones": [
         {
-          "capture": "board-mandelbrot-first-launch",
-          "style": "left:2220px; top:1020px; transform: perspective(4000px) rotateX(14deg) rotateY(-18deg) rotateZ(8deg) scale(1.28);"
+          "capture": "board-multibrot",
+          "statusBar": "dark",
+          "buttons": true,
+          "style": "left:2220px; top:950px; transform: scale(1.3);"
         }
       ]
     }

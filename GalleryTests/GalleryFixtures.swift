@@ -80,6 +80,15 @@ enum GalleryFixtures {
         return s
     }
 
+    /// The first-launch Mandelbrot (Chromatic) zoomed out: the whole set small on the left of a yellow-orange field, room
+    /// for a phone standing in the middle: the creative asset's background (AppStore/creative-assets.json).
+    static var mandelbrotLeft: ViewState {
+        var s = ViewState.defaultState
+        s.centerX = 1.84; s.centerY = 0
+        s.scale = 2.6
+        return s
+    }
+
     static var julia: ViewState {
         var s = ViewState.defaults(for: .julia)
         s.juliaCx = rabbit.x; s.juliaCy = rabbit.y
@@ -136,7 +145,7 @@ enum GalleryFixtures {
     /// Fractals rendered full-frame at App Store creative-asset size (no UI), into XFRACTAL_ARTWORK_DIR: the backgrounds
     /// of AppStore/creative-assets.json.
     static let artwork: [GalleryArtwork] = [
-        GalleryArtwork(name: "julia-cold", state: juliaCold, width: 5244, height: 2950),
+        GalleryArtwork(name: "mandelbrot-yellow", state: mandelbrotLeft, width: 5244, height: 2950),
     ]
 
     // MARK: journals

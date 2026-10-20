@@ -69,10 +69,11 @@ scripts/snapshot-gallery.sh --only artwork                        # the full-siz
 app-store-screenshots --config AppStore/creative-assets.json      # -> .build/app-store-creative-assets/en-US/01-universal.png
 ```
 
-- One slide, no text (the art safe area is too small for a headline, and the image serves every language). The
-  background is `GalleryFixtures.artwork` (the Julia set, Cold palette) rendered at 5244 x 2950 by the app's own Metal
-  renderer: never upscale a screen capture to that size. The review page draws Apple's art safe area (x 1921..3323,
-  y 660..1622, from Apple's universal template): the phone's top sits in it and runs down past it, like Apple's sample.
+- Simple, as Apple asks: one slide, no text (the image serves every language). The background is
+  `GalleryFixtures.artwork` (`mandelbrot-yellow`: the whole set small on the left of a yellow-orange field) rendered at
+  5244 x 2950 by the app's own Metal renderer: never upscale a screen capture to that size. An upright phone with its
+  status bar and buttons (`"statusBar"`, `"buttons"`) shows the Multibrot in the middle; its top sits in Apple's art safe
+  area (x 1921..3323, y 660..1622, drawn on the review page) and it runs down past it, like Apple's sample.
 - Upload: `app-store creative --app xFractal-iOS FILE` puts it in the asset library (reused when the same file is
   already there); with `--version <v>` (an editable version) it is placed as the header and the search results asset on
   every locale, replacing the previous ones. It goes through App Review with that version.
