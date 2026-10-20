@@ -58,6 +58,25 @@ app-store screenshots --app xFractal-iOS --version <v> --locale <locale> --displ
 - `"panels": 2` makes a pair: one canvas two screenshots wide, cut in two, so one phone can lie across the seam. Its
   two titles read as one sentence ("A trillion times deeper" / "and every detail stays sharp").
 
+## The universal creative asset (header and search results)
+
+On iOS 27 and later the App Store shows a creative asset at the top of the product page and in search results
+(without one, it falls back to screenshots and previews). One **universal** image serves both: 5244 x 2950 PNG, no
+alpha, one per placement and localization. `AppStore/creative-assets.json` describes it, rendered by the same command:
+
+```sh
+scripts/snapshot-gallery.sh --only artwork                        # the full-size background, into previews/artwork/
+app-store-screenshots --config AppStore/creative-assets.json      # -> .build/app-store-creative-assets/en-US/01-universal.png
+```
+
+- One slide, no text (the art safe area is too small for a headline, and the image serves every language). The
+  background is `GalleryFixtures.artwork` (the Julia set, Cold palette) rendered at 5244 x 2950 by the app's own Metal
+  renderer: never upscale a screen capture to that size. The review page draws Apple's art safe area (x 1921..3323,
+  y 660..1622, from Apple's universal template): the phone's top sits in it and runs down past it, like Apple's sample.
+- Upload: `app-store creative --app xFractal-iOS FILE` puts it in the asset library (reused when the same file is
+  already there); with `--version <v>` (an editable version) it is placed as the header and the search results asset on
+  every locale, replacing the previous ones. It goes through App Review with that version.
+
 ## Rules
 
 - The screenshots must show the app's real UI (App Review): tilted is fine, a mock-up of a screen the app does not have

@@ -1,6 +1,8 @@
 import SwiftUI
 import UIKit
 import MetalKit
+import ImageIO
+import UniformTypeIdentifiers
 @testable import xFractal
 
 struct GalleryFailure: Error, CustomStringConvertible {
@@ -364,8 +366,15 @@ final class GalleryMount {
 
     /// Renders `state` offscreen through the app's own `encodeFrame` into a texture of the view's drawable size.
     func referenceImage(of state: ViewState) throws -> CGImage {
-        let width = Int(mtk.drawableSize.width), height = Int(mtk.drawableSize.height)
-        let desc = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: mtk.colorPixelFormat, width: width, height: height, mipmapped: false)
+        try Self.offscreenImage(renderer, state: state, width: Int(mtk.drawableSize.width),
+                                height: Int(mtk.drawableSize.height), pixelFormat: mtk.colorPixelFormat)
+    }
+
+    /// Renders `state` through `encodeFrame` into a `width` x `height` texture. `opaque` drops the alpha channel (an App
+    /// Store creative asset may not have one).
+    static func offscreenImage(_ renderer: FractalRenderer, state: ViewState, width: Int, height: Int,
+                               pixelFormat: MTLPixelFormat, opaque: Bool = false) throws -> CGImage {
+        let desc = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: pixelFormat, width: width, height: height, mipmapped: false)
         desc.usage = [.renderTarget, .shaderRead]
         desc.storageMode = .shared
         guard let texture = renderer.device.makeTexture(descriptor: desc),
@@ -384,11 +393,26 @@ final class GalleryMount {
         var bytes = [UInt8](repeating: 0, count: width * height * 4)
         texture.getBytes(&bytes, bytesPerRow: width * 4, from: MTLRegionMake2D(0, 0, width, height), mipmapLevel: 0)
         let space = CGColorSpaceCreateDeviceRGB()
-        let info = CGBitmapInfo.byteOrder32Little.rawValue | CGImageAlphaInfo.premultipliedFirst.rawValue
+        let alpha = opaque ? CGImageAlphaInfo.noneSkipFirst : CGImageAlphaInfo.premultipliedFirst
+        let info = CGBitmapInfo.byteOrder32Little.rawValue | alpha.rawValue
         guard let ctx = CGContext(data: &bytes, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
                                   space: space, bitmapInfo: info),
               let image = ctx.makeImage() else { throw GalleryFailure("reference render: no image") }
         return image
+    }
+
+    /// One artwork as an opaque PNG (RGB, no alpha), rendered off screen at its full pixel size.
+    static func artworkPNG(_ artwork: GalleryArtwork) throws -> Data {
+        guard let renderer = FractalRenderer(metalView: MTKView(frame: .zero)) else { throw GalleryFailure("artwork: no Metal renderer") }
+        let image = try offscreenImage(renderer, state: artwork.state, width: artwork.width, height: artwork.height,
+                                       pixelFormat: .bgra8Unorm, opaque: true)
+        let data = NSMutableData()
+        guard let dest = CGImageDestinationCreateWithData(data, UTType.png.identifier as CFString, 1, nil) else {
+            throw GalleryFailure("artwork: no PNG encoder")
+        }
+        CGImageDestinationAddImage(dest, image, nil)
+        guard CGImageDestinationFinalize(dest) else { throw GalleryFailure("artwork: PNG encoding failed") }
+        return data as Data
     }
 
     /// The scrim (a black overlay of the sheet's dimming) a scenario may show over the board, per appearance, calibrated

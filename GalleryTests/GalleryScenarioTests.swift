@@ -15,6 +15,18 @@ final class GalleryScenarioTests: XCTestCase {
         XCTAssertFalse(slugs.contains(""))
     }
 
+    func testArtworkIsTheUniversalAssetSize() {
+        let names = GalleryFixtures.artwork.map(\.name)
+        XCTAssertEqual(Set(names).count, names.count)
+        XCTAssertFalse(names.isEmpty)
+        for artwork in GalleryFixtures.artwork {
+            XCTAssertEqual(artwork.name, artwork.name.lowercased().replacingOccurrences(of: "[^a-z0-9-]", with: "", options: .regularExpression))
+            // The App Store's universal creative asset (product page header and search results): 5244 x 2950.
+            XCTAssertEqual(artwork.width, 5244, artwork.name)
+            XCTAssertEqual(artwork.height, 2950, artwork.name)
+        }
+    }
+
     func testBuilderIsFreshPerCall() {
         for scenario in GalleryScenarios.every {
             let a = scenario.build(.light), b = scenario.build(.light), c = scenario.build(.dark)

@@ -6,6 +6,8 @@
 #   scripts/snapshot-gallery.sh --shutdown
 #
 # --only PATTERN   comma-separated substrings of scenario names or slugs; renders just those (the check covers all)
+#                  A full run (or one whose PATTERN names "artwork") also renders GalleryFixtures.artwork, the App
+#                  Store creative-asset backgrounds, into previews/artwork/ at full size.
 # --lang en        the languages to render (the app ships English only; another language is one more test run later)
 # --keep-booted    fallback only: leave the simulator running for the next run (shut it down later with --shutdown)
 # --no-open        do not open the page
@@ -360,12 +362,16 @@ run_xcodebuild "$WORK/build.log" build build-for-testing -project xFractal.xcode
     || { tail -30 "$WORK/build.log"; echo "build failed (log: $WORK/build.log)" >&2; exit 1; }
 T_BUILD1=$(now)
 
+ARTWORK_DIR=""
+case ",$ONLY," in ,,|*artwork*) ARTWORK_DIR="$ROOT/previews/artwork" ;; esac
+
 FIRST_PAGE=""
 for lang in "${LANGS[@]}"; do
     fail_if_others "testing"    # immediately before the test command
     T_TEST0=$(now)
     # TEST_RUNNER_<name> in xcodebuild's environment reaches the test process as <name>.
     TEST_RUNNER_XFRACTAL_SNAPSHOT_DIR="$WORK/png-$lang" TEST_RUNNER_XFRACTAL_SNAPSHOT_ONLY="$ONLY" \
+    TEST_RUNNER_XFRACTAL_ARTWORK_DIR="$ARTWORK_DIR" \
     run_xcodebuild "$WORK/test-$lang.log" test test-without-building -project xFractal.xcodeproj -scheme xFractal-iOS \
         -destination "id=$UDID" -derivedDataPath "$DD" \
         -only-testing:xFractalGalleryTests \
@@ -375,6 +381,8 @@ for lang in "${LANGS[@]}"; do
              echo "snapshot test failed [$lang] (log: $WORK/test-$lang.log)" >&2; exit 1; }
     T_TEST1=$(now)
     grep -E "^gallery: [0-9]+ scenario" "$WORK/test-$lang.log" | sed "s/^/[$lang] /" || true
+    grep -E "^gallery: artwork " "$WORK/test-$lang.log" | sed "s/^/[$lang] /" || true
+    ARTWORK_DIR=""    # the artwork has no text: one language renders it
     [ "$VERBOSE" = 1 ] && { grep -E '^gallery: [a-z0-9-]+ (light|dark) ' "$WORK/test-$lang.log" | sed "s/^/[$lang] /" || true; }
     echo "[$lang] $(grep -cE '^gallery: [a-z0-9-]+ (light|dark) ready' "$WORK/test-$lang.log" || true) per-render timing line(s)"
     lang_flag=(--lang "$lang")

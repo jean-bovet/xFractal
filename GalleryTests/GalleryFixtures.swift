@@ -17,6 +17,14 @@ enum GallerySize: Equatable {
     }
 }
 
+/// A fractal rendered off screen at a fixed pixel size, with no app UI around it.
+struct GalleryArtwork {
+    var name: String
+    var state: ViewState
+    var width: Int
+    var height: Int
+}
+
 enum GallerySheet: Equatable {
     case none
     /// Presented, untouched: whatever detent SwiftUI opens at.
@@ -122,6 +130,14 @@ enum GalleryFixtures {
         s.palette = .chromatic
         return s
     }
+
+    // MARK: artwork
+
+    /// Fractals rendered full-frame at App Store creative-asset size (no UI), into XFRACTAL_ARTWORK_DIR: the backgrounds
+    /// of AppStore/creative-assets.json.
+    static let artwork: [GalleryArtwork] = [
+        GalleryArtwork(name: "julia-cold", state: juliaCold, width: 5244, height: 2950),
+    ]
 
     // MARK: journals
 

@@ -97,3 +97,8 @@ app-store-screenshots                # -> .build/app-store-screenshots/<locale>/
 - 1320 x 2868 (`APP_IPHONE_67`), at most 10 per language; files are numbered in display order, and a pair
   (`"panels": 2`) must stay adjacent.
 - The captures are English and 2x (804 px wide): the Controls sheet shows English UI in every language.
+
+The universal creative asset (product page header and search results on iOS 27, 5244 x 2950, no text, one image for
+every language) is the same command with `--config AppStore/creative-assets.json`: the orange Mandelbrot phone over the
+Julia set in the Cold palette, rendered full size by the gallery run into `previews/artwork/` (`GalleryFixtures.artwork`).
+`app-store creative` uploads it.

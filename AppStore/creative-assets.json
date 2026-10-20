@@ -1,0 +1,31 @@
+{
+  "displayType": "UNIVERSAL_CREATIVE_ASSET",
+  "width": 5244,
+  "height": 2950,
+  "max": 1,
+  "locales": [
+    "en-US"
+  ],
+  "guides": [
+    {
+      "label": "Art safe area (Apple's template)",
+      "x": 1921,
+      "y": 660,
+      "width": 1402,
+      "height": 962
+    }
+  ],
+  "slides": [
+    {
+      "id": "universal",
+      "background": "#000",
+      "backgroundImage": "artwork/julia-cold",
+      "phones": [
+        {
+          "capture": "board-mandelbrot-first-launch",
+          "style": "left:2220px; top:1020px; transform: perspective(4000px) rotateX(14deg) rotateY(-18deg) rotateZ(8deg) scale(1.28);"
+        }
+      ]
+    }
+  ]
+}

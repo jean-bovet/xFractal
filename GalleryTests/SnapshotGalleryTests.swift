@@ -77,4 +77,17 @@ final class SnapshotGalleryTests: XCTestCase {
         print("gallery: \(rendered) scenario images, redraws \(redraws), ready ms \(summary)")
         XCTAssertEqual(redraws, 0, "redraws are a finding to explain")
     }
+
+    /// Renders every `GalleryFixtures.artwork` into XFRACTAL_ARTWORK_DIR (`<name>.png`, opaque). Skipped unless set.
+    func testRenderArtwork() throws {
+        guard let dir = ProcessInfo.processInfo.environment["XFRACTAL_ARTWORK_DIR"], !dir.isEmpty else {
+            throw XCTSkip("XFRACTAL_ARTWORK_DIR not set")
+        }
+        try FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
+        for artwork in GalleryFixtures.artwork {
+            let t0 = Date()
+            try GalleryMount.artworkPNG(artwork).write(to: URL(fileURLWithPath: dir + "/\(artwork.name).png"))
+            print("gallery: artwork \(artwork.name) \(artwork.width)x\(artwork.height) in \(Int(Date().timeIntervalSince(t0) * 1000)) ms")
+        }
+    }
 }
