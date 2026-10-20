@@ -66,7 +66,7 @@ The iOS app has no `#Preview`: every screen state is a scenario in `GalleryTests
 needs a scenario; the `/preview-gallery` skill has the rules, the limits and the calibrated checks.
 
 ```sh
-scripts/snapshot-gallery.sh                 # all 17 scenarios -> previews/index.html (gitignored), then CHECK OK
+scripts/snapshot-gallery.sh                 # all 18 scenarios -> previews/index.html (gitignored), then CHECK OK
 scripts/snapshot-gallery.sh --only "julia"  # a subset
 python3 -m unittest discover -s scripts -p 'test_preview_gallery.py'   # page and check contract tests
 scripts/test_snapshot_gallery.sh                                      # lifecycle tests with stub simctl, simpool and buildlock
@@ -81,3 +81,19 @@ scripts/test_snapshot_gallery.sh                                      # lifecycl
 - An `--only` run checks every scenario: in a fresh checkout run the whole gallery once first.
 - iPhone and English only; the "Regular width" cards are an 834 x 1210 pt phone-simulator approximation, not iPad coverage.
 - The plan and its outcome (measurements, thresholds, findings): `planning/gallery-scenarios-plan.md`.
+
+## App Store screenshots
+
+The iPhone App Store screenshots are rendered from the preview-gallery captures by the `app-store-screenshots`
+command: tilted phones, a headline per store language, and a pair of screenshots that share one phone lying across the
+seam. The slides (captures, phone angles, backgrounds, headlines in the four languages) are in
+`AppStore/screenshots.json`; the `/app-store-screenshots` skill renders, reviews and uploads them.
+
+```sh
+scripts/snapshot-gallery.sh          # the captures, into previews/
+app-store-screenshots                # -> .build/app-store-screenshots/<locale>/NN-<slide>.png + index.html
+```
+
+- 1320 x 2868 (`APP_IPHONE_67`), at most 10 per language; files are numbered in display order, and a pair
+  (`"panels": 2`) must stay adjacent.
+- The captures are English and 2x (804 px wide): the Controls sheet shows English UI in every language.

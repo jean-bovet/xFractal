@@ -116,6 +116,12 @@ enum GalleryFixtures {
         s.palette = .gray
         return s
     }
+    /// The same deep zoom in color: the App Store screenshots (AppStore/screenshots.json) use it.
+    static var deepZoomChromatic: ViewState {
+        var s = deepZoom
+        s.palette = .chromatic
+        return s
+    }
 
     // MARK: journals
 
@@ -127,7 +133,7 @@ enum GalleryFixtures {
         [Snapshot(state: a, time: 0), Snapshot(state: b, time: 30)]
     }
 
-    // MARK: the 17 scenarios
+    // MARK: the 18 scenarios
 
     static let all: [GalleryFixture] = [
         GalleryFixture(name: "Board · Mandelbrot · First launch", group: "Board", state: nil,
@@ -140,6 +146,8 @@ enum GalleryFixtures {
                        regions: [.peek, .fractal]),
         GalleryFixture(name: "Board · Mandelbrot · Deep zoom", group: "Board", state: deepZoom, journal: single(deepZoom),
                        regions: [.peek, .fractal]),
+        GalleryFixture(name: "Board · Mandelbrot · Deep zoom · Chromatic", group: "Board", state: deepZoomChromatic,
+                       journal: single(deepZoomChromatic), regions: [.peek, .fractal]),
         GalleryFixture(name: "Board · Replay ready", group: "Board", state: mandelbrotB,
                        journal: pair(mandelbrotA, mandelbrotB), regions: [.peek, .fractal]),
         GalleryFixture(name: "Board · Replaying", group: "Board", state: mandelbrotB,
