@@ -102,6 +102,13 @@ enum GalleryFixtures {
         s.juliaCx = rabbit.x; s.juliaCy = rabbit.y
         return s
     }
+    /// The Spiral preset in Chromatic: colour almost everywhere, little black. The search results asset's phone shows it.
+    static var juliaSpiralChromatic: ViewState {
+        var s = ViewState.defaults(for: .julia)
+        s.juliaCx = -0.7; s.juliaCy = 0.27015
+        s.palette = .chromatic
+        return s
+    }
     static var juliaCold: ViewState {
         var s = julia
         s.palette = .cold
@@ -167,13 +174,15 @@ enum GalleryFixtures {
         [Snapshot(state: a, time: 0), Snapshot(state: b, time: 30)]
     }
 
-    // MARK: the 18 scenarios
+    // MARK: the 19 scenarios
 
     static let all: [GalleryFixture] = [
         GalleryFixture(name: "Board · Mandelbrot · First launch", group: "Board", state: nil,
                        regions: [.peek, .fractal]),
         GalleryFixture(name: "Board · Julia", group: "Board", state: juliaCold, journal: single(juliaCold),
                        regions: [.peek, .fractal]),
+        GalleryFixture(name: "Board · Julia · Spiral · Chromatic", group: "Board", state: juliaSpiralChromatic,
+                       journal: single(juliaSpiralChromatic), regions: [.peek, .fractal]),
         GalleryFixture(name: "Board · Newton", group: "Board", state: newton, journal: single(newton),
                        regions: [.peek, .fractal]),
         GalleryFixture(name: "Board · Multibrot", group: "Board", state: multibrotHot, journal: single(multibrotHot),

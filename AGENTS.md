@@ -66,7 +66,7 @@ The iOS app has no `#Preview`: every screen state is a scenario in `GalleryTests
 needs a scenario; the `/preview-gallery` skill has the rules, the limits and the calibrated checks.
 
 ```sh
-scripts/snapshot-gallery.sh                 # all 18 scenarios -> previews/index.html (gitignored), then CHECK OK
+scripts/snapshot-gallery.sh                 # all 19 scenarios -> previews/index.html (gitignored), then CHECK OK
 scripts/snapshot-gallery.sh --only "julia"  # a subset
 python3 -m unittest discover -s scripts -p 'test_preview_gallery.py'   # page and check contract tests
 scripts/test_snapshot_gallery.sh                                      # lifecycle tests with stub simctl, simpool and buildlock
@@ -101,6 +101,6 @@ app-store-screenshots                # -> .build/app-store-screenshots/<locale>/
 The product page header and the search results asset (iOS 27, no text, one image each for every language) are the same
 command with `--config AppStore/header.json` (3840 x 1646: the whole yellow Mandelbrot, centered, no phone) and
 `--config AppStore/search-results.json` (3840 x 2560: the Mandelbrot on the left, an upright phone with its status bar
-and buttons showing the Multibrot on the right, vertically centered). Their backgrounds are rendered full size by the
+and buttons showing the Julia Spiral in colour on the right, vertically centered). Their backgrounds are rendered full size by the
 gallery run into `previews/artwork/` (`GalleryFixtures.artwork`); `app-store creative --placement header|search` uploads
 them.

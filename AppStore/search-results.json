@@ -13,7 +13,7 @@
       "background": "#f5b630",
       "backgroundImage": "artwork/mandelbrot-search",
       "phones": [
-        { "capture": "board-multibrot", "statusBar": "dark", "buttons": true,
+        { "capture": "board-julia-spiral-chromatic", "statusBar": "dark", "buttons": true,
           "style": "left:2448px; top:406px; transform: scale(1.173);" }
       ]
     }

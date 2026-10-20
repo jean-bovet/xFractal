@@ -75,7 +75,8 @@ app-store-screenshots --config AppStore/search-results.json      # -> .build/app
   just the middle of the header, so the set sits inside the header template's art safe area (x 1097..2743,
   y 493..1154, drawn on the review page).
 - **Search results** (3840 x 2560, 3:2): the Mandelbrot on the left, an upright phone with its status bar and buttons
-  (`"statusBar"`, `"buttons"`) showing the Multibrot on the right, vertically centered and whole. The search template's
+  (`"statusBar"`, `"buttons"`) showing the Julia Spiral in Chromatic (colour, little black: the
+  `board-julia-spiral-chromatic` scenario) on the right, vertically centered and whole. The search template's
   art safe area is x 836..3004, y 765..1795.
 - Simple, as Apple asks: a plain field, one motif, no tilt. The backgrounds are `GalleryFixtures.artwork`
   (`mandelbrot-header`, `mandelbrot-search`) rendered at their exact size by the app's own Metal renderer: never upscale a

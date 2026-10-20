@@ -11,7 +11,7 @@ final class GalleryScenarioTests: XCTestCase {
     func testSlugsAreUnique() {
         let slugs = GalleryScenarios.every.map(\.slug)
         XCTAssertEqual(Set(slugs).count, slugs.count)
-        XCTAssertEqual(slugs.count, 18)
+        XCTAssertEqual(slugs.count, 19)
         XCTAssertFalse(slugs.contains(""))
     }
 
