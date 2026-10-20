@@ -81,18 +81,18 @@ enum GalleryFixtures {
     }
 
     /// The product page header (AppStore/header.json): the whole first-launch Mandelbrot (Chromatic, on its yellow-orange
-    /// field) centered, about 700 px tall, inside the header template's art safe area (y 493..1154 of 1646).
+    /// field) centered and large, about 1150 px of the 1646 px height: the iPhone keeps only the middle of the header.
     static var mandelbrotHeader: ViewState {
         var s = ViewState.defaultState
         s.centerX = -0.76; s.centerY = 0
-        s.scale = 2.7
+        s.scale = 1.65
         return s
     }
-    /// The search results asset (AppStore/search-results.json): the whole set on the left (centered near x 1250 of 3840),
-    /// room for a phone standing on the right.
+    /// The search results asset (AppStore/search-results.json): the whole set well to the left (centered near x 950 of
+    /// 3840), room for a phone standing on the right.
     static var mandelbrotSearch: ViewState {
         var s = ViewState.defaultState
-        s.centerX = 0.68; s.centerY = 0
+        s.centerX = 1.326; s.centerY = 0
         s.scale = 2.75
         return s
     }

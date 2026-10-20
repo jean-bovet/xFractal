@@ -14,7 +14,7 @@
       "backgroundImage": "artwork/mandelbrot-search",
       "phones": [
         { "capture": "board-multibrot", "statusBar": "dark", "buttons": true,
-          "style": "left:2128px; top:406px; transform: scale(1.173);" }
+          "style": "left:2448px; top:406px; transform: scale(1.173);" }
       ]
     }
   ]
