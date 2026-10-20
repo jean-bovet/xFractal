@@ -68,6 +68,16 @@ final class MacWindowSnapshotTests: XCTestCase {
         override func orderFront(_ sender: Any?) {}
         override func orderFrontRegardless() {}
         override func makeKeyAndOrderFront(_ sender: Any?) {}
+        // Drawn as the active window (coloured traffic lights, a dark title, accent-coloured controls) although the
+        // test host is never the active app: the key and main overrides plus AppKit's private appearance queries,
+        // which only this test overrides; the SwiftUI controls also get the key `controlActiveState`.
+        override var isKeyWindow: Bool { true }
+        override var isMainWindow: Bool { true }
+        @objc var hasKeyAppearance: Bool { true }
+        @objc var hasMainAppearance: Bool { true }
+        @objc func _hasActiveAppearance() -> Bool { true }
+        @objc func _hasActiveAppearanceIgnoringKeyFocus() -> Bool { true }
+        @objc func _hasActiveControls() -> Bool { true }
     }
 
     private func render(_ scenario: Scenario) async throws -> Data {
@@ -85,7 +95,8 @@ final class MacWindowSnapshotTests: XCTestCase {
         window.isReleasedWhenClosed = false
         window.ignoresMouseEvents = true
         window.appearance = NSAppearance(named: .aqua)
-        let hosting = NSHostingView(rootView: ContentView(store: store, showingPanel: scenario.panel))
+        let hosting = NSHostingView(rootView: ContentView(store: store, showingPanel: scenario.panel)
+            .environment(\.controlActiveState, .key))
         hosting.sizingOptions = []
         window.contentView = hosting
         window.setContentSize(Self.size)

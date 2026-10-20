@@ -24,7 +24,7 @@ buildlock --folder "$PWD/.build/DerivedData" -- \
   -destination 'platform=macOS' -derivedDataPath "$PWD/.build/DerivedData"
 ```
 
-The `xFractal-MAS` scheme's test action runs `xFractalTests` (72 tests, one of them the skipped Mac window capture; hosted by the Mac app; no simulator). Tests must
+The `xFractal-MAS` scheme's test action runs `xFractalTests` (73 tests, one of them the skipped Mac window capture; hosted by the Mac app; no simulator). Tests must
 pass before any commit. Without a signing team the app is signed ad hoc and the tests still run; if signing fails
 anyway, add `CODE_SIGNING_ALLOWED=NO`. Without `buildlock` on `PATH`, run the `xcodebuild` part alone.
 
@@ -75,7 +75,7 @@ scripts/test_snapshot_gallery.sh                                      # lifecycl
 ```
 
 - `GalleryTests/` is the **iOS** test target (`xFractalGalleryTests`, hosted by the app); `Tests/` stays the macOS logic tests
-  (`xcodebuild test -scheme xFractal-MAS`, 72 tests). The plain gallery tests run with every gallery run.
+  (`xcodebuild test -scheme xFractal-MAS`, 73 tests). The plain gallery tests run with every gallery run.
 - The simulator is leased from the machine-wide pool (`simpool acquire --spec iphone`: iPhone 17 Pro, iOS 27.0) and given
   back with `simpool release` when the script ends, on success, failure or interrupt; both `xcodebuild` commands run under
   `buildlock`. The script never boots or shuts down a simulator itself. Without `simpool`/`buildlock` on PATH (a

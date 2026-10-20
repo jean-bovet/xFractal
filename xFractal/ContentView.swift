@@ -131,11 +131,10 @@ struct ContentView: View {
 
             iterationControl
 
-            Button {
-                withAnimation(.easeInOut(duration: 0.15)) { showingPanel.toggle() }
-            } label: {
-                Image(systemName: showingPanel ? "slider.horizontal.3.fill" : "slider.horizontal.3")
+            Toggle(isOn: $showingPanel.animation(.easeInOut(duration: 0.15))) {
+                Image(systemName: "slider.horizontal.3")
             }
+            .toggleStyle(.button)
 
             Spacer(minLength: 0)
 
