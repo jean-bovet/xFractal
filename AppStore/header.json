@@ -1,0 +1,13 @@
+{
+  "displayType": "PRODUCT_PAGE_HEADER_ASSET",
+  "width": 3840,
+  "height": 1646,
+  "max": 1,
+  "locales": ["en-US"],
+  "guides": [
+    { "label": "Art safe area (Apple's header template)", "x": 1097, "y": 493, "width": 1646, "height": 661 }
+  ],
+  "slides": [
+    { "id": "header", "background": "#f5b630", "backgroundImage": "artwork/mandelbrot-header", "phones": [] }
+  ]
+}

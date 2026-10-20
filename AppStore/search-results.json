@@ -1,0 +1,21 @@
+{
+  "displayType": "APP_STORE_SEARCH_RESULTS_ASSET",
+  "width": 3840,
+  "height": 2560,
+  "max": 1,
+  "locales": ["en-US"],
+  "guides": [
+    { "label": "Art safe area (Apple's search results template)", "x": 836, "y": 765, "width": 2168, "height": 1030 }
+  ],
+  "slides": [
+    {
+      "id": "search-results",
+      "background": "#f5b630",
+      "backgroundImage": "artwork/mandelbrot-search",
+      "phones": [
+        { "capture": "board-multibrot", "statusBar": "dark", "buttons": true,
+          "style": "left:2128px; top:406px; transform: scale(1.173);" }
+      ]
+    }
+  ]
+}

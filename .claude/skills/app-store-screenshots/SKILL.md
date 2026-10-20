@@ -58,25 +58,31 @@ app-store screenshots --app xFractal-iOS --version <v> --locale <locale> --displ
 - `"panels": 2` makes a pair: one canvas two screenshots wide, cut in two, so one phone can lie across the seam. Its
   two titles read as one sentence ("A trillion times deeper" / "and every detail stays sharp").
 
-## The universal creative asset (header and search results)
+## The product page header and the search results asset
 
 On iOS 27 and later the App Store shows a creative asset at the top of the product page and in search results
-(without one, it falls back to screenshots and previews). One **universal** image serves both: 5244 x 2950 PNG, no
-alpha, one per placement and localization. `AppStore/creative-assets.json` describes it, rendered by the same command:
+(without one, it falls back to screenshots and previews). xFractal gives each its own image (a universal 5244 x 2950
+image could serve both, but each place wants a different layout): PNG, no alpha, no text, one per placement for every
+language. Each has a slides file, rendered by the same command:
 
 ```sh
-scripts/snapshot-gallery.sh --only artwork                        # the full-size background, into previews/artwork/
-app-store-screenshots --config AppStore/creative-assets.json      # -> .build/app-store-creative-assets/en-US/01-universal.png
+scripts/snapshot-gallery.sh --only artwork                       # the full-size backgrounds, into previews/artwork/
+app-store-screenshots --config AppStore/header.json              # -> .build/app-store-header/en-US/01-header.png
+app-store-screenshots --config AppStore/search-results.json      # -> .build/app-store-search-results/en-US/01-search-results.png
 ```
 
-- Simple, as Apple asks: one slide, no text (the image serves every language). The background is
-  `GalleryFixtures.artwork` (`mandelbrot-yellow`: the whole set small on the left of a yellow-orange field) rendered at
-  5244 x 2950 by the app's own Metal renderer: never upscale a screen capture to that size. An upright phone with its
-  status bar and buttons (`"statusBar"`, `"buttons"`) shows the Multibrot in the middle; its top sits in Apple's art safe
-  area (x 1921..3323, y 660..1622, drawn on the review page) and it runs down past it, like Apple's sample.
-- Upload: `app-store creative --app xFractal-iOS FILE` puts it in the asset library (reused when the same file is
-  already there); with `--version <v>` (an editable version) it is placed as the header and the search results asset on
-  every locale, replacing the previous ones. It goes through App Review with that version.
+- **Header** (3840 x 1646, 21:9): only the yellow Mandelbrot, whole and centered, no phone. The iPhone product page keeps
+  just the middle of the header, so the set sits inside the header template's art safe area (x 1097..2743,
+  y 493..1154, drawn on the review page).
+- **Search results** (3840 x 2560, 3:2): the Mandelbrot on the left, an upright phone with its status bar and buttons
+  (`"statusBar"`, `"buttons"`) showing the Multibrot on the right, vertically centered and whole. The search template's
+  art safe area is x 836..3004, y 765..1795.
+- Simple, as Apple asks: a plain field, one motif, no tilt. The backgrounds are `GalleryFixtures.artwork`
+  (`mandelbrot-header`, `mandelbrot-search`) rendered at their exact size by the app's own Metal renderer: never upscale a
+  screen capture to that size.
+- Upload: `app-store creative --app xFractal-iOS --placement header FILE` (then `--placement search` with the other
+  file) puts it in the asset library (reused when the same file is already there); with `--version <v>` (an editable
+  version) it is placed on every locale, replacing the previous one. It goes through App Review with that version.
 
 ## Rules
 

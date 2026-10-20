@@ -15,15 +15,16 @@ final class GalleryScenarioTests: XCTestCase {
         XCTAssertFalse(slugs.contains(""))
     }
 
-    func testArtworkIsTheUniversalAssetSize() {
+    func testArtworkHasAnAppStoreCreativeAssetSize() {
         let names = GalleryFixtures.artwork.map(\.name)
         XCTAssertEqual(Set(names).count, names.count)
         XCTAssertFalse(names.isEmpty)
         for artwork in GalleryFixtures.artwork {
             XCTAssertEqual(artwork.name, artwork.name.lowercased().replacingOccurrences(of: "[^a-z0-9-]", with: "", options: .regularExpression))
-            // The App Store's universal creative asset (product page header and search results): 5244 x 2950.
-            XCTAssertEqual(artwork.width, 5244, artwork.name)
-            XCTAssertEqual(artwork.height, 2950, artwork.name)
+            // App Store creative-asset sizes: the product page header (3840 x 1646), the largest search results asset
+            // (3840 x 2560) and the universal asset that serves both (5244 x 2950).
+            let sizes = [[3840, 1646], [3840, 2560], [5244, 2950]]
+            XCTAssertTrue(sizes.contains([artwork.width, artwork.height]), "\(artwork.name): \(artwork.width) x \(artwork.height)")
         }
     }
 
