@@ -24,7 +24,7 @@ buildlock --folder "$PWD/.build/DerivedData" -- \
   -destination 'platform=macOS' -derivedDataPath "$PWD/.build/DerivedData"
 ```
 
-The `xFractal-MAS` scheme's test action runs `xFractalTests` (71 tests, hosted by the Mac app; no simulator). Tests must
+The `xFractal-MAS` scheme's test action runs `xFractalTests` (72 tests, one of them the skipped Mac window capture; hosted by the Mac app; no simulator). Tests must
 pass before any commit. Without a signing team the app is signed ad hoc and the tests still run; if signing fails
 anyway, add `CODE_SIGNING_ALLOWED=NO`. Without `buildlock` on `PATH`, run the `xcodebuild` part alone.
 
@@ -68,18 +68,27 @@ needs a scenario; the `/preview-gallery` skill has the rules, the limits and the
 ```sh
 scripts/snapshot-gallery.sh                 # all 19 scenarios -> previews/index.html (gitignored), then CHECK OK
 scripts/snapshot-gallery.sh --only "julia"  # a subset
+scripts/snapshot-gallery.sh --device ipad   # the same scenarios on the iPad Pro 13-inch -> previews/ipad/
+scripts/snapshot-mac.sh                     # the Mac window (Tests/MacWindowSnapshotTests, off screen, 2x) -> previews/mac/
 python3 -m unittest discover -s scripts -p 'test_preview_gallery.py'   # page and check contract tests
 scripts/test_snapshot_gallery.sh                                      # lifecycle tests with stub simctl, simpool and buildlock
 ```
 
 - `GalleryTests/` is the **iOS** test target (`xFractalGalleryTests`, hosted by the app); `Tests/` stays the macOS logic tests
-  (`xcodebuild test -scheme xFractal-MAS`, 71 tests). The plain gallery tests run with every gallery run.
+  (`xcodebuild test -scheme xFractal-MAS`, 72 tests). The plain gallery tests run with every gallery run.
 - The simulator is leased from the machine-wide pool (`simpool acquire --spec iphone`: iPhone 17 Pro, iOS 27.0) and given
   back with `simpool release` when the script ends, on success, failure or interrupt; both `xcodebuild` commands run under
   `buildlock`. The script never boots or shuts down a simulator itself. Without `simpool`/`buildlock` on PATH (a
   contributor's Mac) it falls back to its own **xFractal Agent** simulator, which it creates, boots and shuts down.
 - An `--only` run checks every scenario: in a fresh checkout run the whole gallery once first.
-- iPhone and English only; the "Regular width" cards are an 834 x 1210 pt phone-simulator approximation, not iPad coverage.
+- English only. iPhone by default; `--device ipad` renders every scenario on the pool's iPad Pro 13-inch (M5) into its own
+  gallery (`previews/ipad/`, its own simulator without the pool). The "Regular width" cards on the phone are an 834 x
+  1210 pt approximation.
+- The Mac app has no simulator: `scripts/snapshot-mac.sh` runs `MacWindowSnapshotTests` (skipped in normal runs), which
+  mounts the real `ContentView` in a window never put on screen and draws it with `CARenderer` at 2x (title bar, HUD,
+  panel). The fractal is a `CAMetalLayer`, which `CARenderer` skips, so it is painted with the app's own `encodeFrame`.
+  The sandboxed host's container is closed to other processes: the PNGs come back as base64 on stdout. Needs a Retina
+  display.
 - The plan and its outcome (measurements, thresholds, findings): `planning/gallery-scenarios-plan.md`.
 
 ## App Store screenshots
@@ -97,6 +106,9 @@ app-store-screenshots                # -> .build/app-store-screenshots/<locale>/
 - 1320 x 2868 (`APP_IPHONE_67`), at most 10 per language; files are numbered in display order, and a pair
   (`"panels": 2`) must stay adjacent.
 - The captures are English and 2x (804 px wide): the Controls sheet shows English UI in every language.
+- iPad: `app-store-screenshots --config AppStore/screenshots-ipad.json --captures previews/ipad` (2048 x 2732,
+  `APP_IPAD_PRO_3GEN_129`, the same slides and headlines in iPad frames). Mac: `--config AppStore/screenshots-mac.json`
+  (2880 x 1800, `APP_DESKTOP`: the real window under a centred one-line headline; the hero says "scroll", not "pinch").
 
 The product page header and the search results asset (iOS 27, no text, one image each for every language) are the same
 command with `--config AppStore/header.json` (3840 x 1646: the whole yellow Mandelbrot, centered, no phone) and

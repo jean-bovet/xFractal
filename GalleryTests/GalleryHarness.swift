@@ -261,13 +261,23 @@ final class GalleryMount {
         func extent(_ s: UIScrollView) -> CGFloat {
             s.contentSize.height + s.adjustedContentInset.top + s.adjustedContentInset.bottom - s.bounds.height
         }
-        let form = scrolls.filter { extent($0) > 0 && $0.contentSize.width <= $0.bounds.width + 0.5 }
-            .max { extent($0) < extent($1) }
-        guard let form else { throw GalleryFailure("no vertical scroll view in the sheet") }
-        let target = form.contentSize.height + form.adjustedContentInset.bottom - form.bounds.height
-        form.setContentOffset(CGPoint(x: form.contentOffset.x, y: target), animated: false)
-        try await waitStableSheetFrame()
-        try await waitUntil(2, "scroll offset held") { abs(form.contentOffset.y - target) <= 1 }
+        let vertical = scrolls.filter { $0.contentSize.width <= $0.bounds.width + 0.5 }
+        if let form = vertical.filter({ extent($0) > 0 }).max(by: { extent($0) < extent($1) }) {
+            let target = form.contentSize.height + form.adjustedContentInset.bottom - form.bounds.height
+            form.setContentOffset(CGPoint(x: form.contentOffset.x, y: target), animated: false)
+            try await waitStableSheetFrame()
+            try await waitUntil(2, "scroll offset held") { abs(form.contentOffset.y - target) <= 1 }
+            return try checkedEnd(of: form)
+        }
+        // The whole form fits (the iPad's large sheet): nothing to scroll, its end is already in view.
+        guard let form = vertical.first(where: { $0 is UICollectionView }) else {
+            throw GalleryFailure("no vertical scroll view in the sheet")
+        }
+        return try checkedEnd(of: form)
+    }
+
+    /// The presets row and the last row of the controls list must both be inside the visible sheet.
+    private func checkedEnd(of form: UIScrollView) throws -> UIScrollView {
         let rows = try formRows(of: form)
         let visible = sheetFrame!.intersection(window.bounds)
         for (name, frame) in [("the presets row (Rabbit)", rows.presets), ("the last row (Clear Journal)", rows.last)] {
@@ -280,7 +290,7 @@ final class GalleryMount {
 
     /// Frames (window coordinates) of the Julia presets row and of the last row of the controls list. SwiftUI draws the
     /// Form's text itself and builds no accessibility tree in a test, so the rows are found structurally: the presets
-    /// row is the cell holding the horizontal scroll view, the last row is the last item of the list.
+    /// row is the cell holding a scroll view, the last row is the last item of the list.
     func formRows(of form: UIScrollView) throws -> (presets: CGRect, last: CGRect) {
         guard let list = form as? UICollectionView else { throw GalleryFailure("the controls list is not a UICollectionView") }
         let sections = list.numberOfSections
@@ -288,8 +298,10 @@ final class GalleryMount {
         guard let last = list.cellForItem(at: IndexPath(item: list.numberOfItems(inSection: sections - 1) - 1, section: sections - 1)) else {
             throw GalleryFailure("the last row of the controls list is not on screen")
         }
+        // The presets row is the only row holding a scroll view (its horizontal one), whether or not the buttons overflow
+        // it: on the iPad's wide sheet they all fit.
         func holdsHorizontalScroll(_ v: UIView) -> Bool {
-            if let s = v as? UIScrollView, s.contentSize.width > s.bounds.width + 1 { return true }
+            if v is UIScrollView { return true }
             return v.subviews.contains(where: holdsHorizontalScroll)
         }
         guard let presets = list.visibleCells.first(where: holdsHorizontalScroll) else {

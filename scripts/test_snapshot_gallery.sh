@@ -548,6 +548,25 @@ pool_run() {
     no_simctl_lifecycle pool_run
 }
 
+pool_ipad() {   # --device ipad: an iPad from the pool, its gallery in previews/ipad/, the iPhone gallery untouched
+    pool_setup
+    gallery --device ipad --no-open; local status=$?
+    expect pool_ipad "exits zero" [ "$status" = 0 ]
+    expect pool_ipad "leased an ipad" called "simpool acquire --spec ipad --pid "
+    expect pool_ipad "never an iphone" not_called "simpool acquire --spec iphone"
+    expect pool_ipad "page in previews/ipad" [ -f "$T/previews/ipad/index.html" ]
+    expect pool_ipad "no iPhone page written" [ ! -f "$T/previews/index.html" ]
+    expect pool_ipad "released the lease" called "simpool release $POOL_UDID"
+    no_simctl_lifecycle pool_ipad
+}
+
+pool_unknown_device() {
+    pool_setup
+    gallery --device watch --no-open; local status=$?
+    expect pool_unknown_device "exits 2" [ "$status" = 2 ]
+    expect pool_unknown_device "no lease" not_called "simpool acquire"
+}
+
 pool_keep_booted() {   # --keep-booted changes nothing with the pool: released, nothing shut down
     pool_setup
     gallery --keep-booted --no-open; local status=$?
@@ -620,7 +639,7 @@ pool_signalled_term_build() { pool_signalled TERM build; }
 pool_signalled_term_test() { pool_signalled TERM test; }
 pool_signalled_hup_test() { pool_signalled HUP test; }
 
-POOL_CASES="pool_run pool_keep_booted pool_stale_marker pool_acquire_fails pool_build_fails pool_test_fails pool_check_fails
+POOL_CASES="pool_run pool_ipad pool_unknown_device pool_keep_booted pool_stale_marker pool_acquire_fails pool_build_fails pool_test_fails pool_check_fails
 pool_signalled_int_acquire pool_signalled_int_build pool_signalled_int_test pool_signalled_term_build pool_signalled_term_test
 pool_signalled_hup_test"
 

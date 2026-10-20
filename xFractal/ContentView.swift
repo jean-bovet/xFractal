@@ -7,17 +7,19 @@ struct ContentView: View {
     @State private var viewSize: CGSize = .zero
     @State private var dragLastLocation: CGPoint? = nil
     @State private var pinchState: PinchState? = nil
-    @State private var showingPanel: Bool = false
+    @State private var showingPanel: Bool
     @State private var showingSheet: Bool
     /// Preview-gallery hook, nil in the app: a view drawn (zero size) inside the controls sheet.
     private let sheetProbe: AnyView?
 
     /// The store is an autoclosure so it is built once per view identity (StateObject's own autoclosure), not on
     /// every initialisation of this struct.
+    /// `showingPanel` (the Mac's parameter panel) and `showingSheet` (the iOS controls) are the preview galleries' hooks.
     init(store: @autoclosure @escaping () -> StateStore = StateStore(), showingSheet: Bool = false,
-         sheetProbe: AnyView? = nil) {
+         showingPanel: Bool = false, sheetProbe: AnyView? = nil) {
         _store = StateObject(wrappedValue: store())
         _showingSheet = State(initialValue: showingSheet)
+        _showingPanel = State(initialValue: showingPanel)
         self.sheetProbe = sheetProbe
     }
 

@@ -1,0 +1,162 @@
+{
+  "displayType": "APP_DESKTOP",
+  "width": 2880,
+  "height": 1800,
+  "locales": [
+    "en-US",
+    "fr-FR",
+    "de-DE",
+    "it"
+  ],
+  "textStyle": "top:120px; left:110px; width:2660px; text-align:center;",
+  "slides": [
+    {
+      "id": "hero",
+      "background": "radial-gradient(120% 80% at 30% 85%, #ffb347 0%, #f5781e 35%, #7a1f05 75%, #2a0a02 100%)",
+      "text": {
+        "en-US": [
+          {
+            "title": "Dive into infinity",
+            "sub": "Scroll to zoom and drag to pan, rendered live on the GPU."
+          }
+        ],
+        "fr-FR": [
+          {
+            "title": "Plongez dans l'infini",
+            "sub": "Faites défiler pour zoomer, faites glisser pour vous déplacer, calculé en direct par la puce graphique."
+          }
+        ],
+        "de-DE": [
+          {
+            "title": "Tauchen Sie ins Unendliche ein",
+            "sub": "Zum Zoomen scrollen, zum Verschieben ziehen, live berechnet von der GPU."
+          }
+        ],
+        "it": [
+          {
+            "title": "Tuffati nell'infinito",
+            "sub": "Scorri per ingrandire e trascina per spostarti, calcolato in tempo reale dalla GPU."
+          }
+        ]
+      },
+      "phones": [
+        {
+          "capture": "mac/mac-mandelbrot",
+          "device": "window",
+          "style": "left:340px; top:440px; transform: scale(.8);"
+        }
+      ]
+    },
+    {
+      "id": "deep-zoom",
+      "background": "radial-gradient(70% 60% at 50% 70%, #6fcf2e 0%, #1f6b12 45%, #071a05 100%)",
+      "text": {
+        "en-US": [
+          {
+            "title": "A trillion times deeper",
+            "sub": "Deep zoom keeps going long after an ordinary zoom turns to blur."
+          }
+        ],
+        "fr-FR": [
+          {
+            "title": "Mille milliards de fois plus loin",
+            "sub": "Le zoom profond continue bien après le point où un zoom ordinaire devient flou."
+          }
+        ],
+        "de-DE": [
+          {
+            "title": "Eine Billion Mal tiefer",
+            "sub": "Der Tiefenzoom geht weiter, lange nachdem ein gewöhnlicher Zoom verschwimmt."
+          }
+        ],
+        "it": [
+          {
+            "title": "Mille miliardi di volte più giù",
+            "sub": "Lo zoom profondo continua ben oltre il punto in cui uno zoom normale diventa sfocato."
+          }
+        ]
+      },
+      "phones": [
+        {
+          "capture": "mac/mac-deep-zoom",
+          "device": "window",
+          "style": "left:340px; top:440px; transform: scale(.8);"
+        }
+      ]
+    },
+    {
+      "id": "families",
+      "background": "radial-gradient(120% 80% at 50% 90%, #3b2a8f 0%, #1a1450 50%, #07061a 100%)",
+      "text": {
+        "en-US": [
+          {
+            "title": "Four fractal families",
+            "sub": "Mandelbrot, Julia, Newton and Multibrot."
+          }
+        ],
+        "fr-FR": [
+          {
+            "title": "Quatre familles de fractales",
+            "sub": "Mandelbrot, Julia, Newton et Multibrot."
+          }
+        ],
+        "de-DE": [
+          {
+            "title": "Vier Fraktal- Familien",
+            "sub": "Mandelbrot, Julia, Newton und Multibrot."
+          }
+        ],
+        "it": [
+          {
+            "title": "Quattro famiglie di frattali",
+            "sub": "Mandelbrot, Julia, Newton e Multibrot."
+          }
+        ]
+      },
+      "phones": [
+        {
+          "capture": "mac/mac-julia-spiral",
+          "device": "window",
+          "style": "left:340px; top:440px; transform: scale(.8);"
+        }
+      ]
+    },
+    {
+      "id": "controls",
+      "background": "radial-gradient(120% 80% at 40% 85%, #2f6bff 0%, #0b2a9e 40%, #020a33 100%)",
+      "text": {
+        "en-US": [
+          {
+            "title": "Shape every detail",
+            "sub": "Palettes, iterations and Julia presets at your fingertips."
+          }
+        ],
+        "fr-FR": [
+          {
+            "title": "Façonnez chaque détail",
+            "sub": "Palettes, itérations et préréglages de Julia au bout des doigts."
+          }
+        ],
+        "de-DE": [
+          {
+            "title": "Gestalten Sie jedes Detail",
+            "sub": "Paletten, Iterationen und Julia-Vorlagen immer griffbereit."
+          }
+        ],
+        "it": [
+          {
+            "title": "Modella ogni dettaglio",
+            "sub": "Tavolozze, iterazioni e preset di Julia a portata di dito."
+          }
+        ]
+      },
+      "phones": [
+        {
+          "capture": "mac/mac-controls-julia",
+          "device": "window",
+          "style": "left:340px; top:440px; transform: scale(.8);"
+        }
+      ]
+    }
+  ]
+}

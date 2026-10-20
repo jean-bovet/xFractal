@@ -22,6 +22,16 @@ Refresh the captures first when the UI changed since the last gallery run: the s
 name (`"capture": "<slug>"` or `"<slug>.dark"`). A slide that needs a screen state the gallery does not have gets a
 new gallery scenario (the `/preview-gallery` rules), never a hand-made capture.
 
+## iPad and Mac
+
+- iPad: `scripts/snapshot-gallery.sh --device ipad` (captures into `previews/ipad/`), then
+  `app-store-screenshots --config AppStore/screenshots-ipad.json --captures previews/ipad` (2048 x 2732,
+  `APP_IPAD_PRO_3GEN_129`: the iPhone's slides and headlines, `"device": "ipad"` frames).
+- Mac: `scripts/snapshot-mac.sh` (the real window, into `previews/mac/`), then
+  `app-store-screenshots --config AppStore/screenshots-mac.json` (2880 x 1800, `APP_DESKTOP`: `"device": "window"`
+  under a centred headline, `textStyle`). Upload with `--app xFractal-iOS --platform MAC_OS --display-type
+  APP_DESKTOP`; the Mac version is its own version in App Store Connect.
+
 ## 2. Render
 
 ```sh

@@ -348,7 +348,9 @@ final class GalleryScenarioTests: XCTestCase {
         defer { mount.teardown() }
         let form = try await mount.scrollSheetToEnd()
         XCTAssertLessThanOrEqual(form.contentSize.width, form.bounds.width + 0.5, "the vertical form, not the presets row")
-        XCTAssertGreaterThan(form.contentOffset.y, 0)
+        if form.contentSize.height > form.bounds.height {
+            XCTAssertGreaterThan(form.contentOffset.y, 0, "a form taller than the sheet is scrolled to its end")
+        }
         let rows = try mount.formRows(of: form)
         let visible = mount.sheetFrame!.intersection(mount.window.bounds)
         XCTAssertTrue(visible.contains(rows.presets.insetBy(dx: 1, dy: 1)), "the presets row")

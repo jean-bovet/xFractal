@@ -2,9 +2,11 @@
 # Renders every GalleryScenarios entry (light + dark) with one run of the xFractalGalleryTests target, imports the PNGs
 # into previews/ and checks the gallery (planning/gallery-scenarios-plan.md).
 #
-#   scripts/snapshot-gallery.sh [--only PATTERN] [--lang en] [--keep-booted] [--no-open] [--verbose]
+#   scripts/snapshot-gallery.sh [--device iphone|ipad] [--only PATTERN] [--lang en] [--keep-booted] [--no-open] [--verbose]
 #   scripts/snapshot-gallery.sh --shutdown
 #
+# --device ipad    render on the pool's iPad (iPad Pro 13-inch (M5), the App Store's 13" screenshots) into previews/ipad/
+#                  instead of the iPhone 17 Pro into previews/ (the artwork, device-independent, comes with iPhone runs)
 # --only PATTERN   comma-separated substrings of scenario names or slugs; renders just those (the check covers all)
 #                  A full run (or one whose PATTERN names "artwork") also renders GalleryFixtures.artwork, the App
 #                  Store creative-asset backgrounds, into previews/artwork/ at full size.
@@ -44,9 +46,13 @@ DD="${XFRACTAL_SNAPSHOT_DD:-$HOME/Library/Developer/Xcode/DerivedData/xFractal-s
 MARKER="${TMPDIR:-/tmp}/xfractal-snapshot-gallery.booted"
 
 ARGS=("$@")
-ONLY=""; LANGS=(en); KEEP_BOOTED=0; OPEN_PAGE=1; SHUTDOWN_ONLY=0; VERBOSE=0
+DEVICE=iphone; ONLY=""; LANGS=(en); KEEP_BOOTED=0; OPEN_PAGE=1; SHUTDOWN_ONLY=0; VERBOSE=0
 while [ $# -gt 0 ]; do
     case "$1" in
+        --device)
+            DEVICE="${2:?--device needs iphone or ipad}"
+            case "$DEVICE" in iphone|ipad) ;; *) echo "--device is iphone or ipad (got '$DEVICE')" >&2; exit 2 ;; esac
+            shift 2 ;;
         --only) ONLY="${2:?--only needs a pattern}"; shift 2 ;;
         --lang)
             IFS=',' read -r -a LANGS <<< "${2:?--lang needs a list such as en}"
@@ -61,6 +67,16 @@ while [ $# -gt 0 ]; do
         *) echo "unknown option: $1" >&2; exit 2 ;;
     esac
 done
+
+# The iPad renders into its own gallery (previews/ipad/) and, without the pool, its own simulator.
+if [ "$DEVICE" = ipad ]; then
+    DEVICE_TYPE="com.apple.CoreSimulator.SimDeviceType.iPad-Pro-13-inch-M5-12GB"
+    SIM_NAME="${XFRACTAL_SNAPSHOT_SIM:-xFractal Agent iPad}"
+    MARKER="${TMPDIR:-/tmp}/xfractal-snapshot-gallery-ipad.booted"
+    GALLERY="${PREVIEW_GALLERY_OUT:-$ROOT/previews}"
+    case "$GALLERY" in */ipad) ;; *) GALLERY="$GALLERY/ipad" ;; esac   # the locked re-run parses the options again
+    export PREVIEW_GALLERY_OUT="$GALLERY"
+fi
 
 # One run at a time, across the main checkout and its worktrees. XFRACTAL_SNAPSHOT_LOCK is for the lifecycle tests.
 # The locked run is a child this wrapper forwards INT/TERM/HUP to (to the script under lockf), so a signal reaches the
@@ -309,7 +325,7 @@ if [ "$POOL" = 1 ]; then
     LEASE_OUT="$WORK/lease"
     : > "$LEASE_OUT"
     rc=0
-    simpool acquire --spec iphone --pid $$ > "$LEASE_OUT" < /dev/null &
+    simpool acquire --spec "$DEVICE" --pid $$ > "$LEASE_OUT" < /dev/null &
     CHILD=$!
     wait "$CHILD" || rc=$?
     CHILD=""
@@ -317,7 +333,7 @@ if [ "$POOL" = 1 ]; then
     UDID="$LEASED"
     if [ "$rc" != 0 ] || [ -z "$UDID" ]; then
         # Not simpool's 75 (a wait that ran out): the wrapper reads 75 as its own lock wait.
-        echo "no iphone simulator from the pool (simpool exit $rc; simpool status shows who holds them)" >&2
+        echo "no $DEVICE simulator from the pool (simpool exit $rc; simpool status shows who holds them)" >&2
         exit 1
     fi
     echo "leased simulator $UDID from the pool"
@@ -363,7 +379,7 @@ run_xcodebuild "$WORK/build.log" build build-for-testing -project xFractal.xcode
 T_BUILD1=$(now)
 
 ARTWORK_DIR=""
-case ",$ONLY," in ,,|*artwork*) ARTWORK_DIR="$ROOT/previews/artwork" ;; esac
+[ "$DEVICE" = iphone ] && case ",$ONLY," in ,,|*artwork*) ARTWORK_DIR="$ROOT/previews/artwork" ;; esac
 
 FIRST_PAGE=""
 for lang in "${LANGS[@]}"; do
@@ -390,8 +406,9 @@ for lang in "${LANGS[@]}"; do
     python3 scripts/preview-gallery.py --check "${lang_flag[@]}"
     echo "timings [$lang]: test $(elapsed "$T_TEST0" "$T_TEST1")"
     if [ -z "$FIRST_PAGE" ]; then
-        FIRST_PAGE="$ROOT/previews/index.html"
-        [ "$lang" = en ] || FIRST_PAGE="$ROOT/previews/$lang/index.html"
+        GALLERY="${PREVIEW_GALLERY_OUT:-$ROOT/previews}"
+        FIRST_PAGE="$GALLERY/index.html"
+        [ "$lang" = en ] || FIRST_PAGE="$GALLERY/$lang/index.html"
     fi
 done
 
