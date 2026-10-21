@@ -1,4 +1,4 @@
-Esplora la bellezza infinita dei frattali con la punta delle dita. Pizzica per ingrandire, trascina per spostarti e immergiti nei dettagli senza fine dell'insieme di Mandelbrot e dei suoi parenti — calcolati in tempo reale dalla GPU del tuo dispositivo.
+Esplora la bellezza infinita dei frattali con la punta delle dita. Allarga due dita per ingrandire, trascina per spostarti e immergiti nei dettagli senza fine dell'insieme di Mandelbrot e dei suoi parenti — calcolati in tempo reale dalla GPU del tuo dispositivo.
 
 xFractal, uscito per la prima volta nel 2008, è tornato — ricostruito da zero per gli iPhone e gli iPad di oggi.
 
@@ -7,7 +7,7 @@ FUNZIONI:
 • Zoom profondo: ingrandisci gli insiemi di Mandelbrot e di Julia più di mille miliardi di volte
 • Quattro tavolozze classiche — Caldo, Freddo, Grigio e Cromatico — con sfumature morbide
 • Preimpostazioni di Julia (Dendrite, Spirale, Coniglio, Galassia, San Marco), esponenti di Multibrot da 2 a 8, tre polinomi di Newton
-• Riproduci: rivedi tutta la tua esplorazione come un breve filmato
+• Riproduci di nuovo: rivedi tutta la tua esplorazione come un breve filmato
 • Riprende esattamente da dove avevi lasciato
 • Gratuito e open source
 

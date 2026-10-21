@@ -1,4 +1,4 @@
-Fraktalların sonsuz güzelliğini parmak uçlarınızla keşfedin. Yakınlaştırmak için iki parmakla sıkıştırın, kaydırmak için sürükleyin ve Mandelbrot kümesi ile akrabalarının bitmeyen ayrıntılarına dalın; hepsi cihazınızın GPU'sunda gerçek zamanlı olarak çizilir.
+Fraktalların sonsuz güzelliğini parmak uçlarınızla keşfedin. Yakınlaştırmak için iki parmağınızı açın, kaydırmak için sürükleyin ve Mandelbrot kümesi ile akrabalarının bitmeyen ayrıntılarına dalın; hepsi cihazınızın GPU'sunda gerçek zamanlı olarak çizilir.
 
 İlk kez 2008'de yayımlanan xFractal geri döndü: bugünün iPhone ve iPad'i için sıfırdan yeniden yazıldı.
 

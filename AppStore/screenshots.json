@@ -14,12 +14,12 @@
         "en-US": [{ "title": "Dive into\ninfinity", "sub": "Pinch to zoom and drag to pan, rendered live on the GPU." }],
         "fr-FR": [{ "title": "Plongez dans\nl'infini", "sub": "Pincez pour zoomer, faites glisser pour vous déplacer, calculé en direct par la puce graphique." }],
         "de-DE": [{ "title": "Tauchen Sie ins\nUnendliche ein", "sub": "Zum Zoomen die Finger spreizen, zum Verschieben ziehen, live berechnet von der GPU." }],
-        "it": [{ "title": "Tuffati\nnell'infinito", "sub": "Pizzica per ingrandire e trascina per spostarti, calcolato in tempo reale dalla GPU." }],
-        "es-ES": [{ "title": "Sumérgete en\nel infinito", "sub": "Pellizca para hacer zoom y arrastra para moverte, en directo en la GPU." }],
-        "es-MX": [{ "title": "Sumérgete en\nel infinito", "sub": "Pellizca para hacer zoom y arrastra para moverte, en directo en la GPU." }],
-        "pt-BR": [{ "title": "Mergulhe no\ninfinito", "sub": "Faça pinça para dar zoom e arraste para mover, ao vivo na GPU." }],
+        "it": [{ "title": "Tuffati\nnell'infinito", "sub": "Allarga due dita per ingrandire e trascina per spostarti, in tempo reale sulla GPU." }],
+        "es-ES": [{ "title": "Sumérgete en\nel infinito", "sub": "Pellizca para hacer zoom y arrastra para moverte, en tiempo real en la GPU." }],
+        "es-MX": [{ "title": "Sumérgete en\nel infinito", "sub": "Pellizca para hacer zoom y arrastra para moverte, en tiempo real en la GPU." }],
+        "pt-BR": [{ "title": "Mergulhe no\ninfinito", "sub": "Faça o gesto de pinça para dar zoom e arraste para mover, em tempo real na GPU." }],
         "ja": [{ "title": "無限の世界へ\n飛び込もう", "sub": "ピンチでズーム、ドラッグで移動。GPUでリアルタイム描画。" }],
-        "tr": [{ "title": "Sonsuzluğa\ndalın", "sub": "Yakınlaştırmak için sıkıştırın, kaydırmak için sürükleyin; GPU'da canlı çizilir." }]
+        "tr": [{ "title": "Sonsuzluğa\ndalın", "sub": "Yakınlaştırmak için iki parmağınızı açın, kaydırmak için sürükleyin; GPU'da gerçek zamanlı çizilir." }]
       }
     },
     {
@@ -47,19 +47,19 @@
           { "title": "e ogni dettaglio\nresta nitido", "sub": "Lo zoom profondo continua ben oltre il punto in cui uno zoom normale diventa sfocato." }
         ],
         "es-ES": [
-          { "title": "Un billón de\nveces más hondo", "sub": "Pellizca cualquier rincón del conjunto de Mandelbrot…" },
+          { "title": "Un billón de\nveces más hondo", "sub": "Amplía cualquier rincón del conjunto de Mandelbrot…" },
           { "title": "y cada detalle\nsigue nítido", "sub": "El zoom profundo sigue mucho después de que un zoom normal se vuelva borroso." }
         ],
         "es-MX": [
-          { "title": "Un billón de\nveces más hondo", "sub": "Pellizca cualquier rincón del conjunto de Mandelbrot…" },
+          { "title": "Un billón de\nveces más hondo", "sub": "Amplía cualquier rincón del conjunto de Mandelbrot…" },
           { "title": "y cada detalle\nsigue nítido", "sub": "El zoom profundo sigue mucho después de que un zoom normal se vuelva borroso." }
         ],
         "pt-BR": [
-          { "title": "Um trilhão de\nvezes mais fundo", "sub": "Faça pinça em qualquer canto do conjunto de Mandelbrot…" },
+          { "title": "Um trilhão de\nvezes mais fundo", "sub": "Amplie qualquer canto do conjunto de Mandelbrot…" },
           { "title": "e cada detalhe\ncontinua nítido", "sub": "O zoom profundo continua muito depois de um zoom comum virar borrão." }
         ],
         "ja": [
-          { "title": "1兆倍の\nその先へ", "sub": "マンデルブロ集合のどこへでもピンチで…" },
+          { "title": "1兆倍の\nその先へ", "sub": "ピンチでマンデルブロ集合の隅々まで拡大…" },
           { "title": "どこまでも\n鮮明に", "sub": "普通のズームがぼやけた後も、ディープズームはどこまでも続きます。" }
         ],
         "tr": [
@@ -79,7 +79,7 @@
       "text": {
         "en-US": [{ "title": "Four fractal\nfamilies", "sub": "Mandelbrot, Julia, Newton and Multibrot." }],
         "fr-FR": [{ "title": "Quatre familles\nde fractales", "sub": "Mandelbrot, Julia, Newton et Multibrot." }],
-        "de-DE": [{ "title": "Vier Fraktal-\nFamilien", "sub": "Mandelbrot, Julia, Newton und Multibrot." }],
+        "de-DE": [{ "title": "Vier\nFraktalfamilien", "sub": "Mandelbrot, Julia, Newton und Multibrot." }],
         "it": [{ "title": "Quattro famiglie\ndi frattali", "sub": "Mandelbrot, Julia, Newton e Multibrot." }],
         "es-ES": [{ "title": "Cuatro familias\nde fractales", "sub": "Mandelbrot, Julia, Newton y Multibrot." }],
         "es-MX": [{ "title": "Cuatro familias\nde fractales", "sub": "Mandelbrot, Julia, Newton y Multibrot." }],
@@ -97,7 +97,7 @@
       "text": {
         "en-US": [{ "title": "Shape every\ndetail", "sub": "Palettes, iterations and Julia presets at your fingertips." }],
         "fr-FR": [{ "title": "Façonnez chaque\ndétail", "sub": "Palettes, itérations et préréglages de Julia au bout des doigts." }],
-        "de-DE": [{ "title": "Gestalten Sie\njedes Detail", "sub": "Paletten, Iterationen und Julia-Vorlagen immer griffbereit." }],
+        "de-DE": [{ "title": "Gestalten Sie\njedes Detail", "sub": "Paletten, Iterationen und Julia-Voreinstellungen immer griffbereit." }],
         "it": [{ "title": "Modella ogni\ndettaglio", "sub": "Tavolozze, iterazioni e preset di Julia a portata di dito." }],
         "es-ES": [{ "title": "Ajusta cada\ndetalle", "sub": "Paletas, iteraciones y preajustes de Julia al alcance de tu mano." }],
         "es-MX": [{ "title": "Ajusta cada\ndetalle", "sub": "Paletas, iteraciones y preajustes de Julia al alcance de tu mano." }],

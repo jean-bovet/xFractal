@@ -39,23 +39,23 @@
         "it": [
           {
             "title": "Tuffati\nnell'infinito",
-            "sub": "Pizzica per ingrandire e trascina per spostarti, calcolato in tempo reale dalla GPU."
+            "sub": "Allarga due dita per ingrandire e trascina per spostarti, in tempo reale sulla GPU."
           }
         ],
         "es-ES": [
-          { "title": "Sumérgete en\nel infinito", "sub": "Pellizca para hacer zoom y arrastra para moverte, en directo en la GPU." }
+          { "title": "Sumérgete en\nel infinito", "sub": "Pellizca para hacer zoom y arrastra para moverte, en tiempo real en la GPU." }
         ],
         "es-MX": [
-          { "title": "Sumérgete en\nel infinito", "sub": "Pellizca para hacer zoom y arrastra para moverte, en directo en la GPU." }
+          { "title": "Sumérgete en\nel infinito", "sub": "Pellizca para hacer zoom y arrastra para moverte, en tiempo real en la GPU." }
         ],
         "pt-BR": [
-          { "title": "Mergulhe no\ninfinito", "sub": "Faça pinça para dar zoom e arraste para mover, ao vivo na GPU." }
+          { "title": "Mergulhe no\ninfinito", "sub": "Faça o gesto de pinça para dar zoom e arraste para mover, em tempo real na GPU." }
         ],
         "ja": [
           { "title": "無限の世界へ\n飛び込もう", "sub": "ピンチでズーム、ドラッグで移動。GPUでリアルタイム描画。" }
         ],
         "tr": [
-          { "title": "Sonsuzluğa\ndalın", "sub": "Yakınlaştırmak için sıkıştırın, kaydırmak için sürükleyin; GPU'da canlı çizilir." }
+          { "title": "Sonsuzluğa\ndalın", "sub": "Yakınlaştırmak için iki parmağınızı açın, kaydırmak için sürükleyin; GPU'da gerçek zamanlı çizilir." }
         ]
       },
       "phones": [
@@ -112,19 +112,19 @@
           }
         ],
         "es-ES": [
-          { "title": "Un billón de\nveces más hondo", "sub": "Pellizca cualquier rincón del conjunto de Mandelbrot…" },
+          { "title": "Un billón de\nveces más hondo", "sub": "Amplía cualquier rincón del conjunto de Mandelbrot…" },
           { "title": "y cada detalle\nsigue nítido", "sub": "El zoom profundo sigue mucho después de que un zoom normal se vuelva borroso." }
         ],
         "es-MX": [
-          { "title": "Un billón de\nveces más hondo", "sub": "Pellizca cualquier rincón del conjunto de Mandelbrot…" },
+          { "title": "Un billón de\nveces más hondo", "sub": "Amplía cualquier rincón del conjunto de Mandelbrot…" },
           { "title": "y cada detalle\nsigue nítido", "sub": "El zoom profundo sigue mucho después de que un zoom normal se vuelva borroso." }
         ],
         "pt-BR": [
-          { "title": "Um trilhão de\nvezes mais fundo", "sub": "Faça pinça em qualquer canto do conjunto de Mandelbrot…" },
+          { "title": "Um trilhão de\nvezes mais fundo", "sub": "Amplie qualquer canto do conjunto de Mandelbrot…" },
           { "title": "e cada detalhe\ncontinua nítido", "sub": "O zoom profundo continua muito depois de um zoom comum virar borrão." }
         ],
         "ja": [
-          { "title": "1兆倍の\nその先へ", "sub": "マンデルブロ集合のどこへでもピンチで…" },
+          { "title": "1兆倍の\nその先へ", "sub": "ピンチでマンデルブロ集合の隅々まで拡大…" },
           { "title": "どこまでも\n鮮明に", "sub": "普通のズームがぼやけた後も、ディープズームはどこまでも続きます。" }
         ],
         "tr": [
@@ -158,7 +158,7 @@
         ],
         "de-DE": [
           {
-            "title": "Vier Fraktal-\nFamilien",
+            "title": "Vier\nFraktalfamilien",
             "sub": "Mandelbrot, Julia, Newton und Multibrot."
           }
         ],
@@ -221,7 +221,7 @@
         "de-DE": [
           {
             "title": "Gestalten Sie\njedes Detail",
-            "sub": "Paletten, Iterationen und Julia-Vorlagen immer griffbereit."
+            "sub": "Paletten, Iterationen und Julia-Voreinstellungen immer griffbereit."
           }
         ],
         "it": [

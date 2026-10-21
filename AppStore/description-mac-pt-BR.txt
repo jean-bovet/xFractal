@@ -7,7 +7,7 @@ RECURSOS:
 • Zoom profundo: amplie os conjuntos de Mandelbrot e Julia mais de um trilhão de vezes
 • Quatro paletas clássicas (Quente, Frio, Cinza e Cromático) com coloração suave
 • Predefinições de Julia (Dendrito, Espiral, Coelho, Galáxia, San Marco), expoentes de Multibrot de 2 a 8, três polinômios de Newton
-• Reproduzir: veja toda a sua exploração animada de novo como um curta
+• Repetir: veja toda a sua exploração animada de novo como um curta
 • Continua exatamente de onde você parou
 • Gratuito e de código aberto
 

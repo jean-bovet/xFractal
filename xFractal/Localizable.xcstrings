@@ -6,13 +6,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Darstellung"
+            "value" : "Erscheinungsbild"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apariencia"
+            "value" : "Aspecto"
           }
         },
         "fr" : {
@@ -196,7 +196,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ajustes"
+            "value" : "Controles"
           }
         },
         "fr" : {
@@ -220,7 +220,7 @@
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ajustes"
+            "value" : "Controles"
           }
         },
         "tr" : {
@@ -490,7 +490,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "グレー"
+            "value" : "グレイ"
           }
         },
         "pt-BR" : {
@@ -1018,13 +1018,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wiedergabe"
+            "value" : "Wiederholen"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reproducir"
+            "value" : "Repetir"
           }
         },
         "fr" : {
@@ -1036,7 +1036,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Riproduci"
+            "value" : "Riproduci di nuovo"
           }
         },
         "ja" : {
@@ -1048,7 +1048,7 @@
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reproduzir"
+            "value" : "Repetir"
           }
         },
         "tr" : {
@@ -1177,7 +1177,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sfumato"
+            "value" : "Liscio"
           }
         },
         "ja" : {
@@ -1269,7 +1269,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ferma"
+            "value" : "Interrompi"
           }
         },
         "ja" : {
@@ -1297,13 +1297,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wiedergabe stoppen"
+            "value" : "Wiederholung stoppen"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Detener reproducción"
+            "value" : "Detener repetición"
           }
         },
         "fr" : {
@@ -1315,7 +1315,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ferma riproduzione"
+            "value" : "Interrompi riproduzione"
           }
         },
         "ja" : {
@@ -1327,7 +1327,7 @@
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Parar reprodução"
+            "value" : "Parar repetição"
           }
         },
         "tr" : {

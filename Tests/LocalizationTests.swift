@@ -17,7 +17,7 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(localized(Palette.gray.label, "fr"), "Gris")
         XCTAssertEqual(localized(Palette.gray.label, "de"), "Grau")
         XCTAssertEqual(localized(Palette.gray.label, "it"), "Grigio")
-        XCTAssertEqual(localized(Palette.gray.label, "ja"), "グレー")
+        XCTAssertEqual(localized(Palette.gray.label, "ja"), "グレイ")
     }
 
     func testJuliaPresetNamesAreTranslated() {

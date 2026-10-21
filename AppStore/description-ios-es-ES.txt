@@ -7,7 +7,7 @@ FUNCIONES:
 • Zoom profundo: amplía los conjuntos de Mandelbrot y Julia más de un billón de veces
 • Cuatro paletas clásicas (Cálido, Frío, Gris y Cromático) con coloreado suave
 • Preajustes de Julia (Dendrita, Espiral, Conejo, Galaxia, San Marco), exponentes de Multibrot de 2 a 8, tres polinomios de Newton
-• Reproducir: mira toda tu exploración animarse de nuevo como una breve película
+• Repetir: vuelve a ver toda tu exploración como una breve película
 • Continúa exactamente donde lo dejaste
 • Gratis y de código abierto
 

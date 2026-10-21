@@ -44,19 +44,19 @@
           }
         ],
         "es-ES": [
-          { "title": "Sumérgete en el infinito", "sub": "Desplaza para hacer zoom y arrastra para moverte, en directo en la GPU." }
+          { "title": "Sumérgete en el infinito", "sub": "Desplaza para hacer zoom y arrastra para moverte, en tiempo real en la GPU." }
         ],
         "es-MX": [
-          { "title": "Sumérgete en el infinito", "sub": "Desplaza para hacer zoom y arrastra para moverte, en directo en la GPU." }
+          { "title": "Sumérgete en el infinito", "sub": "Desplaza para hacer zoom y arrastra para moverte, en tiempo real en la GPU." }
         ],
         "pt-BR": [
-          { "title": "Mergulhe no infinito", "sub": "Role para dar zoom e arraste para mover, ao vivo na GPU." }
+          { "title": "Mergulhe no infinito", "sub": "Role para dar zoom e arraste para mover, em tempo real na GPU." }
         ],
         "ja": [
           { "title": "無限の世界へ飛び込もう", "sub": "スクロールでズーム、ドラッグで移動。GPUでリアルタイム描画。" }
         ],
         "tr": [
-          { "title": "Sonsuzluğa dalın", "sub": "Yakınlaştırmak için kaydırın, taşımak için sürükleyin; GPU'da canlı çizilir." }
+          { "title": "Sonsuzluğa dalın", "sub": "Yakınlaştırmak için kaydırın, taşımak için sürükleyin; GPU'da gerçek zamanlı çizilir." }
         ]
       },
       "phones": [
@@ -137,7 +137,7 @@
         ],
         "de-DE": [
           {
-            "title": "Vier Fraktal- Familien",
+            "title": "Vier Fraktalfamilien",
             "sub": "Mandelbrot, Julia, Newton und Multibrot."
           }
         ],
@@ -190,7 +190,7 @@
         "de-DE": [
           {
             "title": "Gestalten Sie jedes Detail",
-            "sub": "Paletten, Iterationen und Julia-Vorlagen immer griffbereit."
+            "sub": "Paletten, Iterationen und Julia-Voreinstellungen immer griffbereit."
           }
         ],
         "it": [

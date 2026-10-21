@@ -8,4 +8,4 @@ es-ES|xFractal|Explora Mandelbrot y Julia
 es-MX|xFractal|Explora Mandelbrot y Julia
 pt-BR|xFractal|Explore Mandelbrot e Julia
 ja|xFractal|マンデルブロ集合とジュリア集合
-tr|xFractal|Mandelbrot ve Julia keşfi
+tr|xFractal|Mandelbrot ve Julia'yı keşfet
