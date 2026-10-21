@@ -29,9 +29,14 @@ outcome (measurements, thresholds, findings) are in `planning/gallery-scenarios-
 `Tests/` stays the macOS logic tests.
 <!-- /repo-specific -->
 
+**English only**, whatever languages the app ships (`-testLanguage en -testRegion US`). The gallery checks layout and
+appearance; translations are checked by the catalog tests, not by screenshots. Never add a language pass to the gallery.
+The one exception is the App Store screenshots: `--lang fr,de,it` exists only for `/app-store-screenshots`, which renders
+the slides' captures with `--only` into `previews/<lang>/` (`previews/ipad/<lang>/`, `previews/mac/<lang>/`). The gallery
+page stays English.
+
 <!-- repo-specific: platforms-and-languages -->
-English by default (`-testLanguage en`); `--lang fr,de,it` adds one test run per language (`-testLanguage fr -testRegion
-FR`), each into `previews/<lang>/` (`previews/ipad/<lang>/` with `--device ipad`), for the localized App Store screenshots. 19 scenarios, 38 images. **Regular width is an approximation**: an 834 x 1210 pt window on the
+19 scenarios, 38 images. **Regular width is an approximation**: an 834 x 1210 pt window on the
 phone simulator with a regular horizontal size class (window, hosting controller and presented sheet carry the override).
 Idiom, safe areas and presentation adaptation stay the phone's: those cards are not iPad coverage. The real iPad pass is
 `scripts/snapshot-gallery.sh --device ipad` (the pool's iPad Pro 13-inch (M5), every scenario, into `previews/ipad/`;
@@ -166,8 +171,8 @@ One entry in the scenario list, and nothing in the app:
    on screen; no ScreenCaptureKit, `cacheDisplay` or unlocked-screen check. The recipe, readiness without a visible
    window, sheets, `PDFView` waits and what differs from an on-screen capture (neutral dark mode, inactive
    selection, Retina only): [`mac-offscreen-renderer.md`](mac-offscreen-renderer.md).
-6. **Optional passes** when the audience needs them: another language (one more test run on the same
-   simulator), a largest-Dynamic-Type pass, another device family (one simulator after the other).
+6. **Optional passes** when the audience needs them: a largest-Dynamic-Type pass, another device family (one
+   simulator after the other). Never another language (localized store captures belong to `/app-store-screenshots`).
 
 ## The gate: `--check`
 

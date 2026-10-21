@@ -14,15 +14,20 @@ A public repo names the command, never where it comes from.
 The app: xFractal, App Store product `xFractal-iOS` (`--app xFractal-iOS`). The captures come from
 `scripts/snapshot-gallery.sh` (the `/preview-gallery` skill) and land in `previews/`. The slides file covers the iPhone
 6.9" set (`APP_IPHONE_67`, 1320 x 2868). Store languages, in order: en-US, fr-FR, de-DE, it. What the captures cannot
-show: the app's own text is in the store language only when the gallery ran in it (`scripts/snapshot-gallery.sh --lang
-fr,de,it`, also with `--device ipad`, and `scripts/snapshot-mac.sh --lang fr,de,it`: `previews/fr/`, `previews/ipad/fr/`,
-`previews/mac/fr/`), else English; the captures are 2x (804 px wide).
+show: the app's own text is in the store language only when the slides' captures were rendered in it, else English;
+the captures are 2x (804 px wide). The localized captures, right before rendering the slides (the gallery itself stays
+English): `scripts/snapshot-gallery.sh --only "board-julia,board-mandelbrot-deep-zoom-chromatic,board-mandelbrot-first-launch,board-multibrot,board-newton,controls-julia-large" --lang fr,de,it`
+(`previews/fr/`, …), the same with `--device ipad` (`previews/ipad/fr/`, …), and `scripts/snapshot-mac.sh --lang
+fr,de,it` (its four windows are the Mac slides: `previews/mac/fr/`, …). Keep the `--only` list in step with the
+`capture` names in `AppStore/screenshots.json`.
 
 ## 1. Captures
 
 Refresh the captures first when the UI changed since the last gallery run: the slides use the gallery's PNGs by
 name (`"capture": "<slug>"` or `"<slug>.dark"`). A slide that needs a screen state the gallery does not have gets a
-new gallery scenario (the `/preview-gallery` rules), never a hand-made capture.
+new gallery scenario (the `/preview-gallery` rules), never a hand-made capture. When the store pages show the app in
+each language, re-render the slides' captures in those languages too (`--only` and `--lang`, see the slides file
+below): stale localized captures show an older UI than the English one.
 
 ## iPad and Mac
 
@@ -68,8 +73,10 @@ app-store screenshots --app xFractal-iOS --version <v> --locale <locale> --displ
   and tilts it: `left`, `top`, `transform: perspective(...) rotateX/Y/Z(...) scale(...)`) and `text`: per locale, one
   `{ "title", "sub" }` per panel; `\n` breaks the title.
 - Captures in the app's own languages: a capture `X` (or `dir/X`) shows as `<locale>/X` or `<language>/X` (`dir/fr/X`)
-  in the locale that has one, so a gallery pass per language (`previews/fr/`, `previews/mac/fr/`) puts the app's own
-  text in that language on its store page; a locale without one shows the English capture.
+  in the locale that has one; a locale without one shows the English capture. The gallery itself stays English: render
+  only the slides' captures in each other store language, right before rendering the slides (`scripts/snapshot-gallery.sh
+  --only <the slides' captures> --lang fr,de`, the same for each device family). Never a full gallery in another
+  language.
 - `"device"` per phone: `"iphone"` (the default), `"ipad"` (a thin uniform bezel, no island: the iPad set, 2048 x 2732,
   `APP_IPAD_PRO_3GEN_129`, from an iPad gallery pass) or `"window"` (a Mac window capture shown at its natural size with
   a shadow, no frame: the Mac set, 2880 x 1800, `APP_DESKTOP`). A config-level `"textStyle"` adds CSS to every headline
