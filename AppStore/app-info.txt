@@ -1,6 +1,11 @@
 # App Store name and subtitle per locale (at most 30 characters each): app-store metadata --name / --subtitle
-# locale|name|subtitle (no subtitle yet)
-en-US|xFractal|
-fr-FR|xFractal|
-de-DE|xFractal|
-it|xFractal|
+# locale|name|subtitle
+en-US|xFractal|Mandelbrot & Julia explorer
+fr-FR|xFractal|Explorez Mandelbrot et Julia
+de-DE|xFractal|Mandelbrot & Julia erkunden
+it|xFractal|Esplora Mandelbrot e Julia
+es-ES|xFractal|Explora Mandelbrot y Julia
+es-MX|xFractal|Explora Mandelbrot y Julia
+pt-BR|xFractal|Explore Mandelbrot e Julia
+ja|xFractal|マンデルブロ集合とジュリア集合
+tr|xFractal|Mandelbrot ve Julia keşfi

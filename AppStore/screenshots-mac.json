@@ -6,7 +6,12 @@
     "en-US",
     "fr-FR",
     "de-DE",
-    "it"
+    "it",
+    "es-ES",
+    "es-MX",
+    "pt-BR",
+    "ja",
+    "tr"
   ],
   "textStyle": "top:120px; left:110px; width:2660px; text-align:center;",
   "slides": [
@@ -37,6 +42,21 @@
             "title": "Tuffati nell'infinito",
             "sub": "Scorri per ingrandire e trascina per spostarti, calcolato in tempo reale dalla GPU."
           }
+        ],
+        "es-ES": [
+          { "title": "Sumérgete en el infinito", "sub": "Desplaza para hacer zoom y arrastra para moverte, en directo en la GPU." }
+        ],
+        "es-MX": [
+          { "title": "Sumérgete en el infinito", "sub": "Desplaza para hacer zoom y arrastra para moverte, en directo en la GPU." }
+        ],
+        "pt-BR": [
+          { "title": "Mergulhe no infinito", "sub": "Role para dar zoom e arraste para mover, ao vivo na GPU." }
+        ],
+        "ja": [
+          { "title": "無限の世界へ飛び込もう", "sub": "スクロールでズーム、ドラッグで移動。GPUでリアルタイム描画。" }
+        ],
+        "tr": [
+          { "title": "Sonsuzluğa dalın", "sub": "Yakınlaştırmak için kaydırın, taşımak için sürükleyin; GPU'da canlı çizilir." }
         ]
       },
       "phones": [
@@ -74,6 +94,21 @@
             "title": "Mille miliardi di volte più giù",
             "sub": "Lo zoom profondo continua ben oltre il punto in cui uno zoom normale diventa sfocato."
           }
+        ],
+        "es-ES": [
+          { "title": "Un billón de veces más hondo", "sub": "El zoom profundo sigue mucho después de que un zoom normal se vuelva borroso." }
+        ],
+        "es-MX": [
+          { "title": "Un billón de veces más hondo", "sub": "El zoom profundo sigue mucho después de que un zoom normal se vuelva borroso." }
+        ],
+        "pt-BR": [
+          { "title": "Um trilhão de vezes mais fundo", "sub": "O zoom profundo continua muito depois de um zoom comum virar borrão." }
+        ],
+        "ja": [
+          { "title": "1兆倍のその先へ", "sub": "普通のズームがぼやけた後も、ディープズームはどこまでも続きます。" }
+        ],
+        "tr": [
+          { "title": "Bir trilyon kat daha derin", "sub": "Derin yakınlaştırma, sıradan bir yakınlaştırma bulanıklaştıktan çok sonra da sürer." }
         ]
       },
       "phones": [
@@ -111,6 +146,21 @@
             "title": "Quattro famiglie di frattali",
             "sub": "Mandelbrot, Julia, Newton e Multibrot."
           }
+        ],
+        "es-ES": [
+          { "title": "Cuatro familias de fractales", "sub": "Mandelbrot, Julia, Newton y Multibrot." }
+        ],
+        "es-MX": [
+          { "title": "Cuatro familias de fractales", "sub": "Mandelbrot, Julia, Newton y Multibrot." }
+        ],
+        "pt-BR": [
+          { "title": "Quatro famílias de fractais", "sub": "Mandelbrot, Julia, Newton e Multibrot." }
+        ],
+        "ja": [
+          { "title": "4つのフラクタル", "sub": "マンデルブロ、ジュリア、ニュートン、マルチブロ。" }
+        ],
+        "tr": [
+          { "title": "Dört fraktal ailesi", "sub": "Mandelbrot, Julia, Newton ve Multibrot." }
         ]
       },
       "phones": [
@@ -148,6 +198,21 @@
             "title": "Modella ogni dettaglio",
             "sub": "Tavolozze, iterazioni e preset di Julia a portata di dito."
           }
+        ],
+        "es-ES": [
+          { "title": "Ajusta cada detalle", "sub": "Paletas, iteraciones y preajustes de Julia al alcance de tu mano." }
+        ],
+        "es-MX": [
+          { "title": "Ajusta cada detalle", "sub": "Paletas, iteraciones y preajustes de Julia al alcance de tu mano." }
+        ],
+        "pt-BR": [
+          { "title": "Ajuste cada detalhe", "sub": "Paletas, iterações e predefinições de Julia na ponta dos dedos." }
+        ],
+        "ja": [
+          { "title": "細部まで自由自在", "sub": "パレット、反復回数、ジュリアのプリセットを指先で。" }
+        ],
+        "tr": [
+          { "title": "Her ayrıntıyı şekillendirin", "sub": "Paletler, iterasyonlar ve Julia hazır ayarları parmaklarınızın ucunda." }
         ]
       },
       "phones": [

@@ -266,6 +266,17 @@ class ImportTests(GalleryTestCase):
         self.assertEqual(merged["two"]["regions"]["light"][0]["y"], 100, "a rendered scenario takes the new regions")
         self.assertEqual(self.check().returncode, 0)
 
+    def test_first_partial_import_keeps_rendered_only(self):
+        regions = {"light": [region("fractal", FRACTAL)], "dark": [region("fractal", FRACTAL)]}
+        light, dark = board()
+        # The App Store captures in a new language: the run lists every scenario but renders "two" alone.
+        manifest = [entry("One", "G", "one", ["fractal"]), entry("Two", "G", "two", ["fractal"], regions)]
+        done = self.run_script("--import", str(self.source(manifest=manifest, only={"two"}, images={"two": (light, dark)})),
+                               "--partial", "--lang", "ja")
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        self.assertEqual([e["slug"] for e in json.loads((self.out / "ja" / "manifest.json").read_text())], ["two"])
+        self.assertEqual(self.check("--lang", "ja").returncode, 0)
+
     def test_full_import_replaces_own_language_only(self):
         self.imported("--lang", "fr")
         french = {p.name: p.read_bytes() for p in (self.out / "fr").glob("*")}

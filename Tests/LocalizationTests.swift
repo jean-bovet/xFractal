@@ -1,9 +1,10 @@
 import XCTest
 @testable import xFractal
 
-/// The app ships in English, French, German and Italian (as Departure does).
+/// The app ships in English, French, German and Italian (the Swiss four), plus Spanish, Brazilian Portuguese,
+/// Japanese and Turkish.
 final class LocalizationTests: XCTestCase {
-    static let languages = ["fr", "de", "it"]
+    static let languages = ["fr", "de", "it", "es", "pt-BR", "ja", "tr"]
 
     private func localized(_ resource: LocalizedStringResource, _ language: String) -> String {
         var r = resource
@@ -16,6 +17,7 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(localized(Palette.gray.label, "fr"), "Gris")
         XCTAssertEqual(localized(Palette.gray.label, "de"), "Grau")
         XCTAssertEqual(localized(Palette.gray.label, "it"), "Grigio")
+        XCTAssertEqual(localized(Palette.gray.label, "ja"), "グレー")
     }
 
     func testJuliaPresetNamesAreTranslated() {

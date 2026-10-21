@@ -1,6 +1,6 @@
 ---
 name: app-store-screenshots
-description: Render xFractal's iPhone App Store screenshots (tilted phones, a headline in English, French, German and Italian, a pair of screenshots sharing one phone) from the preview-gallery captures with the `app-store-screenshots` command, review them, and upload them once approved. Use when Jean asks for new or updated App Store screenshots, to change a headline, a slide or a phone's angle, or when `/release` says the screenshots must be retaken.
+description: Render xFractal's iPhone App Store screenshots (tilted phones, a headline in each of the nine store languages, a pair of screenshots sharing one phone) from the preview-gallery captures with the `app-store-screenshots` command, review them, and upload them once approved. Use when Jean asks for new or updated App Store screenshots, to change a headline, a slide or a phone's angle, or when `/release` says the screenshots must be retaken.
 allowed-tools: Read, Edit, Bash, AskUserQuestion
 ---
 
@@ -13,12 +13,13 @@ A public repo names the command, never where it comes from.
 
 The app: xFractal, App Store product `xFractal-iOS` (`--app xFractal-iOS`). The captures come from
 `scripts/snapshot-gallery.sh` (the `/preview-gallery` skill) and land in `previews/`. The slides file covers the iPhone
-6.9" set (`APP_IPHONE_67`, 1320 x 2868). Store languages, in order: en-US, fr-FR, de-DE, it. What the captures cannot
+6.9" set (`APP_IPHONE_67`, 1320 x 2868). Store languages, in order: en-US, fr-FR, de-DE, it, es-ES, es-MX, pt-BR, ja, tr (both Spanish pages use the `es`
+captures). What the captures cannot
 show: the app's own text is in the store language only when the slides' captures were rendered in it, else English;
 the captures are 2x (804 px wide). The localized captures, right before rendering the slides (the gallery itself stays
-English): `scripts/snapshot-gallery.sh --only "board-julia,board-mandelbrot-deep-zoom-chromatic,board-mandelbrot-first-launch,board-multibrot,board-newton,controls-julia-large" --lang fr,de,it`
+English): `scripts/snapshot-gallery.sh --only "board-julia,board-mandelbrot-deep-zoom-chromatic,board-mandelbrot-first-launch,board-multibrot,board-newton,controls-julia-large" --lang fr,de,it,es,pt-BR,ja,tr`
 (`previews/fr/`, …), the same with `--device ipad` (`previews/ipad/fr/`, …), and `scripts/snapshot-mac.sh --lang
-fr,de,it` (its four windows are the Mac slides: `previews/mac/fr/`, …). Keep the `--only` list in step with the
+fr,de,it,es,pt-BR,ja,tr` (its four windows are the Mac slides: `previews/mac/fr/`, …). Keep the `--only` list in step with the
 `capture` names in `AppStore/screenshots.json`.
 
 ## 1. Captures

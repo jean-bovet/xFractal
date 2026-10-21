@@ -148,23 +148,24 @@ Read the subjects and bodies of the §2 range. Keep only what a user of the App 
 notice, written from their side: no ticket ids, internal names, file names or "fix for #…"; no
 emoji (App Store Connect rejects some); at most 4000 characters per locale.
 
-Four notes files, used for both platforms: `ReleaseNotes/<version>-en-US.txt` first, then its
-translations `-fr-FR.txt`, `-de-DE.txt` and `-it.txt` (the app ships in English, French, German and
-Italian; use the app's own words from `xFractal/Localizable.xcstrings`; French and German address the
-user as *vous* / *Sie*, Italian as *tu*). Plain text: a one-line lead, then short `- ` lines;
+Eight notes files, used for both platforms: `ReleaseNotes/<version>-en-US.txt` first, then its
+translations `-fr-FR.txt`, `-de-DE.txt`, `-it.txt`, `-es-ES.txt` (also used for es-MX), `-pt-BR.txt`,
+`-ja.txt` and `-tr.txt` (the app ships in all of them; use the app's own words from
+`xFractal/Localizable.xcstrings`; French and German address the user as *vous* / *Sie*, Italian, Spanish
+and Portuguese as *tu* / *você*, Turkish as *siz*, Japanese in polite form). Plain text: a one-line lead, then short `- ` lines;
 match the previous file's tone once there is one (`app-store status` shows the live notes). Say when an
 item concerns only iPhone/iPad or only the Mac.
 
 The rewrite already shipped as 2.0, so What's New describes the changes since the live version;
 `app-store status` shows its notes. The first release with the translated app (2.1) says so first:
-the app is now available in French, German and Italian.
+the app is now available in French, German, Italian, Spanish, Portuguese, Japanese and Turkish.
 
 **The App Store page.** Every language's description lives in `AppStore/`, one per platform
 (`description-ios-<locale>.txt`, `description-mac-<locale>.txt`, at most 4000 characters), the
 keywords in `AppStore/keywords.txt` (at most 100 bytes per locale), the name and subtitle in
 `AppStore/app-info.txt` (at most 30 characters each). When the range changes what a description
 promises, update the English one and its translations and show them with the notes. 2.0 was
-en-US only: 2.1 adds `fr-FR`, `de-DE` and `it` to the listing (§6).
+en-US only: 2.1 adds `fr-FR`, `de-DE`, `it`, `es-ES`, `es-MX`, `pt-BR`, `ja` and `tr` to the listing (§6).
 
 Show Jean every notes file in full, with the commit list it came from, and ask for a yes or his
 edits. Apply edits and show again until approved. **Do not commit before that.**
@@ -189,13 +190,18 @@ For each platform, `<P>` = `IOS` with `<p>` = `ios`, then `<P>` = `MAC_OS` with 
 ```bash
 app-store status --app xFractal-iOS
 app-store prepare --app xFractal-iOS --platform <P> --version <version> --notes-file $N-en-US.txt \
-    --notes fr-FR=$N-fr-FR.txt --notes de-DE=$N-de-DE.txt --notes it=$N-it.txt
+    --notes fr-FR=$N-fr-FR.txt --notes de-DE=$N-de-DE.txt --notes it=$N-it.txt \
+    --notes es-ES=$N-es-ES.txt --notes es-MX=$N-es-ES.txt --notes pt-BR=$N-pt-BR.txt --notes ja=$N-ja.txt --notes tr=$N-tr.txt
 app-store metadata --app xFractal-iOS --platform <P> --version <version> \
     --add-locale fr-FR --add-locale de-DE --add-locale it \
-    --name en-US=xFractal --name fr-FR=xFractal --name de-DE=xFractal --name it=xFractal \
+    --add-locale es-ES --add-locale es-MX --add-locale pt-BR --add-locale ja --add-locale tr \
+    --name "<locale>=xFractal" … --subtitle "<locale>=…" … \
     --description en-US=AppStore/description-<p>-en-US.txt --description fr-FR=AppStore/description-<p>-fr-FR.txt \
     --description de-DE=AppStore/description-<p>-de-DE.txt --description it=AppStore/description-<p>-it.txt \
-    --keywords "en-US=…" --keywords "fr-FR=…" --keywords "de-DE=…" --keywords "it=…" \
+    --description es-ES=AppStore/description-<p>-es-ES.txt --description es-MX=AppStore/description-<p>-es-MX.txt \
+    --description pt-BR=AppStore/description-<p>-pt-BR.txt --description ja=AppStore/description-<p>-ja.txt \
+    --description tr=AppStore/description-<p>-tr.txt \
+    --keywords "<locale>=…" … \
     --support-url https://github.com/jean-bovet/xFractal --marketing-url https://github.com/jean-bovet/xFractal \
     --privacy-url https://jean-bovet.github.io/xFractal/privacy.html \
     --review-contact-email <apple-review address>   # from the global working agreement's contacts
@@ -206,10 +212,11 @@ app-store check --app xFractal-iOS --platform MAC_OS --version <version> --famil
 ```
 
 `metadata` gets the keywords from `AppStore/keywords.txt` (one `--keywords` per line) and the names
-from `AppStore/app-info.txt` (plus `--subtitle` once a line has one). `--add-locale` does nothing for a
+and subtitles from `AppStore/app-info.txt` (one `--name` and one `--subtitle` per line). `--add-locale` does nothing for a
 locale the version already has, so the same commands serve every release; `metadata` only matters
 when `AppStore/` changed or `check` reports a locale missing something. Each added locale then gets
-its own screenshots (`/app-store-screenshots`: the headlines and the app in that language).
+its own screenshots (`/app-store-screenshots`: the headlines in that language, the app in its own
+language where the app has it).
 
 If App Store Connect refuses a step for one platform (What's New, the phased release), stop and
 report the error to Jean.

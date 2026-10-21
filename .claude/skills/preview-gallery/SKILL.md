@@ -31,7 +31,7 @@ outcome (measurements, thresholds, findings) are in `planning/gallery-scenarios-
 
 **English only**, whatever languages the app ships (`-testLanguage en -testRegion US`). The gallery checks layout and
 appearance; translations are checked by the catalog tests, not by screenshots. Never add a language pass to the gallery.
-The one exception is the App Store screenshots: `--lang fr,de,it` exists only for `/app-store-screenshots`, which renders
+The one exception is the App Store screenshots: `--lang fr,de,it,es,pt-BR,ja,tr` exists only for `/app-store-screenshots`, which renders
 the slides' captures with `--only` into `previews/<lang>/` (`previews/ipad/<lang>/`, `previews/mac/<lang>/`). The gallery
 page stays English.
 

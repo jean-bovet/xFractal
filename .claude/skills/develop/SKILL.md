@@ -174,7 +174,8 @@ while tracked changes are uncommitted or untracked files are not ignored: commit
 - **Frozen appcast:** `git diff --exit-code main -- docs/appcast.xml` must be clean.
 - **String Catalog:** a change to user-facing strings syncs `xFractal/Localizable.xcstrings` (one
   catalog for both apps) headless with `catalog-sync` (the commands in `AGENTS.md` § Languages) instead
-  of an Xcode GUI build: `--delete-stale`, then the French, German and Italian translations via the
+  of an Xcode GUI build: `--delete-stale`, then the French, German, Italian, Spanish, Brazilian Portuguese, Japanese and Turkish
+  translations via the
   Xcode MCP `StringCatalogEdit` (open the worktree's project in Xcode first, not the main checkout's),
   then `catalog-sync --skip-build` once (it re-sorts the keys the editor wrote) and
   `--check --skip-build` ("catalog unchanged"); commit the catalog with the step. `--check` still

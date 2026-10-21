@@ -99,10 +99,14 @@ def do_import(source, partial, lang):
     pngs = sorted(source.glob("*.png"))
     out.mkdir(parents=True, exist_ok=True)
     manifest = json.loads(source_manifest.read_text(encoding="utf-8"))
-    if partial and (out / "manifest.json").exists():
+    rendered = {p.name[:-len(".dark.png")] if p.name.endswith(".dark.png") else p.name[:-len(".png")] for p in pngs}
+    if partial and not (out / "manifest.json").exists():
+        # A first partial run in this folder (the App Store captures in another language): the gallery holds only
+        # what it rendered.
+        manifest = [e for e in manifest if e["slug"] in rendered]
+    elif partial:
         # Merge: the entries of the slugs this run rendered replace the existing ones; every other entry keeps its
         # last measured regions. A slug that is new is added.
-        rendered = {p.name[:-len(".dark.png")] if p.name.endswith(".dark.png") else p.name[:-len(".png")] for p in pngs}
         existing = load_manifest(out)
         by_slug = {e["slug"]: e for e in manifest}
         merged = [by_slug.pop(e["slug"]) if e["slug"] in rendered and e["slug"] in by_slug else e for e in existing]

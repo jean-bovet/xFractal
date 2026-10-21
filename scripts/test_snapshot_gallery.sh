@@ -576,9 +576,18 @@ pool_french() {   # --lang fr: the test runs in French (region FR), its gallery 
     expect pool_french "no English page written" [ ! -f "$T/previews/index.html" ]
 }
 
+pool_regions() {   # --lang ja,pt-BR: Japan's region is JP, a locale's region is its own (pt-BR -> BR)
+    pool_setup
+    gallery --lang ja,pt-BR --no-open; local status=$?
+    expect pool_regions "exits zero" [ "$status" = 0 ]
+    expect pool_regions "tested in Japanese" called "-testLanguage ja -testRegion JP"
+    expect pool_regions "tested in Brazilian Portuguese" called "-testLanguage pt-BR -testRegion BR"
+    expect pool_regions "page in previews/pt-BR" [ -f "$T/previews/pt-BR/index.html" ]
+}
+
 pool_unknown_language() {
     pool_setup
-    gallery --lang es --no-open; local status=$?
+    gallery --lang ko --no-open; local status=$?
     expect pool_unknown_language "exits 2" [ "$status" = 2 ]
     expect pool_unknown_language "no lease" not_called "simpool acquire"
 }
@@ -655,7 +664,7 @@ pool_signalled_term_build() { pool_signalled TERM build; }
 pool_signalled_term_test() { pool_signalled TERM test; }
 pool_signalled_hup_test() { pool_signalled HUP test; }
 
-POOL_CASES="pool_run pool_ipad pool_unknown_device pool_french pool_unknown_language pool_keep_booted pool_stale_marker pool_acquire_fails pool_build_fails pool_test_fails pool_check_fails
+POOL_CASES="pool_run pool_ipad pool_unknown_device pool_french pool_regions pool_unknown_language pool_keep_booted pool_stale_marker pool_acquire_fails pool_build_fails pool_test_fails pool_check_fails
 pool_signalled_int_acquire pool_signalled_int_build pool_signalled_int_test pool_signalled_term_build pool_signalled_term_test
 pool_signalled_hup_test"
 

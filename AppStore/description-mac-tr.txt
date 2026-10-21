@@ -1,0 +1,14 @@
+Fraktalların sonsuz güzelliğini Mac'inizde keşfedin. Yakınlaştırmak için kaydırın ya da sıkıştırın, taşımak için sürükleyin ve Mandelbrot kümesi ile akrabalarının bitmeyen ayrıntılarına dalın; hepsi Mac'inizin GPU'sunda gerçek zamanlı olarak çizilir.
+
+İlk kez 2008'de iPhone için yayımlanan xFractal geri döndü: Mac, iPhone ve iPad için sıfırdan yeniden yazıldı. Bir kez edinin, hepsinde kullanın.
+
+ÖZELLİKLER:
+• Mandelbrot, Julia, Newton ve Multibrot fraktalları
+• Derin yakınlaştırma: Mandelbrot ve Julia kümelerini bir trilyon kattan fazla büyütün
+• Dört klasik palet (Sıcak, Soğuk, Gri ve Kromatik) ve yumuşak renklendirme
+• Julia hazır ayarları (Dendrit, Sarmal, Tavşan, Galaksi, San Marco), 2–8 arası Multibrot üsleri, üç Newton polinomu
+• Yeniden Oynat: tüm keşfinizi kısa bir film gibi yeniden izleyin
+• Kaldığınız yerden aynen devam eder
+• Ücretsiz ve açık kaynak
+
+Derin yakınlaştırma, K. I. Martin'in pertürbasyon tekniğini kullanır.

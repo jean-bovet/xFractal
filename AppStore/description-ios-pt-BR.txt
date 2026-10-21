@@ -1,0 +1,14 @@
+Explore a beleza infinita dos fractais na ponta dos dedos. Faça o gesto de pinça para dar zoom, arraste para mover a imagem e mergulhe nos detalhes sem fim do conjunto de Mandelbrot e seus parentes, renderizados em tempo real na GPU do seu dispositivo.
+
+O xFractal, lançado pela primeira vez em 2008, está de volta: reconstruído do zero para o iPhone e o iPad de hoje.
+
+RECURSOS:
+• Fractais de Mandelbrot, Julia, Newton e Multibrot
+• Zoom profundo: amplie os conjuntos de Mandelbrot e Julia mais de um trilhão de vezes
+• Quatro paletas clássicas (Quente, Frio, Cinza e Cromático) com coloração suave
+• Predefinições de Julia (Dendrito, Espiral, Coelho, Galáxia, San Marco), expoentes de Multibrot de 2 a 8, três polinômios de Newton
+• Reproduzir: veja toda a sua exploração animada de novo como um curta
+• Continua exatamente de onde você parou
+• Gratuito e de código aberto
+
+O zoom profundo usa a técnica de perturbação de K. I. Martin.

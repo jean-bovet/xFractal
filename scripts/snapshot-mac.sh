@@ -2,7 +2,7 @@
 # Renders the Mac app's window for the Mac App Store screenshots (Tests/MacWindowSnapshotTests: the real ContentView in
 # a window never on screen, drawn at 2x) and copies the PNGs into previews/mac/ (gitignored).
 #
-#   scripts/snapshot-mac.sh [--lang en,fr,de,it]
+#   scripts/snapshot-mac.sh [--lang en,fr,de,it,es,pt-BR,ja,tr]
 #
 # --lang  the languages to render, one test run each: English into previews/mac/, another language into
 #         previews/mac/<lang>/ (the app's own text in that language)
@@ -18,7 +18,7 @@ while [ $# -gt 0 ]; do
         --lang)
             IFS=',' read -r -a LANGS <<< "${2:?--lang needs a list such as en,fr}"
             for l in "${LANGS[@]}"; do
-                case "$l" in en|fr|de|it) ;; *) echo "--lang is en, fr, de or it (got '$l')" >&2; exit 2 ;; esac
+                case "$l" in en|fr|de|it|es|pt-BR|ja|tr) ;; *) echo "--lang is en, fr, de, it, es, pt-BR, ja or tr (got '$l')" >&2; exit 2 ;; esac
             done
             shift 2 ;;
         *) echo "unknown option: $1" >&2; exit 2 ;;
@@ -34,7 +34,7 @@ cd "$ROOT"
 LOCK=(); command -v buildlock > /dev/null && LOCK=(buildlock --folder "$DD" --)
 for lang in "${LANGS[@]}"; do
     OUT="$ROOT/previews/mac"; [ "$lang" = en ] || OUT="$OUT/$lang"
-    case "$lang" in en) region=US ;; *) region="$(echo "$lang" | tr a-z A-Z)" ;; esac
+    case "$lang" in en) region=US ;; ja) region=JP ;; *-*) region="${lang#*-}" ;; *) region="$(echo "$lang" | tr a-z A-Z)" ;; esac
     # TEST_RUNNER_<name> in xcodebuild's environment reaches the test process as <name>.
     TEST_RUNNER_XFRACTAL_MAC_SNAPSHOT=1 "${LOCK[@]}" xcodebuild test -project xFractal.xcodeproj -scheme xFractal-MAS \
         -configuration Debug -destination 'platform=macOS' -derivedDataPath "$DD" \

@@ -9,6 +9,12 @@
             "value" : "Darstellung"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apariencia"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -20,6 +26,24 @@
             "state" : "translated",
             "value" : "Aspetto"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外観"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aparência"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Görünüm"
+          }
         }
       }
     },
@@ -29,6 +53,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chromatisch"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cromático"
           }
         },
         "fr" : {
@@ -42,6 +72,24 @@
             "state" : "translated",
             "value" : "Cromatico"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "クロマチック"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cromático"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kromatik"
+          }
         }
       }
     },
@@ -51,6 +99,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verlauf löschen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Borrar historial"
           }
         },
         "fr" : {
@@ -64,6 +118,24 @@
             "state" : "translated",
             "value" : "Cancella cronologia"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "履歴を消去"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpar histórico"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geçmişi Temizle"
+          }
         }
       }
     },
@@ -73,6 +145,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kalt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frío"
           }
         },
         "fr" : {
@@ -86,6 +164,24 @@
             "state" : "translated",
             "value" : "Freddo"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コールド"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frio"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Soğuk"
+          }
         }
       }
     },
@@ -95,6 +191,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Steuerung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustes"
           }
         },
         "fr" : {
@@ -108,6 +210,24 @@
             "state" : "translated",
             "value" : "Controlli"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コントロール"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustes"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontroller"
+          }
         }
       }
     },
@@ -117,6 +237,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dendrit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dendrita"
           }
         },
         "fr" : {
@@ -130,6 +256,24 @@
             "state" : "translated",
             "value" : "Dendrite"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "デンドライト"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dendrito"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dendrit"
+          }
         }
       }
     },
@@ -139,6 +283,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fertig"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
           }
         },
         "fr" : {
@@ -152,6 +302,24 @@
             "state" : "translated",
             "value" : "Fine"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完了"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitti"
+          }
         }
       }
     },
@@ -161,6 +329,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Exponent"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exponente"
           }
         },
         "fr" : {
@@ -174,6 +348,24 @@
             "state" : "translated",
             "value" : "Esponente"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "指数"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expoente"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Üs"
+          }
         }
       }
     },
@@ -183,6 +375,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fraktal"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fractal"
           }
         },
         "fr" : {
@@ -196,6 +394,24 @@
             "state" : "translated",
             "value" : "Frattale"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フラクタル"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fractal"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fraktal"
+          }
         }
       }
     },
@@ -205,6 +421,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Galaxie"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Galaxia"
           }
         },
         "fr" : {
@@ -218,6 +440,24 @@
             "state" : "translated",
             "value" : "Galassia"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "銀河"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Galáxia"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Galaksi"
+          }
         }
       }
     },
@@ -227,6 +467,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Grau"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gris"
           }
         },
         "fr" : {
@@ -240,6 +486,24 @@
             "state" : "translated",
             "value" : "Grigio"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "グレー"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cinza"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gri"
+          }
         }
       }
     },
@@ -249,6 +513,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Heiß"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cálido"
           }
         },
         "fr" : {
@@ -262,6 +532,24 @@
             "state" : "translated",
             "value" : "Caldo"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ホット"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quente"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sıcak"
+          }
         }
       }
     },
@@ -271,6 +559,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Imaginärteil"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parte imaginaria"
           }
         },
         "fr" : {
@@ -284,12 +578,36 @@
             "state" : "translated",
             "value" : "Parte immaginaria"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "虚部"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parte imaginária"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sanal kısım"
+          }
         }
       }
     },
     "Iter %u" : {
       "localizations" : {
         "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iter. %u"
+          }
+        },
+        "es" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Iter. %u"
@@ -306,6 +624,24 @@
             "state" : "translated",
             "value" : "Iter. %u"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "反復 %u"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iter. %u"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İter. %u"
+          }
         }
       }
     },
@@ -315,6 +651,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Iterationen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iteraciones"
           }
         },
         "fr" : {
@@ -328,6 +670,24 @@
             "state" : "translated",
             "value" : "Iterazioni"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "反復回数"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iterações"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İterasyon"
+          }
         }
       }
     },
@@ -337,6 +697,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Julia-Konstante c"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "c de Julia"
           }
         },
         "fr" : {
@@ -350,6 +716,24 @@
             "state" : "translated",
             "value" : "c di Julia"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ジュリアの c"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "c de Julia"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Julia c"
+          }
         }
       }
     },
@@ -359,6 +743,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Palette"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paleta"
           }
         },
         "fr" : {
@@ -372,12 +762,36 @@
             "state" : "translated",
             "value" : "Tavolozza"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "パレット"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paleta"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Palet"
+          }
         }
       }
     },
     "Perturb" : {
       "localizations" : {
         "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perturb."
+          }
+        },
+        "es" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Perturb."
@@ -394,6 +808,24 @@
             "state" : "translated",
             "value" : "Perturb."
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "摂動"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perturb."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pertürb."
+          }
         }
       }
     },
@@ -403,6 +835,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Perturbation"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perturbación"
           }
         },
         "fr" : {
@@ -416,6 +854,24 @@
             "state" : "translated",
             "value" : "Perturbazione"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "摂動"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perturbação"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pertürbasyon"
+          }
         }
       }
     },
@@ -425,6 +881,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Polynom"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Polinomio"
           }
         },
         "fr" : {
@@ -438,6 +900,24 @@
             "state" : "translated",
             "value" : "Polinomio"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "多項式"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Polinômio"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Polinom"
+          }
         }
       }
     },
@@ -447,6 +927,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hase"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conejo"
           }
         },
         "fr" : {
@@ -460,6 +946,24 @@
             "state" : "translated",
             "value" : "Coniglio"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ウサギ"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coelho"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tavşan"
+          }
         }
       }
     },
@@ -469,6 +973,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Realteil"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parte real"
           }
         },
         "fr" : {
@@ -482,6 +992,24 @@
             "state" : "translated",
             "value" : "Parte reale"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "実部"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parte real"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gerçel kısım"
+          }
         }
       }
     },
@@ -491,6 +1019,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wiedergabe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reproducir"
           }
         },
         "fr" : {
@@ -504,6 +1038,24 @@
             "state" : "translated",
             "value" : "Riproduci"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リプレイ"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reproduzir"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeniden Oynat"
+          }
         }
       }
     },
@@ -513,6 +1065,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zurücksetzen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restablecer"
           }
         },
         "fr" : {
@@ -526,6 +1084,24 @@
             "state" : "translated",
             "value" : "Ripristina"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リセット"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Redefinir"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sıfırla"
+          }
         }
       }
     },
@@ -535,6 +1111,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ansicht zurücksetzen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restablecer vista"
           }
         },
         "fr" : {
@@ -547,6 +1129,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ripristina vista"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "表示をリセット"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Redefinir visualização"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Görünümü Sıfırla"
           }
         }
       }
@@ -562,6 +1162,12 @@
             "value" : "Glatt"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suavizado"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -572,6 +1178,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sfumato"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スムーズ"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suave"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yumuşak"
           }
         }
       }
@@ -584,6 +1208,12 @@
             "value" : "Spirale"
           }
         },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Espiral"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -595,6 +1225,24 @@
             "state" : "translated",
             "value" : "Spirale"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "渦巻き"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Espiral"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sarmal"
+          }
         }
       }
     },
@@ -604,6 +1252,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Stopp"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detener"
           }
         },
         "fr" : {
@@ -617,6 +1271,24 @@
             "state" : "translated",
             "value" : "Ferma"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停止"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parar"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Durdur"
+          }
         }
       }
     },
@@ -626,6 +1298,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wiedergabe stoppen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detener reproducción"
           }
         },
         "fr" : {
@@ -639,6 +1317,24 @@
             "state" : "translated",
             "value" : "Ferma riproduzione"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リプレイを停止"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parar reprodução"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oynatmayı Durdur"
+          }
         }
       }
     },
@@ -648,6 +1344,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Typ"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipo"
           }
         },
         "fr" : {
@@ -660,6 +1362,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tipo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "種類"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipo"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tür"
           }
         }
       }
