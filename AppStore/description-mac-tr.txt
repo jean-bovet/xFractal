@@ -1,6 +1,6 @@
 Fraktalların sonsuz güzelliğini Mac'inizde keşfedin. Yakınlaştırmak için kaydırın ya da iki parmağınızı açın, taşımak için sürükleyin ve Mandelbrot kümesi ile akrabalarının bitmeyen ayrıntılarına dalın; hepsi Mac'inizin GPU'sunda gerçek zamanlı olarak çizilir.
 
-İlk kez 2008'de iPhone için yayımlanan xFractal geri döndü: Mac, iPhone ve iPad için sıfırdan yeniden yazıldı. Bir kez edinin, hepsinde kullanın.
+İlk kez 2008'de iPhone için yayımlanan xFractal geri döndü: Mac, iPhone ve iPad için sıfırdan yeniden yazıldı.
 
 ÖZELLİKLER:
 • Mandelbrot, Julia, Newton ve Multibrot fraktalları

@@ -1,6 +1,6 @@
 Explore a beleza infinita dos fractais no seu Mac. Role ou faça o gesto de pinça para dar zoom, arraste para mover a imagem e mergulhe nos detalhes sem fim do conjunto de Mandelbrot e seus parentes, renderizados em tempo real na GPU do seu Mac.
 
-O xFractal, lançado pela primeira vez para iPhone em 2008, está de volta: reconstruído do zero para Mac, iPhone e iPad. Obtenha uma vez e use em todos eles.
+O xFractal, lançado pela primeira vez para iPhone em 2008, está de volta: reconstruído do zero para Mac, iPhone e iPad.
 
 RECURSOS:
 • Fractais de Mandelbrot, Julia, Newton e Multibrot

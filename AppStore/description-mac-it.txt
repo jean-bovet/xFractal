@@ -1,6 +1,6 @@
 Esplora la bellezza infinita dei frattali sul tuo Mac. Scorri o allarga due dita per ingrandire, trascina per spostarti e immergiti nei dettagli senza fine dell'insieme di Mandelbrot e dei suoi parenti — calcolati in tempo reale dalla GPU del tuo Mac.
 
-xFractal, uscito per iPhone nel 2008, è tornato — ricostruito da zero per Mac, iPhone e iPad. Lo compri una volta e lo usi su tutti i dispositivi.
+xFractal, uscito per iPhone nel 2008, è tornato — ricostruito da zero per Mac, iPhone e iPad.
 
 FUNZIONI:
 • Frattali di Mandelbrot, Julia, Newton e Multibrot
