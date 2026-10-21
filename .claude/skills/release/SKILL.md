@@ -12,8 +12,8 @@ allowed-tools: Read, Edit, Write, Bash, AskUserQuestion
 - Platforms: iPhone and iPad (`xFractal-iOS`, App Store platform `IOS`, families `iphone,ipad`) and
   the Mac (`xFractal-MAS`, platform `MAC_OS`, family `mac`). They share one App Store listing (one
   universal purchase), but App Store Connect keeps **one version per platform**: every `app-store`
-  step below runs once for `--platform IOS` and once for `--platform MAC_OS`, and Jean attaches and
-  submits each platform's build.
+  step below runs once for `--platform IOS` and once for `--platform MAC_OS`, and Jean submits each
+  platform's version.
 - The App Store setup: `RELEASING.md`. The privacy policy page is `docs/privacy.html` (GitHub Pages).
 - No `release` branch: the `v<version>` tag marks the published commit. The `v1.0` tag is older: it
   marks the Mac DMG published with Sparkle (frozen, see `RELEASING.md`), not an App Store release.
