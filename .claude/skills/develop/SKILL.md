@@ -85,9 +85,21 @@ rationale, or nothing.
 Two tiers. **Step gates** run after each plan step and each fix round: the build, the warnings check
 and the unit tests; add the UI tests only when the step touches what they drive (navigation, titles,
 accessibility identifiers, launch fixtures), and the preview gallery only when the step changes what a
-screen looks like. The **final gate** runs before handing back and again after the rebase when
-landing: every gate below in full, plus the full gallery when the plan touched UI. Step gates never
-replace it.
+screen looks like. The **final gate** runs **once per plan**, on the tree handed back: every gate
+below in full, plus the full gallery when the plan touched UI. Step gates never replace it. After it
+passed on a commit G, every later tree (a fix round, the rebase, the squash on `main`) is classified
+by what changed since G and reruns only what its class requires, not the final gate again:
+
+| Class | When (tracked paths changed since G) | What reruns |
+|---|---|---|
+| `none` | the same tree (a no-op rebase, the squash commit on `main`), or only docs-only paths | no build or test; for a docs edit, the docs-only checks below |
+| `quick` | only docs-only paths and test code that cannot change what ships | the step gate, plus the warnings check on its logs |
+| `full` | any other path | the whole final gate on a fresh `<dd>`; that tree becomes the new G |
+
+When in doubt, the class is `full`. The repo fills in the exact paths for `quick` and `none`, and a
+script that prints the class when it has one (see its gates facts); without a script, the parent
+reads `git diff --name-only G` and applies the table by hand. A script must refuse to classify
+while tracked changes are uncommitted or untracked files are not ignored: commit first.
 
 - **Build folders.** Step gates reuse ONE build folder for the whole plan (`<dd>`, e.g.
   `/private/tmp/<id-slug>-dd`, created once), so every build after the first is incremental. The final
@@ -124,6 +136,10 @@ replace it.
   then refactor with the suite green. A bug fix starts with a test that reproduces it. Logic that seems
   untestable (gestures, Metal) is first checked for pure math that can move into `FractalMath.swift`;
   what truly is not testable is named in the plan and verified by hand (an owed check).
+- **Gate scope:** `none` is a change to the docs-only paths of Context only; `quick` adds test code
+  that does not ship (`Tests/`, `GalleryTests/`); anything else (sources, `Shaders.metal`, `project.yml`,
+  the project, `scripts/`, `ci_scripts/`, `docs/`) is `full`. No script classifies it: the parent reads
+  `git diff --name-only G` and applies the table by hand.
 - **Project:** `xcodegen generate` after any `project.yml` change, and commit the regenerated
   `xFractal.xcodeproj` with it (the project is checked in). Settings Xcode applies go into `project.yml`.
 - **Test gate:** the command of `AGENTS.md` § Running the tests, with `<dd>` as the build folder:
@@ -156,7 +172,14 @@ replace it.
   `python3 -m unittest discover -s scripts -p 'test_preview_gallery.py'` and
   `scripts/test_snapshot_gallery.sh`.
 - **Frozen appcast:** `git diff --exit-code main -- docs/appcast.xml` must be clean.
-- No String Catalog: the app ships English only.
+- **String Catalog:** a change to user-facing strings syncs `xFractal/Localizable.xcstrings` (one
+  catalog for both apps) headless with `catalog-sync` (the commands in `AGENTS.md` § Languages) instead
+  of an Xcode GUI build: `--delete-stale`, then the French, German and Italian translations via the
+  Xcode MCP `StringCatalogEdit` (open the worktree's project in Xcode first, not the main checkout's),
+  then `catalog-sync --skip-build` once (it re-sorts the keys the editor wrote) and
+  `--check --skip-build` ("catalog unchanged"); commit the catalog with the step. `--check` still
+  builds, and `--skip-build` reuses a possibly stale build. `LocalizationTests` (in the test gate)
+  fails on a key missing a translation and on a stale key.
 
 ## Deploy (only when Jean asks)
 
@@ -287,25 +310,28 @@ whether every new entity or field reaches its screen through the production read
 attach the whole design doc. Same `codex exec` command and the same "did it run" protocol.
 
 Send each accepted finding to the **same** subagent with `SendMessage`. Rejected findings get a
-one-line rationale in the final report, not silence. Re-run the gates after every fix round. Apply
-the Codex policy.
+one-line rationale in the final report, not silence. After every fix round run the step gate plus the
+class from § Gates for the changes since G. Apply the Codex policy.
 
 ## Phase 6 — Hand back (landing is Jean's call)
 
-The deliverable is a green, reviewed branch in the worktree — the final gate (fresh `<dd>`) run
-last — plus a report: what shipped (commits),
+The deliverable is a green, reviewed branch in the worktree — the final gate (fresh `<dd>`) passed
+once on the tree handed back (commit G), or the class from § Gates that the last tree requires —
+plus a report: G's commit, each gate class applied, what shipped (commits),
 plan revisions and review rounds with what each changed, findings rejected and why, gates run (the
 test summary lines, the warnings check, and each conditional gate — which ran and which did not),
 and what is owed (the owed checks in Context). **When Jean
 says land, the feature lands as ONE squashed commit:**
 
-1. `git fetch && git rebase main` in the worktree, then the final gate (fresh `<dd>`) after the rebase.
+1. `git fetch && git rebase main` in the worktree, then classify the tree against G (§ Gates): the
+   whole final gate (fresh `<dd>`) reruns only on `full`.
 2. On `main`: `git merge --squash <branch>` then ONE `git commit` whose subject is the plan id and a
    sentence and whose body carries the branch's commit subjects (`git log main..<branch>
    --format='- %s'`), each regression test's red proof in one line, every gate's summary line, the
    plan revisions and review rounds, the plan's index-row text, and the attribution trailer. Write
    the message before deleting anything.
-3. The test gate once more on `main`, then `git push origin main`.
+3. On `main`, classify against G again (a squash of the same tree is `none`); run what the class
+   requires, then `git push origin main`.
 4. Remove the worktree, `git worktree prune`, and `git branch -D` the branch (`-D`, because git never
    sees a squashed branch as merged). Update the plan's index row to "Implemented on main <date>".
 

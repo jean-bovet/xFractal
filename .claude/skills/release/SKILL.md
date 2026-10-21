@@ -198,7 +198,7 @@ app-store metadata --app xFractal-iOS --platform <P> --version <version> \
     --keywords "en-US=…" --keywords "fr-FR=…" --keywords "de-DE=…" --keywords "it=…" \
     --support-url https://github.com/jean-bovet/xFractal --marketing-url https://github.com/jean-bovet/xFractal \
     --privacy-url https://jean-bovet.github.io/xFractal/privacy.html \
-    --review-contact-email jean_bovet@mac.com      # the apple-review address of maestro's global/contacts.txt
+    --review-contact-email <apple-review address>   # from the global working agreement's contacts
 app-store prepare …                      # the same prepare again: gives the added locales their What's New
 app-store age-rating --app xFractal-iOS --set socialMediaAgeRestricted=false   # once (the app info is shared); 2.0 left it unanswered
 app-store check --app xFractal-iOS --platform IOS --version <version> --families iphone,ipad     # must report 0 problems

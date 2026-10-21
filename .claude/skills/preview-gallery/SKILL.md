@@ -51,6 +51,7 @@ a `#Preview` to the app.
 ```
 scripts/snapshot-gallery.sh                     # every scenario; the simulator goes back to the pool
 scripts/snapshot-gallery.sh --only "settings,list" # a subset: comma-separated substrings of names or slugs
+scripts/snapshot-gallery.sh --device ipad       # one device (when the repo renders several)
 ```
 
 - **Done = `CHECK OK [<lang>]: <n> cards, light and dark complete and correctly lit`** for every language
@@ -127,30 +128,51 @@ One entry in the scenario list, and nothing in the app:
    scenario) so the page script never parses Swift. It swaps the host app's own shared loader for the stub too.
 3. **`scripts/preview-gallery.py`**: `--import DIR [--partial]` (replace the gallery, or only the files of an
    `--only` run), `--check`, `--coverage`; with `scripts/preview-luminance.swift` for the lit check.
+   **Output layout**: only the page at the top of the output folder, everything else in subfolders:
+   ```
+   previews/
+     index.html
+     <platform>/<slug>.png, <slug>.dark.png    one folder per platform or device family (iphone/, ipad/, mac/, watch/)
+     other/                                    an imported image no scenario names (--check reports it as stray)
+     data/manifest.json, data/coverage.json    what the page is built from
+   ```
+   The folder is the manifest entry's platform field (with a default for entries without one); the page links
+   `<platform>/<file>`. The snapshot test still writes one flat directory per run: only the import places the files.
+   A full import clears the images of every folder but `data/`, and keeps `data/coverage.json`. `--check` lists
+   the PNGs of every folder but `data/` and names files by their relative path (`ipad/x.dark.png`). The
+   luminance helper prints `<folder>/<file>`. A repo moving from a flat gallery migrates it in the script (every
+   command first moves what is still at the top, resumably, then rebuilds the page), and `snapshot-gallery.sh`
+   reads `data/manifest.json` with a fallback to the old path.
 4. **`scripts/snapshot-gallery.sh`**:
-   - The simulator from the machine-wide pool: `simpool acquire --spec iphone --pid $$`, and `simpool release`
-     in the exit trap. Every `xcodebuild` runs under `buildlock --folder <DerivedData>`. Never boots or shuts
-     down a simulator itself.
+   - The simulator from the machine-wide pool: `SIMULATOR_UDID` if the caller passes one (never released),
+     else `simpool acquire --spec iphone --pid $$` (then `ipad`, one device after the other), and
+     `simpool release` in the exit trap. Every `xcodebuild` runs under `buildlock --folder <DerivedData>`.
+     Never boots or shuts down a simulator itself.
    - A repo that may run without the pool (a public repo, a fresh clone): when `simpool` is not on PATH, its
      own agent simulator (created if missing, booted with `simctl boot`, no Simulator.app window) under the
      old rule: `xcrun simctl list devices booted` first, wait (up to 10 min) for another one, never touch one
-     it did not boot, a `trap` shuts down the one it booted.
+     it did not boot, a `trap` shuts down the one it booted. A private repo requires the pool.
    - Persistent DerivedData; `-skipPackageUpdates -disableAutomaticPackageResolution` once the packages are
      resolved (otherwise every run resolves remote packages: 75 s measured).
    - `build-for-testing` once, then per language one `test-without-building -only-testing:<snapshot class>
-     -parallel-testing-enabled NO -enableCodeCoverage NO -testLanguage <lang>`.
+     -parallel-testing-enabled NO -enableCodeCoverage NO -testLanguage <lang> -testRegion <region>`.
    - The variables go in **xcodebuild's environment** as `TEST_RUNNER_<NAME>=… xcodebuild …`; written as
      arguments they become build settings and never reach the test.
    - Import, `--check`, open the page, print the timings (boot, build, test, total).
-5. **A Mac target**: a macOS unit test renders natively (an `NSHostingView` with an `NSAppearance`), with no
-   simulator at all. Not proven yet: design and measure it before relying on it.
+5. **A Mac target**: an app-hosted macOS test renders each scenario with no simulator, **off screen**: a real
+   `NSWindow` with an `NSHostingController` (so `.toolbar` and `NavigationSplitView` bridge to AppKit) and an
+   `NSAppearance`, never ordered on screen, whose whole layer tree `CARenderer` draws into a Metal texture at 2x.
+   It works with the screen locked, flashes nothing, and draws sidebars, toolbar glass, `PDFView` and materials as
+   on screen; no ScreenCaptureKit, `cacheDisplay` or unlocked-screen check. The recipe, readiness without a visible
+   window, sheets, `PDFView` waits and what differs from an on-screen capture (neutral dark mode, inactive
+   selection, Retina only): [`mac-offscreen-renderer.md`](mac-offscreen-renderer.md).
 6. **Optional passes** when the audience needs them: another language (one more test run on the same
    simulator), a largest-Dynamic-Type pass, another device family (one simulator after the other).
 
 ## The gate: `--check`
 
 `--check` rebuilds the page from the PNGs on disk and fails on: a scenario of the manifest missing either
-image, a stray PNG no scenario expects, a duplicate slug, a light image that is dark or a dark one that is light
+image, a stray PNG no scenario expects (in any folder, or in the wrong platform's folder), a duplicate slug, a light image that is dark or a dark one that is light
 (mean luminance against a threshold), a dark image byte-identical to its light one, an image that cannot be
 decoded. An `--only` run replaces only its own images; the check still covers every scenario. The gallery is
 done only when `--check` passes for every language rendered.

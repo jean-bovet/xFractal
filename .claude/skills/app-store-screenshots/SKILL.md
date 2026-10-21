@@ -9,6 +9,7 @@ allowed-tools: Read, Edit, Bash, AskUserQuestion
 The screenshots are rendered, never hand-made: the app's preview gallery captures every screen, and the
 `app-store-screenshots` command (on PATH) lays the captures out on slides described in the repo's
 `AppStore/screenshots.json`, renders each store language with headless Chromium, and writes a review page.
+A public repo names the command, never where it comes from.
 
 The app: xFractal, App Store product `xFractal-iOS` (`--app xFractal-iOS`). The captures come from
 `scripts/snapshot-gallery.sh` (the `/preview-gallery` skill) and land in `previews/`. The slides file covers the iPhone
@@ -66,6 +67,16 @@ app-store screenshots --app xFractal-iOS --version <v> --locale <locale> --displ
 - `slides`: in display order. Each has an `id`, a CSS `background`, `phones` (a `capture` and a CSS `style` that places
   and tilts it: `left`, `top`, `transform: perspective(...) rotateX/Y/Z(...) scale(...)`) and `text`: per locale, one
   `{ "title", "sub" }` per panel; `\n` breaks the title.
+- Captures in the app's own languages: a capture `X` (or `dir/X`) shows as `<locale>/X` or `<language>/X` (`dir/fr/X`)
+  in the locale that has one, so a gallery pass per language (`previews/fr/`, `previews/mac/fr/`) puts the app's own
+  text in that language on its store page; a locale without one shows the English capture.
+- `"device"` per phone: `"iphone"` (the default), `"ipad"` (a thin uniform bezel, no island: the iPad set, 2048 x 2732,
+  `APP_IPAD_PRO_3GEN_129`, from an iPad gallery pass) or `"window"` (a Mac window capture shown at its natural size with
+  a shadow, no frame: the Mac set, 2880 x 1800, `APP_DESKTOP`). A config-level `"textStyle"` adds CSS to every headline
+  block (e.g. centred above a Mac window). One slides file per set; upload each with its own `--display-type` (the Mac
+  set with `--platform MAC_OS`).
+- A phone can also carry its device chrome: `"statusBar": "dark"` or `"light"` (9:41, signal, Wi-Fi and battery in the
+  color the screen under them needs) and `"buttons": true` (action, volume and side buttons).
 - `"panels": 2` makes a pair: one canvas two screenshots wide, cut in two, so one phone can lie across the seam. Its
   two titles read as one sentence ("A trillion times deeper" / "and every detail stays sharp").
 
@@ -74,7 +85,9 @@ app-store screenshots --app xFractal-iOS --version <v> --locale <locale> --displ
 On iOS 27 and later the App Store shows a creative asset at the top of the product page and in search results
 (without one, it falls back to screenshots and previews). xFractal gives each its own image (a universal 5244 x 2950
 image could serve both, but each place wants a different layout): PNG, no alpha, no text, one per placement for every
-language. Each has a slides file, rendered by the same command:
+language. The sizes: a **universal** image 5244 x 2950 (16:9), the **header** 3840 x 1646 (21:9), the **search
+results** asset 3:2 (1920 x 1280 to 3840 x 2560). Each has a slides file (`"max": 1`, one slide, no `text`: a text-less
+image serves every language), rendered by the same command into `.build/app-store-<slides file name>/`:
 
 ```sh
 scripts/snapshot-gallery.sh --only artwork                       # the full-size backgrounds, into previews/artwork/
@@ -89,11 +102,14 @@ app-store-screenshots --config AppStore/search-results.json      # -> .build/app
   (`"statusBar"`, `"buttons"`) showing the Julia Spiral in Chromatic (colour, little black: the
   `board-julia-spiral-chromatic` scenario) on the right, vertically centered and whole. The search template's
   art safe area is x 836..3004, y 765..1795.
-- Simple, as Apple asks: a plain field, one motif, no tilt. The backgrounds are `GalleryFixtures.artwork`
+- Simple, as Apple asks: a plain field, one motif, no tilt; a phone showing the app is upright with its device chrome,
+  the way Apple's own examples look. `"backgroundImage"` names the full-size render among the captures
+  (`artwork/<name>`); `"guides"` draw the art safe areas above on the review page (the universal one is
+  x 1921..3323, y 660..1622). The backgrounds are `GalleryFixtures.artwork`
   (`mandelbrot-header`, `mandelbrot-search`) rendered at their exact size by the app's own Metal renderer: never upscale a
   screen capture to that size.
 - Upload: `app-store creative --app xFractal-iOS --placement header FILE` (then `--placement search` with the other
-  file) puts it in the asset library (reused when the same file is already there); with `--version <v>` (an editable
+  file; `both` would upload a universal image) puts it in the asset library (reused when the same file is already there); with `--version <v>` (an editable
   version) it is placed on every locale, replacing the previous one. It goes through App Review with that version.
 
 ## Rules

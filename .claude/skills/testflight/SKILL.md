@@ -39,6 +39,10 @@ Facts this skill relies on:
 - It runs in the main conversation: git, a few files, a check or two — no subagent.
 - It ends when `testflight` is pushed (§10). Processing, the build report and the expiry reminder
   are Jean's to ask for later (§11); never wait on Xcode Cloud after the push.
+- **The `testflight` run is the cloud check.** Never read or wait for a `main` run before the push:
+  to save compute hours (one monthly pool for every app, see the global working agreement),
+  `main` need not build in Xcode Cloud at all. The run the push starts tests and archives the
+  commit that goes out; whether it succeeded is the §11 build report.
 - Stop on the first failure, say which step failed and why, and leave the rest undone. Never fake
   a check that is Jean's to make.
 
@@ -96,7 +100,12 @@ The version lives in `CFBundleShortVersionString` of both `xFractal/Info-iOS.pli
 minor (e.g. 2.0 → 2.1). On a bump, change both plists and `MARKETING_VERSION` in `project.yml`
 (read by the release checks) together, and nothing else (not `CFBundleVersion`). It must stay above the live App Store version (2.0 on both platforms).
 
-State the version in your first message after the answer.
+State the version in your first message after the answer; `git tag -l "v<version>"` must be empty.
+
+The version belongs to the next App Store release, not to one build (this repo has `/release`):
+recommend a bump only when the current version already shipped to the App Store (it has its
+`v<version>` tag — or is 2.0, which shipped untagged); otherwise recommend keeping it, so every
+TestFlight build until `/release` shares that version. `/release` tags the version, never this skill.
 
 ## 5. Test gate
 
@@ -109,7 +118,7 @@ buildlock --folder "$PWD/.build/DerivedData" -- \
 macOS unit tests (71), no simulator. Run `xcodegen generate` first if `project.yml` changed (and commit
 the regenerated project). Must end with `** TEST SUCCEEDED **`.
 
-Stop on failure.
+Stop on failure. Never gate on an Xcode Cloud run here (see "How a build reaches TestFlight").
 
 ## 6. What to Test
 
@@ -122,6 +131,10 @@ the rest from the tester's side:
 - Plain text, at most 4000 characters per file, no emoji (App Store Connect rejected a 🔒 as
   "invalid characters"; `•`, `« »` and accented letters pass).
 - The What to Test file is **replaced** every build, not appended; its history is its `git log`.
+- Contact addresses (the global working agreement's contacts): an address testers see — in What to
+  Test, or as the TestFlight feedback email — is the `public` one; the `apple-review` address goes
+  only in the Beta App Review contact. No retired domain (the global working agreement's list) in
+  any link.
 - If nothing in the range is visible to a tester, write one line saying so (e.g. "No visible
   changes: build and stability work.") rather than leaving the file stale or empty.
 
@@ -149,6 +162,10 @@ git push origin main
 
 No tag: the App Store release tags `v<version>` (RELEASING.md), not this skill.
 
+Push `main` and `testflight` (§8) together, right after the commit: Jean's approval of the notes
+(§6) is the go. Never wait for an Xcode Cloud run — before the commit or after the push — and never
+ask again before §8.
+
 ## 8. Start the build: fast-forward `testflight`
 
 ```bash
@@ -174,11 +191,12 @@ background watcher, no "still running" check-ins. Report right away:
   app ▸ Xcode Cloud ▸ Builds shows the run and its build number (never predict it); the
   TestFlight group gets the build when processing ends, with the notes as "What to Test";
 - if the CloudKit gate of §3 fired, that Jean confirmed the Production deploy;
+- that the build is checked only once that run finishes: its tests and archive are the check;
 - how to ask for §11 later ("report Xcode Cloud build <n>", "remind me about <App>'s expiry").
 
 ## 11. Later, only when Jean asks
 
-**Build report.** Read the finished run — every action, not only the archive — with the
+**Build report** — did the `testflight` branch succeed. Read the finished run — every action, not only the archive — with the
 `xcode-cloud` tool (its path is in the global working agreement; it loads its own credentials,
 never open or source them):
 
@@ -188,7 +206,9 @@ xcode-cloud report xFractal-iOS <build number>   # warnings, errors, failed test
 ```
 
 List its warnings (grouped by file) and any failed test action, even when the run says SUCCEEDED,
-and offer to fix them in a follow-up commit. For a failed action, `report … --logs DIR` downloads
+and offer to fix them in a follow-up commit. A failed test action on a build that reached the
+testers comes first: say so plainly, so Jean can expire the build in App Store Connect.
+For a failed action, `report … --logs DIR` downloads
 its logs; `ci_post_clone.log` holds the post-clone script's output. Report the iOS and the Mac
 archive separately: one can upload while the other fails. A run still in progress: say so and
 stop; do not wait for it.
