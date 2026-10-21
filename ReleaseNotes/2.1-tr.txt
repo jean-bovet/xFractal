@@ -1,0 +1,6 @@
+xFractal artık sizin dilinizi konuşuyor.
+- Artık Fransızca, Almanca, İtalyanca, İspanyolca, Portekizce, Japonca ve Türkçe olarak kullanılabilir.
+- iPhone ve iPad: Ana Ekranınız için koyu ve renk tonlu uygulama simgeleri.
+- Yeniden Oynat artık uygulamayı yeniden açtıktan sonra bile tüm keşfinizi oynatır.
+- Uygulamadan çıktığınız anda görünümünüz kaydedilir ve xFractal pil tasarrufu için arka planda çizimi durdurur.
+- Mac: Panel açık kaldığı sürece panel düğmesi vurgulu kalır.

@@ -1,0 +1,6 @@
+xFractal spricht jetzt Ihre Sprache.
+- Jetzt auf Französisch, Deutsch, Italienisch, Spanisch, Portugiesisch, Japanisch und Türkisch verfügbar.
+- iPhone und iPad: dunkles und getöntes App-Symbol für Ihren Home-Bildschirm.
+- Wiederholen spielt jetzt Ihre ganze Erkundung ab, auch nachdem Sie die App erneut geöffnet haben.
+- Ihre Ansicht wird gesichert, sobald Sie die App verlassen, und im Hintergrund zeichnet xFractal nicht mehr, um die Batterie zu schonen.
+- Mac: Die Taste für das Seitenfenster bleibt hervorgehoben, solange es geöffnet ist.

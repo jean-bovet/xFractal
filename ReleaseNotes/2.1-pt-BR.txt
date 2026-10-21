@@ -1,0 +1,6 @@
+O xFractal agora fala o seu idioma.
+- Agora disponível em francês, alemão, italiano, espanhol, português, japonês e turco.
+- iPhone e iPad: ícones escuro e colorido para a sua Tela de Início.
+- Repetir agora reproduz toda a sua exploração, mesmo depois de você reabrir o app.
+- Sua visualização é salva assim que você sai do app, e o xFractal para de desenhar em segundo plano para economizar bateria.
+- Mac: o botão do painel fica destacado enquanto o painel está aberto.

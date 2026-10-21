@@ -1,0 +1,6 @@
+xFractal ora parla la tua lingua.
+- Ora disponibile in francese, tedesco, italiano, spagnolo, portoghese, giapponese e turco.
+- iPhone e iPad: icone scura e colorata per la schermata Home.
+- Riproduci di nuovo ora mostra tutta la tua esplorazione, anche dopo aver riaperto l'app.
+- La tua vista viene salvata appena esci dall'app, e xFractal smette di disegnare in background per risparmiare batteria.
+- Mac: il pulsante del pannello resta evidenziato finché il pannello è aperto.

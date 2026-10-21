@@ -1,0 +1,6 @@
+xFractal parle désormais votre langue.
+- Désormais disponible en français, allemand, italien, espagnol, portugais, japonais et turc.
+- iPhone et iPad : icônes sombre et teintée pour votre écran d'accueil.
+- Rejouer reproduit désormais toute votre exploration, même après la réouverture de l'app.
+- Votre vue est enregistrée dès que vous quittez l'app, et xFractal cesse de dessiner en arrière-plan pour économiser la batterie.
+- Mac : le bouton du panneau reste en surbrillance tant que le panneau est ouvert.

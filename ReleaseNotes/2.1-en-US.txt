@@ -1,0 +1,6 @@
+xFractal now speaks your language.
+- Now available in French, German, Italian, Spanish, Portuguese, Japanese and Turkish.
+- iPhone and iPad: dark and tinted app icons for your Home Screen.
+- Replay now plays back your whole exploration, even after you reopen the app.
+- Your view is saved as soon as you leave the app, and xFractal stops drawing in the background to save battery.
+- Mac: the panel button stays highlighted while the panel is open.
