@@ -1,3 +1,3 @@
-- xFractal is now also available in Spanish, Brazilian Portuguese, Japanese and Turkish, on iPhone, iPad and Mac: every label, palette and Julia preset follows your device's language.
+- Improved translations on iPhone, iPad and Mac: several controls now use Apple's own wording in German, Italian, Spanish, Brazilian Portuguese and Japanese (for example Controls, Appearance, Replay and Stop Replay).
 
-Please verify: switch the device language to Spanish, Brazilian Portuguese, Japanese or Turkish and check that the controls read naturally and nothing is cut off, especially the Japanese labels and the longer Turkish and Portuguese ones.
+Please verify: with the device in German, Italian, Spanish, Brazilian Portuguese or Japanese, open the controls and appearance settings and start and stop a replay, and check the labels read naturally and nothing is cut off.
