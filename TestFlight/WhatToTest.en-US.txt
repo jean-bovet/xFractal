@@ -1,9 +1,3 @@
-- xFractal is now available in French, German and Italian, on iPhone, iPad and Mac: every label, palette and Julia preset follows your device's language.
+- xFractal is now also available in Spanish, Brazilian Portuguese, Japanese and Turkish, on iPhone, iPad and Mac: every label, palette and Julia preset follows your device's language.
 
-- New app icon appearances on iPhone and iPad: a dark version for the dark Home Screen and a tinted one for tinted icons.
-
-- Your exploration history is no longer cut short when the app starts, so Replay plays back your whole session after a relaunch.
-
-- Mac: the parameter panel button no longer goes blank while the panel is open; it now stays highlighted until you close the panel.
-
-Please verify: switch the device language to French, German or Italian and check the controls read naturally, try the dark and tinted Home Screen icons, and on the Mac open and close the parameter panel from its button.
+Please verify: switch the device language to Spanish, Brazilian Portuguese, Japanese or Turkish and check that the controls read naturally and nothing is cut off, especially the Japanese labels and the longer Turkish and Portuguese ones.
