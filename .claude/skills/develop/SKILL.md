@@ -196,7 +196,8 @@ installed 1.0 DMG copies still read it.
 
 Unless `--no-worktree`, or the change touches only the docs-only paths in Context: `git fetch`, then
 create `.claude/worktrees/<id-slug>` on a new branch `<id-slug>` from `main` (`EnterWorktree` when
-available, else `git worktree add`). Everything below — the plan, the code, the subagent, the
+available, else `git worktree add`). If the session already runs in an Orca worktree (under
+`~/orca/workspaces/`), use it and its branch instead of creating one. Everything below — the plan, the code, the subagent, the
 reviews — happens in that path. Leave unrelated changes in the main checkout alone. The worktree
 guard refuses compound Bash commands (variables, `$(…)`, heredocs): write scripts to the scratchpad
 and run them.
@@ -334,7 +335,7 @@ says land, the feature lands as ONE squashed commit:**
 3. On `main`, classify against G again (a squash of the same tree is `none`); run what the class
    requires, then `git push origin main`.
 4. Remove the worktree, `git worktree prune`, and `git branch -D` the branch (`-D`, because git never
-   sees a squashed branch as merged). Update the plan's index row to "Implemented on main <date>".
+   sees a squashed branch as merged); in an Orca worktree, skip this and leave both to Orca. Update the plan's index row to "Implemented on main <date>".
 
 ## Anti-patterns
 
