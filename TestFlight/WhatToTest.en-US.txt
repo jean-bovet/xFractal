@@ -1,3 +1,9 @@
-- Improved translations on iPhone, iPad and Mac: several controls now use Apple's own wording in German, Italian, Spanish, Brazilian Portuguese and Japanese (for example Controls, Appearance, Replay and Stop Replay).
+- iPhone Duo: xFractal is now built for the Duo. On the open inner display the fractal fills the whole screen, and the Controls open as a side panel next to the fractal instead of a sheet. The panel stays open when you fold the phone to the outer display and unfold it again.
 
-Please verify: with the device in German, Italian, Spanish, Brazilian Portuguese or Japanese, open the controls and appearance settings and start and stop a replay, and check the labels read naturally and nothing is cut off.
+- iPhone Duo, half folded: the fractal name and iteration count (the capsule at the bottom) move off the hinge so they stay readable.
+
+- iPad: the Controls open as a side panel on the right, like on the Duo; on iPhone they stay a bottom sheet. The fractal keeps the whole screen while the panel is closed.
+
+- Mac: no visible changes in this build.
+
+Please verify: on an iPhone Duo, open the Controls on the inner display, fold and unfold the phone, and half-fold it to see the capsule step off the hinge; on iPad, open and close the Controls and check the fractal still fills the screen; on iPhone, check the Controls still open as a bottom sheet.
