@@ -18,8 +18,13 @@
     {
       "id": "hero",
       "background": "radial-gradient(120% 80% at 30% 85%, #ffb347 0%, #f5781e 35%, #7a1f05 75%, #2a0a02 100%)",
-      "backgroundImage": "duo-inner-landscape-board-mandelbrot-first-launch",
-      "phones": [],
+      "phones": [
+        {
+          "capture": "duo-inner-landscape-board-mandelbrot-first-launch",
+          "device": "duo",
+          "style": "left:450px; top:600px; transform: perspective(4800px) rotateX(10deg) rotateY(-8deg) rotateZ(2deg) scale(.95);"
+        }
+      ],
       "text": {
         "en-US": [
           {

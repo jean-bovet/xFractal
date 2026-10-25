@@ -106,13 +106,21 @@ def do_import(source, partial, lang):
         # what it rendered.
         manifest = [e for e in manifest if e["slug"] in rendered]
     elif partial:
-        # Merge: the entries of the slugs this run rendered replace the existing ones; every other entry keeps its
-        # last measured regions. A slug that is new is added.
+        # Merge: the entries of the slugs this run rendered replace the existing ones; every other entry that is
+        # still a scenario keeps its last measured regions. A scenario that no longer exists leaves with its images.
+        # A new scenario this run did not render enters the English gallery, where the check then reports it
+        # missing until a full run renders it; it stays out of a language folder, which holds the slides' captures
+        # only.
         existing = load_manifest(out)
         by_slug = {e["slug"]: e for e in manifest}
-        merged = [by_slug.pop(e["slug"]) if e["slug"] in rendered and e["slug"] in by_slug else e for e in existing]
-        known = {e["slug"] for e in existing}
-        merged += [e for e in manifest if e["slug"] not in known]
+        merged = [by_slug.pop(e["slug"]) if e["slug"] in rendered and e["slug"] in by_slug else e
+                  for e in existing if e["slug"] in by_slug or e["slug"] in rendered]
+        for gone in {e["slug"] for e in existing} - {e["slug"] for e in merged}:
+            for stale in (out / f"{gone}.png", out / f"{gone}.dark.png"):
+                if stale.is_file():
+                    stale.unlink()
+        known = {e["slug"] for e in merged}
+        merged += [e for e in manifest if e["slug"] not in known and (lang == "en" or e["slug"] in rendered)]
         manifest = merged
     elif not partial:
         # Only this language's top-level files: previews/fr/ survives an English import.

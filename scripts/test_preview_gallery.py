@@ -277,6 +277,38 @@ class ImportTests(GalleryTestCase):
         self.assertEqual([e["slug"] for e in json.loads((self.out / "ja" / "manifest.json").read_text())], ["two"])
         self.assertEqual(self.check("--lang", "ja").returncode, 0)
 
+    def test_partial_import_follows_the_scenario_list(self):
+        regions = {"light": [region("fractal", FRACTAL)], "dark": [region("fractal", FRACTAL)]}
+        light, dark = board()
+        # A language folder from an earlier session: "old" was a scenario then, "two" still is.
+        earlier = [entry("Old", "G", "old", ["fractal"], regions), entry("Two", "G", "two", ["fractal"], regions)]
+        self.imported("--lang", "ja", manifest=earlier, images={"old": (light, dark), "two": (light, dark)}, name="first")
+        # Today's run: "old" is gone, "three" is new but not selected, "two" is rendered again.
+        today = [entry("Two", "G", "two", ["fractal"], regions), entry("Three", "G", "three", ["fractal"])]
+        done = self.run_script("--import", str(self.source(manifest=today, only={"two"}, images={"two": (light, dark)}, name="p")),
+                               "--partial", "--lang", "ja")
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        self.assertEqual([e["slug"] for e in json.loads((self.out / "ja" / "manifest.json").read_text())], ["two"],
+                         "a removed scenario leaves the manifest, an unrendered new one does not enter it")
+        self.assertEqual(sorted(p.name for p in (self.out / "ja").glob("*.png")), ["two.dark.png", "two.png"],
+                         "the removed scenario's images go with it")
+        check = self.check("--lang", "ja")
+        self.assertEqual(check.returncode, 0, check.stdout + check.stderr)
+
+    def test_partial_import_lists_a_new_scenario_in_english(self):
+        regions = {"light": [region("fractal", FRACTAL)], "dark": [region("fractal", FRACTAL)]}
+        light, dark = board()
+        self.imported(manifest=[entry("Two", "G", "two", ["fractal"], regions)], images={"two": (light, dark)}, name="first")
+        # The English gallery is the whole set: a new scenario an --only run skipped is listed, and the check wants it.
+        today = [entry("Two", "G", "two", ["fractal"], regions), entry("Three", "G", "three", ["fractal"])]
+        done = self.run_script("--import", str(self.source(manifest=today, only={"two"}, images={"two": (light, dark)}, name="p")),
+                               "--partial")
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        self.assertEqual([e["slug"] for e in json.loads((self.out / "manifest.json").read_text())], ["two", "three"])
+        check = self.check()
+        self.assertNotEqual(check.returncode, 0)
+        self.assertIn("missing: three.png", check.stdout)
+
     def test_full_import_replaces_own_language_only(self):
         self.imported("--lang", "fr")
         french = {p.name: p.read_bytes() for p in (self.out / "fr").glob("*")}
