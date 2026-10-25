@@ -16,6 +16,8 @@ final class SnapshotGalleryTests: XCTestCase {
             var detent: String?
             var sheetHeight: Double?
         }
+        struct SafeArea: Encodable { var left: Double; var right: Double }
+        struct Fold: Encodable { var x: Double; var y: Double; var w: Double; var h: Double }
         var name: String
         var group: String
         var slug: String
@@ -23,6 +25,34 @@ final class SnapshotGalleryTests: XCTestCase {
         var kinds: [String]
         var regions: Regions?
         var diagnostics: Diagnostics?
+        var fold: Fold?
+        var safeArea: SafeArea?
+    }
+
+    /// The Duo pass labels its captures the outer display: a leased Duo may be reused in another posture, so the screen is
+    /// checked before anything is rendered. nil = fine (also for every other device).
+    static func duoPassProblem() async throws -> String? {
+        guard ProcessInfo.processInfo.environment["XFRACTAL_SNAPSHOT_DEVICE"] == "duo" else { return nil }
+        let screen = UIScreen.main.bounds.size
+        print("gallery: duo screen \(Int(screen.width)) x \(Int(screen.height)) pt")
+        guard screen == CGSize(width: 466, height: 678) else {
+            return "the Duo simulator is not folded: screen \(Int(screen.width)) x \(Int(screen.height))"
+        }
+        let mount = try await GalleryHarness.mount(GalleryScenarios.scenario("board-mandelbrot-first-launch"), .light)
+        defer { mount.teardown() }
+        guard mount.host.traitCollection.horizontalSizeClass == .compact else {
+            return "the Duo's outer display is not compact (screen \(Int(screen.width)) x \(Int(screen.height)))"
+        }
+        return nil
+    }
+
+    /// Skipped unless XFRACTAL_SNAPSHOT_DEVICE=duo: the screen is the outer display, 466 x 678 pt, and compact.
+    func testDuoPassRequiresTheOuterDisplay() async throws {
+        guard ProcessInfo.processInfo.environment["XFRACTAL_SNAPSHOT_DEVICE"] == "duo" else {
+            throw XCTSkip("XFRACTAL_SNAPSHOT_DEVICE is not duo")
+        }
+        let problem = try await Self.duoPassProblem()
+        XCTAssertNil(problem)
     }
 
     func testRenderGallery() async throws {
@@ -31,6 +61,7 @@ final class SnapshotGalleryTests: XCTestCase {
         }
         let only = (ProcessInfo.processInfo.environment["XFRACTAL_SNAPSHOT_ONLY"] ?? "")
             .split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).lowercased() }.filter { !$0.isEmpty }
+        if let problem = try await Self.duoPassProblem() { throw GalleryFailure(problem) }
         try FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
 
         var entries: [ManifestEntry] = []
@@ -41,7 +72,8 @@ final class SnapshotGalleryTests: XCTestCase {
             let selected = only.isEmpty || only.contains { scenario.name.lowercased().contains($0) || scenario.slug.contains($0) }
             var entry = ManifestEntry(name: scenario.name, group: scenario.group, slug: scenario.slug,
                                       size: .init(w: scenario.fixture.size.points.width, h: scenario.fixture.size.points.height),
-                                      kinds: scenario.fixture.regions.map(\.rawValue), regions: nil, diagnostics: nil)
+                                      kinds: scenario.fixture.regions.map(\.rawValue), regions: nil, diagnostics: nil,
+                                      fold: scenario.fixture.foldRegion.map { .init(x: $0.minX, y: $0.minY, w: $0.width, h: $0.height) })
             if selected {
                 var results: [GalleryAppearance: RenderResult] = [:]
                 for appearance in [GalleryAppearance.light, .dark] {
@@ -62,9 +94,11 @@ final class SnapshotGalleryTests: XCTestCase {
                 }
                 if let light = results[.light], let dark = results[.dark] {
                     entry.regions = .init(light: light.regions, dark: dark.regions)
+                    entry.kinds = light.regions.map(\.kind.rawValue)   // as measured: a column beside the board is `sheet`, not `sheetGlass`
                     entry.diagnostics = .init(referenceMode: light.check?.mode, referenceLight: light.check?.value,
                                               referenceDark: dark.check?.value, detent: light.detent,
                                               sheetHeight: light.sheetHeight)
+                    entry.safeArea = .init(left: light.safeLeft, right: light.safeRight)
                 }
             }
             entries.append(entry)

@@ -13,7 +13,7 @@ struct BuiltScenario {
     let store: StateStore
     let suiteName: String
     let defaults: UserDefaults
-    let makeView: (_ sheetProbe: AnyView?) -> ContentView
+    let makeView: (_ sheetProbe: AnyView?, _ foldRegions: [CGRect]?) -> ContentView
 }
 
 struct GalleryScenario {
@@ -39,8 +39,8 @@ struct GalleryScenario {
         }
         let store = StateStore(defaults: defaults, now: { galleryFixedDate })
         let showing = fixture.sheet != .none
-        return BuiltScenario(store: store, suiteName: suiteName, defaults: defaults) { probe in
-            ContentView(store: store, showingSheet: showing, sheetProbe: probe)
+        return BuiltScenario(store: store, suiteName: suiteName, defaults: defaults) { probe, foldRegions in
+            ContentView(store: store, showingSheet: showing, sheetProbe: probe, foldRegions: foldRegions)
         }
     }
 }

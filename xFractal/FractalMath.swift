@@ -1,5 +1,6 @@
 import Foundation
 import simd
+import CoreGraphics
 
 @inline(__always)
 func splitDouble(_ d: Double) -> (hi: Float, lo: Float) {
@@ -111,4 +112,29 @@ func smoothEscapeCount(iter: Int, zMag2: Double, exponent: Int) -> Double {
     let n = Double(max(exponent, 2))
     let nu = Double(iter) + 1.0 - log2(0.5 * log2(max(zMag2, 1.000001))) / log2(n)
     return max(nu, 0.0)
+}
+
+/// The horizontal shift that places `capsule` (its unshifted frame, container coordinates) clear of every rect in
+/// `regions`: 0 when it already is; else the smallest trailing (positive) shift whose placement stays inside
+/// `container` and overlaps no region; else the smallest leading (negative) such shift; else 0 (nothing fits:
+/// the capsule stays where it is, no worse than today).
+func peekShift(capsule: CGRect, clearing regions: [CGRect], in container: CGSize) -> CGFloat {
+    func isValid(_ shift: CGFloat) -> Bool {
+        let moved = capsule.offsetBy(dx: shift, dy: 0)
+        guard moved.minX >= 0, moved.maxX <= container.width else { return false }
+        return !regions.contains { region in
+            let overlap = moved.intersection(region)
+            return !overlap.isNull && overlap.width > 0 && overlap.height > 0
+        }
+    }
+    if isValid(0) { return 0 }
+    var candidates: [CGFloat] = []
+    for region in regions {
+        candidates.append(region.maxX - capsule.minX)   // just past its trailing edge
+        candidates.append(region.minX - capsule.maxX)   // just before its leading edge
+    }
+    let trailing = candidates.filter { $0 > 0 && isValid($0) }.min()
+    if let trailing { return trailing }
+    let leading = candidates.filter { $0 < 0 && isValid($0) }.max()
+    return leading ?? 0
 }

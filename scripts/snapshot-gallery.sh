@@ -2,11 +2,14 @@
 # Renders every GalleryScenarios entry (light + dark) with one run of the xFractalGalleryTests target, imports the PNGs
 # into previews/ and checks the gallery (planning/gallery-scenarios-plan.md).
 #
-#   scripts/snapshot-gallery.sh [--device iphone|ipad] [--only PATTERN] [--lang en] [--keep-booted] [--no-open] [--verbose]
+#   scripts/snapshot-gallery.sh [--device iphone|ipad|duo] [--only PATTERN] [--lang en] [--keep-booted] [--no-open] [--verbose]
 #   scripts/snapshot-gallery.sh --shutdown
 #
 # --device ipad    render on the pool's iPad (iPad Pro 13-inch (M5), the App Store's 13" screenshots) into previews/ipad/
 #                  instead of the iPhone 17 Pro into previews/ (the artwork, device-independent, comes with iPhone runs)
+# --device duo     render on the pool's iPhone Duo (iOS 27.1, spec duo) into previews/duo/. The simulator must be folded: the
+#                  test fails before rendering unless the screen is the 466 x 678 pt outer display and compact. The inner
+#                  display's scenarios are fixed-size windows with the regular trait, on every pass
 # --only PATTERN   comma-separated substrings of scenario names or slugs; renders just those (the check covers all)
 #                  A full run (or one whose PATTERN names "artwork") also renders GalleryFixtures.artwork, the App
 #                  Store creative-asset backgrounds, into previews/artwork/ at full size.
@@ -51,8 +54,8 @@ DEVICE=iphone; ONLY=""; LANGS=(en); KEEP_BOOTED=0; OPEN_PAGE=1; SHUTDOWN_ONLY=0;
 while [ $# -gt 0 ]; do
     case "$1" in
         --device)
-            DEVICE="${2:?--device needs iphone or ipad}"
-            case "$DEVICE" in iphone|ipad) ;; *) echo "--device is iphone or ipad (got '$DEVICE')" >&2; exit 2 ;; esac
+            DEVICE="${2:?--device needs iphone, ipad or duo}"
+            case "$DEVICE" in iphone|ipad|duo) ;; *) echo "--device is iphone, ipad or duo (got '$DEVICE')" >&2; exit 2 ;; esac
             shift 2 ;;
         --only) ONLY="${2:?--only needs a pattern}"; shift 2 ;;
         --lang)
@@ -76,6 +79,18 @@ if [ "$DEVICE" = ipad ]; then
     MARKER="${TMPDIR:-/tmp}/xfractal-snapshot-gallery-ipad.booted"
     GALLERY="${PREVIEW_GALLERY_OUT:-$ROOT/previews}"
     case "$GALLERY" in */ipad) ;; *) GALLERY="$GALLERY/ipad" ;; esac   # the locked re-run parses the options again
+    export PREVIEW_GALLERY_OUT="$GALLERY"
+fi
+
+# The Duo renders into its own gallery (previews/duo/) and, without the pool, its own simulator (iOS 27.1 is the only
+# runtime that has the device).
+if [ "$DEVICE" = duo ]; then
+    DEVICE_TYPE="com.apple.CoreSimulator.SimDeviceType.iPhone-Duo"
+    RUNTIME="com.apple.CoreSimulator.SimRuntime.iOS-27-1"
+    SIM_NAME="${XFRACTAL_SNAPSHOT_SIM:-xFractal Agent Duo}"
+    MARKER="${TMPDIR:-/tmp}/xfractal-snapshot-gallery-duo.booted"
+    GALLERY="${PREVIEW_GALLERY_OUT:-$ROOT/previews}"
+    case "$GALLERY" in */duo) ;; *) GALLERY="$GALLERY/duo" ;; esac   # the locked re-run parses the options again
     export PREVIEW_GALLERY_OUT="$GALLERY"
 fi
 
@@ -389,7 +404,7 @@ for lang in "${LANGS[@]}"; do
     fail_if_others "testing"    # immediately before the test command
     T_TEST0=$(now)
     # TEST_RUNNER_<name> in xcodebuild's environment reaches the test process as <name>.
-    TEST_RUNNER_XFRACTAL_SNAPSHOT_DIR="$WORK/png-$lang" TEST_RUNNER_XFRACTAL_SNAPSHOT_ONLY="$ONLY" \
+    TEST_RUNNER_XFRACTAL_SNAPSHOT_DEVICE="$DEVICE" TEST_RUNNER_XFRACTAL_SNAPSHOT_DIR="$WORK/png-$lang" TEST_RUNNER_XFRACTAL_SNAPSHOT_ONLY="$ONLY" \
     TEST_RUNNER_XFRACTAL_ARTWORK_DIR="$ARTWORK_DIR" \
     run_xcodebuild "$WORK/test-$lang.log" test test-without-building -project xFractal.xcodeproj -scheme xFractal-iOS \
         -destination "id=$UDID" -derivedDataPath "$DD" \
@@ -408,6 +423,7 @@ for lang in "${LANGS[@]}"; do
     python3 scripts/preview-gallery.py --import "$WORK/png-$lang" ${ONLY:+--partial} "${lang_flag[@]}"
     python3 scripts/preview-gallery.py --check "${lang_flag[@]}"
     echo "timings [$lang]: test $(elapsed "$T_TEST0" "$T_TEST1")"
+    [ "$DEVICE" = duo ] && { grep -E "^gallery: duo screen " "$WORK/test-$lang.log" | sed "s/^/[$lang] /" || true; }
     if [ -z "$FIRST_PAGE" ]; then
         GALLERY="${PREVIEW_GALLERY_OUT:-$ROOT/previews}"
         FIRST_PAGE="$GALLERY/index.html"

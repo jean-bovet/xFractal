@@ -5,14 +5,15 @@ options:
     macOS: "14.0"
     iOS: "17.0"
   # false: with true, XcodeGen puts Signing.xcconfig in an extra group with a random TEMP_ ID,
-  # so every run changes the checked-in project.
+  # so every run changes the checked-in project. The file lives in Config/ because XcodeGen wraps a root-level config file in a
+  # group named after the checkout's directory: a project generated in a worktree then differs from one generated in "xFractal".
   createIntermediateGroups: false
   xcodeVersion: "27.1"
 
-# Signing team comes from Signing.xcconfig -> git-ignored Signing.local.xcconfig (public repo).
+# Signing team comes from Config/Signing.xcconfig -> git-ignored Signing.local.xcconfig (public repo).
 configFiles:
-  Debug: Signing.xcconfig
-  Release: Signing.xcconfig
+  Debug: Config/Signing.xcconfig
+  Release: Config/Signing.xcconfig
 
 settings:
   base:

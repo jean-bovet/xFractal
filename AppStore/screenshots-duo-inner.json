@@ -1,0 +1,329 @@
+{
+  "displayType": "IPHONE_DUO",
+  "width": 2853,
+  "height": 2007,
+  "locales": [
+    "en-US",
+    "fr-FR",
+    "de-DE",
+    "it",
+    "es-ES",
+    "es-MX",
+    "pt-BR",
+    "ja",
+    "tr"
+  ],
+  "textStyle": "top:120px; width:2200px;",
+  "slides": [
+    {
+      "id": "hero",
+      "background": "radial-gradient(120% 80% at 30% 85%, #ffb347 0%, #f5781e 35%, #7a1f05 75%, #2a0a02 100%)",
+      "backgroundImage": "duo-inner-landscape-board-mandelbrot-first-launch",
+      "phones": [],
+      "text": {
+        "en-US": [
+          {
+            "title": "Dive into\ninfinity",
+            "sub": "Pinch to zoom and drag to pan, rendered live on the GPU."
+          }
+        ],
+        "fr-FR": [
+          {
+            "title": "Plongez dans\nl'infini",
+            "sub": "Pincez pour zoomer, faites glisser pour vous déplacer, calculé en direct par la puce graphique."
+          }
+        ],
+        "de-DE": [
+          {
+            "title": "Tauchen Sie ins\nUnendliche ein",
+            "sub": "Zum Zoomen die Finger spreizen, zum Verschieben ziehen, live berechnet von der GPU."
+          }
+        ],
+        "it": [
+          {
+            "title": "Tuffati\nnell'infinito",
+            "sub": "Allarga due dita per ingrandire e trascina per spostarti, in tempo reale sulla GPU."
+          }
+        ],
+        "es-ES": [
+          {
+            "title": "Sumérgete en\nel infinito",
+            "sub": "Pellizca para hacer zoom y arrastra para moverte, en tiempo real en la GPU."
+          }
+        ],
+        "es-MX": [
+          {
+            "title": "Sumérgete en\nel infinito",
+            "sub": "Pellizca para hacer zoom y arrastra para moverte, en tiempo real en la GPU."
+          }
+        ],
+        "pt-BR": [
+          {
+            "title": "Mergulhe no\ninfinito",
+            "sub": "Faça o gesto de pinça para dar zoom e arraste para mover, em tempo real na GPU."
+          }
+        ],
+        "ja": [
+          {
+            "title": "無限の世界へ\n飛び込もう",
+            "sub": "ピンチでズーム、ドラッグで移動。GPUでリアルタイム描画。"
+          }
+        ],
+        "tr": [
+          {
+            "title": "Sonsuzluğa\ndalın",
+            "sub": "Yakınlaştırmak için iki parmağınızı açın, kaydırmak için sürükleyin; GPU'da gerçek zamanlı çizilir."
+          }
+        ]
+      }
+    },
+    {
+      "id": "deep-zoom",
+      "panels": 2,
+      "background": "radial-gradient(70% 60% at 50% 70%, #6fcf2e 0%, #1f6b12 45%, #071a05 100%)",
+      "phones": [
+        {
+          "capture": "duo-inner-landscape-board-mandelbrot-deep-zoom-chromatic",
+          "device": "duo",
+          "style": "left:1878px; top:640px; transform: perspective(5200px) rotateX(10deg) rotateZ(-3deg) scale(1.0);"
+        }
+      ],
+      "text": {
+        "en-US": [
+          {
+            "title": "A trillion\ntimes deeper",
+            "sub": "Pinch into any corner of the Mandelbrot set…"
+          },
+          {
+            "title": "and every detail\nstays sharp",
+            "sub": "Deep zoom keeps going long after an ordinary zoom turns to blur."
+          }
+        ],
+        "fr-FR": [
+          {
+            "title": "Mille milliards\nde fois plus loin",
+            "sub": "Zoomez dans n'importe quel recoin de l'ensemble de Mandelbrot…"
+          },
+          {
+            "title": "et chaque détail\nreste net",
+            "sub": "Le zoom profond continue bien après le point où un zoom ordinaire devient flou."
+          }
+        ],
+        "de-DE": [
+          {
+            "title": "Eine Billion Mal\ntiefer",
+            "sub": "Zoomen Sie in jeden Winkel der Mandelbrot-Menge …"
+          },
+          {
+            "title": "und jedes Detail\nbleibt scharf",
+            "sub": "Der Tiefenzoom geht weiter, lange nachdem ein gewöhnlicher Zoom verschwimmt."
+          }
+        ],
+        "it": [
+          {
+            "title": "Mille miliardi\ndi volte più giù",
+            "sub": "Ingrandisci ogni angolo dell'insieme di Mandelbrot…"
+          },
+          {
+            "title": "e ogni dettaglio\nresta nitido",
+            "sub": "Lo zoom profondo continua ben oltre il punto in cui uno zoom normale diventa sfocato."
+          }
+        ],
+        "es-ES": [
+          {
+            "title": "Un billón de\nveces más hondo",
+            "sub": "Amplía cualquier rincón del conjunto de Mandelbrot…"
+          },
+          {
+            "title": "y cada detalle\nsigue nítido",
+            "sub": "El zoom profundo sigue mucho después de que un zoom normal se vuelva borroso."
+          }
+        ],
+        "es-MX": [
+          {
+            "title": "Un billón de\nveces más hondo",
+            "sub": "Amplía cualquier rincón del conjunto de Mandelbrot…"
+          },
+          {
+            "title": "y cada detalle\nsigue nítido",
+            "sub": "El zoom profundo sigue mucho después de que un zoom normal se vuelva borroso."
+          }
+        ],
+        "pt-BR": [
+          {
+            "title": "Um trilhão de\nvezes mais fundo",
+            "sub": "Amplie qualquer canto do conjunto de Mandelbrot…"
+          },
+          {
+            "title": "e cada detalhe\ncontinua nítido",
+            "sub": "O zoom profundo continua muito depois de um zoom comum virar borrão."
+          }
+        ],
+        "ja": [
+          {
+            "title": "1兆倍の\nその先へ",
+            "sub": "ピンチでマンデルブロ集合の隅々まで拡大…"
+          },
+          {
+            "title": "どこまでも\n鮮明に",
+            "sub": "普通のズームがぼやけた後も、ディープズームはどこまでも続きます。"
+          }
+        ],
+        "tr": [
+          {
+            "title": "Bir trilyon kat\ndaha derin",
+            "sub": "Mandelbrot kümesinin herhangi bir köşesine yakınlaşın…"
+          },
+          {
+            "title": "ve her ayrıntı\nnet kalır",
+            "sub": "Derin yakınlaştırma, sıradan bir yakınlaştırma bulanıklaştıktan çok sonra da sürer."
+          }
+        ]
+      }
+    },
+    {
+      "id": "families",
+      "background": "radial-gradient(120% 80% at 50% 90%, #3b2a8f 0%, #1a1450 50%, #07061a 100%)",
+      "phones": [
+        {
+          "capture": "duo-inner-landscape-board-newton",
+          "device": "duo",
+          "style": "left:-420px; top:980px; transform: perspective(4000px) rotateY(24deg) rotateZ(-8deg) scale(.55);"
+        },
+        {
+          "capture": "duo-inner-landscape-board-multibrot",
+          "device": "duo",
+          "style": "left:1330px; top:980px; transform: perspective(4000px) rotateY(-24deg) rotateZ(8deg) scale(.55);"
+        },
+        {
+          "capture": "duo-inner-landscape-board-julia",
+          "device": "duo",
+          "style": "left:450px; top:860px; transform: perspective(4000px) rotateX(8deg) scale(.6);"
+        }
+      ],
+      "text": {
+        "en-US": [
+          {
+            "title": "Four fractal\nfamilies",
+            "sub": "Mandelbrot, Julia, Newton and Multibrot."
+          }
+        ],
+        "fr-FR": [
+          {
+            "title": "Quatre familles\nde fractales",
+            "sub": "Mandelbrot, Julia, Newton et Multibrot."
+          }
+        ],
+        "de-DE": [
+          {
+            "title": "Vier\nFraktalfamilien",
+            "sub": "Mandelbrot, Julia, Newton und Multibrot."
+          }
+        ],
+        "it": [
+          {
+            "title": "Quattro famiglie\ndi frattali",
+            "sub": "Mandelbrot, Julia, Newton e Multibrot."
+          }
+        ],
+        "es-ES": [
+          {
+            "title": "Cuatro familias\nde fractales",
+            "sub": "Mandelbrot, Julia, Newton y Multibrot."
+          }
+        ],
+        "es-MX": [
+          {
+            "title": "Cuatro familias\nde fractales",
+            "sub": "Mandelbrot, Julia, Newton y Multibrot."
+          }
+        ],
+        "pt-BR": [
+          {
+            "title": "Quatro famílias\nde fractais",
+            "sub": "Mandelbrot, Julia, Newton e Multibrot."
+          }
+        ],
+        "ja": [
+          {
+            "title": "4つの\nフラクタル",
+            "sub": "マンデルブロ、ジュリア、ニュートン、マルチブロ。"
+          }
+        ],
+        "tr": [
+          {
+            "title": "Dört fraktal\nailesi",
+            "sub": "Mandelbrot, Julia, Newton ve Multibrot."
+          }
+        ]
+      }
+    },
+    {
+      "id": "controls",
+      "background": "radial-gradient(120% 80% at 40% 85%, #2f6bff 0%, #0b2a9e 40%, #020a33 100%)",
+      "phones": [
+        {
+          "capture": "duo-inner-landscape-controls-julia.dark",
+          "device": "duo",
+          "style": "left:450px; top:600px; transform: perspective(4800px) rotateX(10deg) rotateY(-8deg) rotateZ(2deg) scale(.95);"
+        }
+      ],
+      "text": {
+        "en-US": [
+          {
+            "title": "Shape every\ndetail",
+            "sub": "Palettes, iterations and Julia presets at your fingertips."
+          }
+        ],
+        "fr-FR": [
+          {
+            "title": "Façonnez chaque\ndétail",
+            "sub": "Palettes, itérations et préréglages de Julia au bout des doigts."
+          }
+        ],
+        "de-DE": [
+          {
+            "title": "Gestalten Sie\njedes Detail",
+            "sub": "Paletten, Iterationen und Julia-Voreinstellungen immer griffbereit."
+          }
+        ],
+        "it": [
+          {
+            "title": "Modella ogni\ndettaglio",
+            "sub": "Tavolozze, iterazioni e preset di Julia a portata di dito."
+          }
+        ],
+        "es-ES": [
+          {
+            "title": "Ajusta cada\ndetalle",
+            "sub": "Paletas, iteraciones y preajustes de Julia al alcance de tu mano."
+          }
+        ],
+        "es-MX": [
+          {
+            "title": "Ajusta cada\ndetalle",
+            "sub": "Paletas, iteraciones y preajustes de Julia al alcance de tu mano."
+          }
+        ],
+        "pt-BR": [
+          {
+            "title": "Ajuste cada\ndetalhe",
+            "sub": "Paletas, iterações e predefinições de Julia na ponta dos dedos."
+          }
+        ],
+        "ja": [
+          {
+            "title": "細部まで\n自由自在",
+            "sub": "パレット、反復回数、ジュリアのプリセットを指先で。"
+          }
+        ],
+        "tr": [
+          {
+            "title": "Her ayrıntıyı\nşekillendirin",
+            "sub": "Paletler, iterasyonlar ve Julia hazır ayarları parmaklarınızın ucunda."
+          }
+        ]
+      }
+    }
+  ]
+}

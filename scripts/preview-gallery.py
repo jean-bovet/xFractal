@@ -43,6 +43,7 @@ PEEK_OUTSIDE_CEILING = 0.005
 PEEK_WIDTH = (120, 380)
 PEEK_HEIGHT = (28, 60)
 PEEK_CENTER_TOLERANCE = 40
+PEEK_FOLD_SLACK = 2   # pt: the detector's box can start a pixel or two inside the capsule's edge (iPad pass: 495.0 vs 495.5)
 SHEET_COVERAGE_FLOOR = 0.50
 SHEET_COVERAGE = 0.50   # half the smallest measured coverage is 0.434: the floor wins
 # A translucent sheet (opening and medium detents, the regular-width form sheet) lets the board through: its region must
@@ -55,7 +56,7 @@ GLASS_PIXEL_DELTA = 0.05
 GLASS_COVERAGE_FLOOR = 0.50
 GLASS_COVERAGE = 0.50
 FRACTAL_MIN_STD = 0.02
-FRACTAL_MEAN = (0.02, 0.98)
+FRACTAL_MEAN = (0.01, 0.98)   # the cold Julia on the Duo's wide inner display measures 0.016
 
 
 def slugify(text):
@@ -405,6 +406,8 @@ def do_check(lang, measure=False):
                 jobs.append(["diff", str(out / light_file), str(out / dark_file), *region])
                 owners.append((slug, "peek", scale))
 
+    safes = {e["slug"]: e["safeArea"] for e in manifest if e.get("safeArea")}
+    folds = {e["slug"]: e["fold"] for e in manifest if e.get("fold")}
     answers, error = run_jobs(jobs)
     if error:
         problems.append("luminance helper failed: " + error)
@@ -449,9 +452,28 @@ def do_check(lang, measure=False):
                 problems.append(f"peek capsule not found in {slug}")
                 continue
             w_pt, h_pt = bw / scale, bh / scale
-            centre_off = abs((bx + bw / 2) / scale - width_pt / 2)
-            if not (PEEK_WIDTH[0] <= w_pt <= PEEK_WIDTH[1] and PEEK_HEIGHT[0] <= h_pt <= PEEK_HEIGHT[1]) or centre_off > PEEK_CENTER_TOLERANCE:
-                problems.append(f"peek capsule has the wrong size or position in {slug}: {w_pt:.0f} x {h_pt:.0f} pt, {centre_off:.0f} pt off centre")
+            fold = folds.get(slug)
+            if fold:
+                # Beside a fold the capsule sits just past its trailing edge: off the fold, on its trailing side, and no
+                # further than the tolerance from the minimal position.
+                left, fold_right = bx / scale, fold["x"] + fold["w"]
+                minimal_centre = fold_right + w_pt / 2
+                centre_off = abs((bx + bw / 2) / scale - minimal_centre)
+                if left < fold_right - PEEK_FOLD_SLACK and left + w_pt > fold["x"]:
+                    problems.append(f"peek capsule on the fold in {slug}: x {left:.0f} ... {left + w_pt:.0f} pt, fold {fold['x']:.0f} ... {fold_right:.0f}")
+                elif left < fold_right - PEEK_FOLD_SLACK:
+                    problems.append(f"peek capsule not on the trailing side of the fold in {slug}")
+                elif centre_off > PEEK_CENTER_TOLERANCE:
+                    problems.append(f"peek capsule has the wrong size or position in {slug}: {centre_off:.0f} pt past the minimal position beside the fold")
+                if not (PEEK_WIDTH[0] <= w_pt <= PEEK_WIDTH[1] and PEEK_HEIGHT[0] <= h_pt <= PEEK_HEIGHT[1]):
+                    problems.append(f"peek capsule has the wrong size or position in {slug}: {w_pt:.0f} x {h_pt:.0f} pt")
+            else:
+                # The capsule is centred between the safe-area insets (a device may have unequal ones: the Duo's outer display).
+                safe = safes.get(slug) or {}
+                centre = width_pt / 2 + (safe.get("left", 0) - safe.get("right", 0)) / 2
+                centre_off = abs((bx + bw / 2) / scale - centre)
+                if not (PEEK_WIDTH[0] <= w_pt <= PEEK_WIDTH[1] and PEEK_HEIGHT[0] <= h_pt <= PEEK_HEIGHT[1]) or centre_off > PEEK_CENTER_TOLERANCE:
+                    problems.append(f"peek capsule has the wrong size or position in {slug}: {w_pt:.0f} x {h_pt:.0f} pt, {centre_off:.0f} pt off centre")
             if not measure:
                 separation = light_mean - dark_mean
                 if separation < max(PEEK_DELTA, PEEK_DELTA_FLOOR):

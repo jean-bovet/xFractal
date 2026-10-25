@@ -5,16 +5,26 @@ import UIKit
 let galleryFixedDate = Date(timeIntervalSince1970: 1_800_000_000)
 
 enum GallerySize: Equatable {
+    /// The simulator's own screen (the Duo simulator folded: its 466 x 678 pt outer display).
     case phone
-    /// 834 x 1210 pt on the phone simulator with a regular horizontal size class: an approximation, not iPad coverage.
-    case regularWidth
+    /// The iPhone Duo's inner display in landscape, 951 x 669 pt: a window with the regular horizontal size class.
+    case duoInnerLandscape
+    /// The iPhone Duo's inner display in portrait, 669 x 951 pt.
+    case duoInnerPortrait
 
     var points: CGSize {
         switch self {
         case .phone: return UIScreen.main.bounds.size
-        case .regularWidth: return CGSize(width: 834, height: 1210)
+        case .duoInnerLandscape: return CGSize(width: 951, height: 669)
+        case .duoInnerPortrait: return CGSize(width: 669, height: 951)
         }
     }
+
+    /// The sizes whose window and presented controller are told the regular horizontal size class.
+    var forcesRegularWidth: Bool { self != .phone }
+
+    /// The capture scale: the Duo's inner display is 3x (its store screenshots are edge to edge at 2853 x 2007), 2 otherwise.
+    var scale: CGFloat { self == .phone ? 2 : 3 }
 }
 
 /// A fractal rendered off screen at a fixed pixel size, with no app UI around it.
@@ -54,6 +64,9 @@ struct GalleryFixture {
     /// Started with the production `store.replay()` once the store is built.
     var replays = false
     var regions: [GalleryRegionKind]
+    /// A stand-in for the fold region the system reports (hinge at x 475.5, 40 pt wide with its margins): the peek
+    /// capsule must clear it. nil = no fold.
+    var foldRegion: CGRect? = nil
 
     var slug: String {
         name.lowercased().replacingOccurrences(of: "[^a-z0-9]+", with: "-", options: .regularExpression)
@@ -174,7 +187,7 @@ enum GalleryFixtures {
         [Snapshot(state: a, time: 0), Snapshot(state: b, time: 30)]
     }
 
-    // MARK: the 19 scenarios
+    // MARK: the 26 scenarios
 
     static let all: [GalleryFixture] = [
         GalleryFixture(name: "Board · Mandelbrot · First launch", group: "Board", state: nil,
@@ -211,11 +224,33 @@ enum GalleryFixtures {
                        journal: single(multibrot5), sheet: .large, regions: [.sheet]),
         GalleryFixture(name: "Controls · Replaying", group: "Controls", state: mandelbrotB,
                        journal: pair(mandelbrotA, mandelbrotB), sheet: .large, replays: true, regions: [.sheet]),
-        GalleryFixture(name: "Regular width · Board · Julia", group: "Regular width (approximation)",
-                       state: juliaCold, journal: single(juliaCold), size: .regularWidth, regions: [.peek, .fractal]),
-        GalleryFixture(name: "Regular width · Controls · Mandelbrot", group: "Regular width (approximation)",
-                       state: mandelbrotA, journal: single(mandelbrotA), size: .regularWidth, sheet: .opening,
+        GalleryFixture(name: "Duo inner · Landscape · Board · Mandelbrot · First launch", group: "iPhone Duo · inner display",
+                       state: nil, size: .duoInnerLandscape,
+                       regions: [.peek, .fractal]),
+        GalleryFixture(name: "Duo inner · Landscape · Board · Mandelbrot · Deep zoom · Chromatic", group: "iPhone Duo · inner display",
+                       state: deepZoomChromatic, size: .duoInnerLandscape,
+                       regions: [.peek, .fractal]),
+        GalleryFixture(name: "Duo inner · Landscape · Board · Newton", group: "iPhone Duo · inner display",
+                       state: newton, size: .duoInnerLandscape,
+                       regions: [.peek, .fractal]),
+        GalleryFixture(name: "Duo inner · Landscape · Board · Multibrot", group: "iPhone Duo · inner display",
+                       state: multibrotHot, size: .duoInnerLandscape,
+                       regions: [.peek, .fractal]),
+        GalleryFixture(name: "Duo inner · Landscape · Board · Julia", group: "iPhone Duo · inner display",
+                       state: juliaCold, size: .duoInnerLandscape,
+                       regions: [.peek, .fractal]),
+        GalleryFixture(name: "Duo inner · Landscape · Controls · Julia", group: "iPhone Duo · inner display",
+                       state: juliaB, journal: pair(julia, juliaB), size: .duoInnerLandscape, sheet: .opening,
+                       regions: [.sheet, .fractal]),
+        GalleryFixture(name: "Duo inner · Portrait · Board · Mandelbrot · Deep zoom", group: "iPhone Duo · inner display",
+                       state: deepZoom, size: .duoInnerPortrait,
+                       regions: [.peek, .fractal]),
+        GalleryFixture(name: "Duo inner · Portrait · Controls · Mandelbrot", group: "iPhone Duo · inner display",
+                       state: mandelbrotA, size: .duoInnerPortrait, sheet: .opening,
                        regions: [.sheetGlass, .fractal]),
+        GalleryFixture(name: "Duo inner · Landscape · Board · Folded · Mandelbrot", group: "iPhone Duo · inner display",
+                       state: mandelbrotA, size: .duoInnerLandscape, regions: [.peek, .fractal],
+                       foldRegion: CGRect(x: 455.5, y: 0, width: 40, height: 669)),
     ]
 
     static func named(_ fragment: String) -> GalleryFixture {

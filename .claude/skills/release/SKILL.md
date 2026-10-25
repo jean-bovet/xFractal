@@ -131,6 +131,16 @@ Each prints `PROBLEM`, `CHECK` and `ok` lines. What they cover, and what to judg
 | App Privacy label | Not readable through the API: compare it with what the build collects (permissions, SDKs, network use); an app last updated before 2020 may have none |
 | Features removed since the live version | What's New (§4) must say so; the description must not still promise them |
 
+Two things the checkers do not read, judged by hand (rules and sizes in maestro's `docs/iphone-duo.md`):
+
+- **iPhone Duo SDK**: the candidate's iOS build was archived with the iOS 27.1 SDK or later (`xcode-cloud report
+  <build> --logs DIR`, then grep the iOS archive log for `iPhoneOS27.1.sdk`; "Latest Release" workflows have had it
+  since Xcode 27.1). A 27.0 build leaves the inner display's right edge to the status bar: not a stop, but say so in
+  the report, and never call such a build Duo-ready.
+- **iPhone Duo screenshots**: a set for the inner display (2853 x 2007) and one for the outer display (1398 x 2034)
+  when the repo has them (`/app-store-screenshots`); they earn the product-page badge now and are required from
+  April 2027 for 27.1-SDK apps. They are uploaded by hand in App Store Connect until `app-store` can.
+
 If either checker exits non-zero, or a `CHECK` shows something false, **stop**: list each problem
 with its proposed fix (code fixes follow the repo's own workflow and need a new `/testflight`;
 App Store page fixes use `app-store metadata`, `age-rating` and `screenshots`; pages on the web go

@@ -22,6 +22,13 @@ English): `scripts/snapshot-gallery.sh --only "board-julia,board-mandelbrot-deep
 fr,de,it,es,pt-BR,ja,tr` (its four windows are the Mac slides: `previews/mac/fr/`, …). Keep the `--only` list in step with the
 `capture` names in `AppStore/screenshots.json`.
 
+iPhone Duo (rendered, not uploaded yet), two sets, one config each (`displayType` `IPHONE_DUO`):
+
+- Outer display, 1398 x 2034: `scripts/snapshot-gallery.sh --device duo --only "<slides' captures>" --lang fr,de,it,es,pt-BR,ja,tr`
+  (captures into `previews/duo/`), then `app-store-screenshots --config AppStore/screenshots-duo-outer.json --captures previews/duo`.
+- Inner display, 2853 x 2007 (landscape): `scripts/snapshot-gallery.sh --device duo --only "duo-inner-landscape" --lang fr,de,it,es,pt-BR,ja,tr`,
+  then `app-store-screenshots --config AppStore/screenshots-duo-inner.json --captures previews/duo`.
+
 ## 1. Captures
 
 Refresh the captures first when the UI changed since the last gallery run: the slides use the gallery's PNGs by
@@ -66,6 +73,10 @@ app-store screenshots --app xFractal-iOS --version <v> --locale <locale> --displ
   .build/app-store-screenshots/<locale>/*.png
 ```
 
+The two iPhone Duo sets have no `--display-type`: the screenshot API has no Duo value (only the App Asset Library's
+`IPHONE_DUO` display class has). Until `app-store` uploads through it, upload them by hand in App Store Connect and
+say so in the report. Sizes, badge and the April 2027 deadline: maestro's `docs/iphone-duo.md`.
+
 ## The slides file (`AppStore/screenshots.json`)
 
 - `displayType`, `width`, `height`: the App Store set it renders (iPhone 6.9": `APP_IPHONE_67`, 1320 x 2868).
@@ -79,7 +90,10 @@ app-store screenshots --app xFractal-iOS --version <v> --locale <locale> --displ
   --only <the slides' captures> --lang fr,de`, the same for each device family). Never a full gallery in another
   language.
 - `"device"` per phone: `"iphone"` (the default), `"ipad"` (a thin uniform bezel, no island: the iPad set, 2048 x 2732,
-  `APP_IPAD_PRO_3GEN_129`, from an iPad gallery pass) or `"window"` (a Mac window capture shown at its natural size with
+  `APP_IPAD_PRO_3GEN_129`, from an iPad gallery pass), `"duo"` (the iPhone Duo's inner display: an open book with a thin
+  bezel and a hinge line, no island; the inner set, 2853 x 2007, from a `--device duo` gallery pass), `"duo-outer"` (its
+  outer display: the iPhone rim with the Duo's asymmetric corners, no island; the outer set, 1398 x 2034, from the
+  phone-sized captures of that pass) or `"window"` (a Mac window capture shown at its natural size with
   a shadow, no frame: the Mac set, 2880 x 1800, `APP_DESKTOP`). A config-level `"textStyle"` adds CSS to every headline
   block (e.g. centred above a Mac window). One slides file per set; upload each with its own `--display-type` (the Mac
   set with `--platform MAC_OS`).

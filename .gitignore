@@ -19,7 +19,7 @@ dist/
 .build/
 Package.resolved
 
-# Per-machine signing team (see Signing.xcconfig)
+# Per-machine signing team (see Config/Signing.xcconfig)
 Signing.local.xcconfig
 
 # Claude worktrees

@@ -118,6 +118,7 @@ PY
         fi
         exit 0 ;;
     test-without-building)
+        echo "TEST_RUNNER_XFRACTAL_SNAPSHOT_DEVICE=${TEST_RUNNER_XFRACTAL_SNAPSHOT_DEVICE:-}" >> "$STUB_LOG"
         [ -n "${STUB_TEST_BLOCK:-}" ] && { echo $$ > "$TMPDIR/xcb.pid"; if [ -n "${STUB_IGNORE_TERM:-}" ]; then trap '' TERM; while :; do sleep 0.2; done; fi; exec sleep 60; }
         case "${STUB_TEST_MODE:-ok}" in
             fail) exit 1 ;;
@@ -560,6 +561,19 @@ pool_ipad() {   # --device ipad: an iPad from the pool, its gallery in previews/
     no_simctl_lifecycle pool_ipad
 }
 
+pool_duo() {   # --device duo: an iPhone Duo from the pool, its gallery in previews/duo/, the device named to the test
+    pool_setup
+    gallery --device duo --no-open; local status=$?
+    expect pool_duo "exits zero" [ "$status" = 0 ]
+    expect pool_duo "leased a duo" called "simpool acquire --spec duo --pid "
+    expect pool_duo "never an iphone" not_called "simpool acquire --spec iphone"
+    expect pool_duo "page in previews/duo" [ -f "$T/previews/duo/index.html" ]
+    expect pool_duo "no iPhone page written" [ ! -f "$T/previews/index.html" ]
+    expect pool_duo "the device reaches the test" bash -c 'grep -q "TEST_RUNNER_XFRACTAL_SNAPSHOT_DEVICE=duo" "$0"' "$STUB_LOG"
+    expect pool_duo "released the lease" called "simpool release $POOL_UDID"
+    no_simctl_lifecycle pool_duo
+}
+
 pool_unknown_device() {
     pool_setup
     gallery --device watch --no-open; local status=$?
@@ -664,7 +678,7 @@ pool_signalled_term_build() { pool_signalled TERM build; }
 pool_signalled_term_test() { pool_signalled TERM test; }
 pool_signalled_hup_test() { pool_signalled HUP test; }
 
-POOL_CASES="pool_run pool_ipad pool_unknown_device pool_french pool_regions pool_unknown_language pool_keep_booted pool_stale_marker pool_acquire_fails pool_build_fails pool_test_fails pool_check_fails
+POOL_CASES="pool_run pool_ipad pool_duo pool_unknown_device pool_french pool_regions pool_unknown_language pool_keep_booted pool_stale_marker pool_acquire_fails pool_build_fails pool_test_fails pool_check_fails
 pool_signalled_int_acquire pool_signalled_int_build pool_signalled_int_test pool_signalled_term_build pool_signalled_term_test
 pool_signalled_hup_test"
 

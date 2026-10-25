@@ -4,6 +4,10 @@ import simd
 struct ContentView: View {
     @StateObject private var store: StateStore
     @Environment(\.scenePhase) private var scenePhase
+    #if os(iOS)
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @State private var widthGuard = WidthGuard()
+    #endif
     @State private var viewSize: CGSize = .zero
     @State private var dragLastLocation: CGPoint? = nil
     @State private var pinchState: PinchState? = nil
@@ -11,16 +15,30 @@ struct ContentView: View {
     @State private var showingSheet: Bool
     /// Preview-gallery hook, nil in the app: a view drawn (zero size) inside the controls sheet.
     private let sheetProbe: AnyView?
+    /// Preview-gallery hook, nil in the app: stands in for the fold regions the system reports (container coordinates).
+    private let foldRegionsOverride: [CGRect]?
+    #if os(iOS)
+    @State private var peekSize: CGSize = .zero
+    @State private var foldInput = FoldInput(size: .zero, regions: [])
+
+    /// What the fold avoidance reads from the layout: the container the peek capsule sits in and the active fold regions in
+    /// that same space.
+    private struct FoldInput: Equatable {
+        var size: CGSize
+        var regions: [CGRect]
+    }
+    #endif
 
     /// The store is an autoclosure so it is built once per view identity (StateObject's own autoclosure), not on
     /// every initialisation of this struct.
     /// `showingPanel` (the Mac's parameter panel) and `showingSheet` (the iOS controls) are the preview galleries' hooks.
     init(store: @autoclosure @escaping () -> StateStore = StateStore(), showingSheet: Bool = false,
-         showingPanel: Bool = false, sheetProbe: AnyView? = nil) {
+         showingPanel: Bool = false, sheetProbe: AnyView? = nil, foldRegions: [CGRect]? = nil) {
         _store = StateObject(wrappedValue: store())
         _showingSheet = State(initialValue: showingSheet)
         _showingPanel = State(initialValue: showingPanel)
         self.sheetProbe = sheetProbe
+        self.foldRegionsOverride = foldRegions
     }
 
     private struct PinchState {
@@ -35,7 +53,7 @@ struct ContentView: View {
                         isActive: scenePhase != .background)
                 .gesture(viewGestures)
                 .allowsHitTesting(!store.isReplaying)
-                .ignoresSafeArea()
+                .ignoresSafeArea(.all, edges: boardIgnoredEdges)
 
             #if os(macOS)
             VStack(spacing: 10) {
@@ -46,21 +64,90 @@ struct ContentView: View {
             .padding(.bottom, 16)
             #else
             iOSPeek
+                .onGeometryChange(for: CGSize.self, of: { $0.size }) { peekSize = $0 }
+                .offset(x: peekOffset)
+                .animation(.default, value: peekOffset)
                 .padding(.bottom, 12)
             #endif
         }
         #if os(iOS)
-        .sheet(isPresented: $showingSheet) {
-            iOSControlsSheet
-                .background { if let sheetProbe { sheetProbe.frame(width: 0, height: 0) } }
-                .presentationDetents([.height(260), .medium, .large])
-                .presentationDragIndicator(.visible)
-                .presentationBackgroundInteraction(.enabled(upThrough: .height(260)))
+        .background {
+            GeometryReader { proxy in
+                let input = FoldInput(size: proxy.size, regions: activeFoldRegions(proxy))
+                Color.clear.onChange(of: input, initial: true) { foldInput = input }
+            }
         }
+        #endif
+        #if os(iOS)
+        // One state, two presentations: the sheet while the width is compact, the inspector column once it is regular
+        // (the Duo's inner display in every pose, the iPad). Each binding writes only while its own form is current: the
+        // outgoing presentation's dismissal during a size-class change must not close the controls in the new form.
+        .sheet(isPresented: sheetBinding) { controlsContent }
+        .inspector(isPresented: inspectorBinding) { controlsContent }
         #endif
         .onChange(of: scenePhase) { _, phase in
             if phase == .background { store.enterBackground() }
         }
+    }
+
+    #if os(iOS)
+    /// The fold regions that are active now (none when the device is open or does not fold), in `proxy`'s space.
+    private func activeFoldRegions(_ proxy: GeometryProxy) -> [CGRect] {
+        if let foldRegionsOverride { return foldRegionsOverride }
+        if #available(iOS 27.1, *) {
+            return proxy.reservedRegions(kind: .division).filter(\.isActive).map(\.frame)
+        }
+        return []
+    }
+
+    /// How far the peek capsule moves off a fold. Its unshifted frame is derived from its size and the container (the
+    /// ZStack bottom-centres it, 12 pt up), never measured through the offset it feeds, which would oscillate.
+    private var peekOffset: CGFloat {
+        let container = foldInput.size
+        guard peekSize.width > 0, container.width > 0, !foldInput.regions.isEmpty else { return 0 }
+        let capsule = CGRect(x: (container.width - peekSize.width) / 2,
+                             y: container.height - 12 - peekSize.height,
+                             width: peekSize.width, height: peekSize.height)
+        return peekShift(capsule: capsule, clearing: foldInput.regions, in: container)
+    }
+
+    private var isRegularWidth: Bool { horizontalSizeClass == .regular }
+
+    /// The width the presentations' bindings consult. A reference, so that a binding SwiftUI kept from an earlier body
+    /// still reads the current width when it is written during a size-class change (a captured copy of the view would
+    /// hold the old one). Refreshed whenever a binding is built, i.e. on every body evaluation.
+    private final class WidthGuard { var regular = false }
+
+    private var sheetBinding: Binding<Bool> {
+        let guardRef = widthGuard
+        guardRef.regular = isRegularWidth
+        return Binding(get: { showingSheet && !guardRef.regular }, set: { if !guardRef.regular { showingSheet = $0 } })
+    }
+
+    private var inspectorBinding: Binding<Bool> {
+        let guardRef = widthGuard
+        guardRef.regular = isRegularWidth
+        return Binding(get: { showingSheet && guardRef.regular }, set: { if guardRef.regular { showingSheet = $0 } })
+    }
+
+    private var controlsContent: some View {
+        iOSControlsSheet
+            .background { if let sheetProbe { sheetProbe.frame(width: 0, height: 0) } }
+            .presentationDetents([.height(260), .medium, .large])
+            .presentationDragIndicator(.visible)
+            .presentationBackgroundInteraction(.enabled(upThrough: .height(260)))
+    }
+    #endif
+
+    /// The board fills the screen. While the inspector column is shown (regular width, controls open) it stops at the column's
+    /// edge, which the column reports as a trailing safe-area inset; closed, the board is full-bleed again, whatever device
+    /// inset (the Duo's status bar side) the trailing edge has.
+    private var boardIgnoredEdges: Edge.Set {
+        #if os(iOS)
+        return isRegularWidth && showingSheet ? [.top, .bottom, .leading] : .all
+        #else
+        return .all
+        #endif
     }
 
     private var viewGestures: some Gesture {

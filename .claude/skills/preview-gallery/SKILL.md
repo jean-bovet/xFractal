@@ -24,7 +24,7 @@ scheme `xFractal-iOS`, hosted unit-test target `xFractalGalleryTests` (`GalleryT
 scenario's seeded state, journal, sheet, scroll and size, defined once), `GalleryScenarios.swift` (the list, built from the
 fixtures), `GalleryHarness.swift` (mount, readiness, capture, validation), `SnapshotGalleryTests.swift` (the render test) and
 `GalleryScenarioTests.swift` (plain tests of the harness, run with every gallery run). Output: `previews/` (gitignored). Groups:
-Board, Controls, Regular width (approximation). There is no approved visual spec: read the cards and judge. The plan and its
+Board, Controls, iPhone Duo · inner display. There is no approved visual spec: read the cards and judge. The plan and its
 outcome (measurements, thresholds, findings) are in `planning/gallery-scenarios-plan.md`. `GalleryTests/` is the iOS test target;
 `Tests/` stays the macOS logic tests.
 <!-- /repo-specific -->
@@ -36,11 +36,15 @@ the slides' captures with `--only` into `previews/<lang>/` (`previews/ipad/<lang
 page stays English.
 
 <!-- repo-specific: platforms-and-languages -->
-19 scenarios, 38 images. **Regular width is an approximation**: an 834 x 1210 pt window on the
-phone simulator with a regular horizontal size class (window, hosting controller and presented sheet carry the override).
-Idiom, safe areas and presentation adaptation stay the phone's: those cards are not iPad coverage. The real iPad pass is
-`scripts/snapshot-gallery.sh --device ipad` (the pool's iPad Pro 13-inch (M5), every scenario, into `previews/ipad/`;
-the large Controls sheet shows the whole form there, so "scroll to the end" checks the rows without scrolling). The Mac
+26 scenarios, 52 images. **The iPhone Duo · inner display group** (9 scenarios) are the fixed-size windows of the
+iPhone Duo bullet below (the window and the hosting controller carry the regular size class override; 2853 x 2007 px). The Controls there are an inspector **column** beside the board (landscape) or laid over it with the
+system's dimming (portrait, 669 pt: judged as a translucent `sheetGlass` with the medium detent's scrim band); a "Folded" card
+feeds a stand-in fold rect to `ContentView(foldRegions:)` and the check wants the peek capsule just past its trailing edge.
+The real `reservedRegions` source is an owed manual check. The iPad pass
+(`scripts/snapshot-gallery.sh --device ipad`, the pool's iPad Pro 13-inch (M5), every scenario, into `previews/ipad/`)
+shows every Controls scenario as a column (the harness follows the presentation it finds, `PresentationForm`). The Duo pass
+(`--device duo`, into `previews/duo/`) asserts that the simulator is folded (466 x 678 pt, compact) before rendering and
+renders all 26 scenarios: the 17 phone ones are the outer display there. The Mac
 pass is `scripts/snapshot-mac.sh` (`Tests/MacWindowSnapshotTests`: the real window off screen through `CARenderer`; the
 `CAMetalLayer` it skips is painted with the app's own `encodeFrame`), four windows into `previews/mac/` for the Mac App
 Store screenshots.
@@ -57,6 +61,7 @@ a `#Preview` to the app.
 scripts/snapshot-gallery.sh                     # every scenario; the simulator goes back to the pool
 scripts/snapshot-gallery.sh --only "settings,list" # a subset: comma-separated substrings of names or slugs
 scripts/snapshot-gallery.sh --device ipad       # one device (when the repo renders several)
+scripts/snapshot-gallery.sh --device duo        # the iPhone Duo: outer display and fixed-size inner poses -> previews/duo/
 ```
 
 - **Done = `CHECK OK [<lang>]: <n> cards, light and dark complete and correctly lit`** for every language
@@ -68,6 +73,13 @@ scripts/snapshot-gallery.sh --device ipad       # one device (when the repo rend
   `--only` one scenario about 25 s. From a shut-down simulator add 1–3 min (a fresh boot keeps iOS busy). The
   pool normally keeps a released simulator warm for the next run (within the host's budget) and shuts it
   down after 30 idle minutes.
+- **iPhone Duo** (`--device duo`, pool spec `duo`, iOS 27.1): `simctl` cannot fold or unfold a simulator (Xcode 27.1),
+  so it stays folded. The phone-sized scenarios render on the outer display (466 x 678 pt, compact width, the status
+  bar on the side); the script asserts that size before labelling the captures. The inner display's poses are
+  scenarios at fixed window sizes, 951 x 669 pt (landscape, the hinge vertical at the centre) and 669 x 951 pt
+  (portrait), regular size class both ways, captured at 3x. A custom control that steps off the fold takes its fold
+  rectangles from a test-only hook (a 40 pt stand-in hinge at the centre); the OS's real reserved regions are a manual
+  check in Xcode's Device Hub. Model: xFractal. Apple's rules and the audit checklist: maestro's `docs/iphone-duo.md`.
 
 <!-- repo-specific: script -->
 `scripts/snapshot-gallery.sh [--only P] [--no-open] [--verbose]` (fallback only: `[--keep-booted] | --shutdown`). Snapshot
@@ -150,7 +162,7 @@ One entry in the scenario list, and nothing in the app:
    reads `data/manifest.json` with a fallback to the old path.
 4. **`scripts/snapshot-gallery.sh`**:
    - The simulator from the machine-wide pool: `SIMULATOR_UDID` if the caller passes one (never released),
-     else `simpool acquire --spec iphone --pid $$` (then `ipad`, one device after the other), and
+     else `simpool acquire --spec iphone --pid $$` (then `ipad`, `duo`, one device after the other), and
      `simpool release` in the exit trap. Every `xcodebuild` runs under `buildlock --folder <DerivedData>`.
      Never boots or shuts down a simulator itself.
    - A repo that may run without the pool (a public repo, a fresh clone): when `simpool` is not on PATH, its

@@ -475,6 +475,68 @@ class RegionTests(GalleryTestCase):
         self.assertIn("no measured regions: screen", done.stdout)
 
 
+class FoldTests(GalleryTestCase):
+    """A scenario with a `fold` rect (pt): the peek capsule must sit just past its trailing edge."""
+    FOLD = {"x": 181, "y": 0, "w": 40, "h": H}
+
+    def fold_case(self, capsule_x):
+        manifest = [entry("Screen", "Group", "screen", ["peek", "fractal"],
+                          {"light": [region("peek", PEEK_BAND), region("fractal", FRACTAL)],
+                           "dark": [region("peek", PEEK_BAND), region("fractal", FRACTAL)]})]
+        manifest[0]["fold"] = self.FOLD
+        images = []
+        for capsule in (gray(235), gray(50)):
+            img = Image(color=gray(128)).stripes(*FRACTAL)
+            img.rect(capsule_x, 790, 120, 40, capsule)
+            images.append(img)
+        self.imported(manifest=manifest, images={"screen": tuple(images)})
+        return self.check()
+
+    def test_capsule_clearing_the_fold_on_the_trailing_side_passes(self):
+        done = self.fold_case(221)
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+
+    def test_capsule_a_pixel_inside_the_fold_edge_passes(self):
+        done = self.fold_case(220)
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+
+    def test_centred_capsule_over_the_fold_fails(self):
+        done = self.fold_case(141)
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("peek capsule on the fold in screen", done.stdout)
+
+    def test_capsule_shifted_twice_the_minimum_fails(self):
+        done = self.fold_case(281)
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("peek capsule has the wrong size or position in screen", done.stdout)
+
+
+class SafeAreaTests(GalleryTestCase):
+    """Unequal leading and trailing safe-area insets move the centre the capsule is judged against."""
+    def inset_case(self, safe):
+        manifest = [entry("Screen", "Group", "screen", ["peek", "fractal"],
+                          {"light": [region("peek", PEEK_BAND), region("fractal", FRACTAL)],
+                           "dark": [region("peek", PEEK_BAND), region("fractal", FRACTAL)]})]
+        if safe:
+            manifest[0]["safeArea"] = safe
+        images = []
+        for capsule in (gray(235), gray(50)):
+            img = Image(color=gray(128)).stripes(*FRACTAL)
+            img.rect(151, 790, 220, 40, capsule)   # centre 261: 60 pt right of the window centre
+            images.append(img)
+        self.imported(manifest=manifest, images={"screen": tuple(images)})
+        return self.check()
+
+    def test_capsule_off_centre_without_insets_fails(self):
+        done = self.inset_case(None)
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("off centre", done.stdout)
+
+    def test_capsule_centred_between_unequal_insets_passes(self):
+        done = self.inset_case({"left": 84, "right": 0})
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+
+
 class GlassSheetTests(GalleryTestCase):
     """A translucent sheet (the opening and medium detents, the regular-width form sheet) shows the board through it:
     its background is not lit or dark, but the region still reads lighter in the light render than in the dark one."""

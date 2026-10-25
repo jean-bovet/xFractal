@@ -87,6 +87,29 @@ struct RenderResult {
     var check: ContentCheck?
     var detent: String?
     var sheetHeight: Double?
+    /// The window's leading and trailing safe-area insets: the peek capsule is centred between them.
+    var safeLeft: Double
+    var safeRight: Double
+}
+
+/// How the controls are presented: a sheet in a compact horizontal size class, a trailing column in a regular one
+/// (`.inspector` adapts by itself).
+enum PresentationForm: String, Equatable {
+    case sheet, column
+}
+
+/// The fold regions a mounted scenario is told about, changeable after the mount (the app itself gets them from the system).
+final class FoldRegionsBox: ObservableObject {
+    @Published var regions: [CGRect]?
+    init(_ regions: [CGRect]?) { self.regions = regions }
+}
+
+/// Hosts `ContentView` so that a change of `FoldRegionsBox.regions` rebuilds the view from the same wrapper: the structural
+/// identity holds, so the store, the sheet state and the peek state persist while the fold regions change.
+struct FoldHost: View {
+    @ObservedObject var box: FoldRegionsBox
+    let make: (_ foldRegions: [CGRect]?) -> ContentView
+    var body: some View { make(box.regions) }
 }
 
 /// One scenario mounted in a window on the app's scene.
@@ -98,6 +121,7 @@ final class GalleryMount {
     let window: UIWindow
     let host: UIHostingController<AnyView>
     let sizeClasses = SizeClassBox()
+    let foldBox: FoldRegionsBox
     var replayStartedAt: Date?
 
     var mtk: MTKView!
@@ -112,7 +136,8 @@ final class GalleryMount {
         window.frame = CGRect(origin: .zero, size: scenario.fixture.size.points)
         window.overrideUserInterfaceStyle = appearance.style
         let probe = AnyView(SizeClassProbe { [sizeClasses] in sizeClasses.sheet = $0 })
-        let content = built.makeView(probe)
+        foldBox = FoldRegionsBox(scenario.fixture.foldRegion.map { [$0] })
+        let content = FoldHost(box: foldBox) { [built] regions in built.makeView(probe, regions) }
         let root: AnyView
         if activeScenePhase {
             // The real app's foreground state: a test window's scene phase is .background, which pauses the MTKView.
@@ -122,7 +147,7 @@ final class GalleryMount {
             root = AnyView(content.background(SizeClassProbe { [sizeClasses] in sizeClasses.outer = $0 }))
         }
         host = UIHostingController(rootView: root)
-        if scenario.fixture.size == .regularWidth {
+        if scenario.fixture.size.forcesRegularWidth {
             host.traitOverrides.horizontalSizeClass = .regular
             // The presented sheet takes its traits from the window, not from the presenting controller.
             window.traitOverrides.horizontalSizeClass = .regular
@@ -131,8 +156,49 @@ final class GalleryMount {
 
     var store: StateStore { built.store }
     var fixture: GalleryFixture { scenario.fixture }
-    var presented: UIViewController? { host.presentedViewController }
+    /// The controller presenting nothing above it that is a sheet: found from the host down through its children (the
+    /// inspector wrapper hosts the content in a child controller, which then presents the sheet).
+    var presented: UIViewController? {
+        func find(_ vc: UIViewController) -> UIViewController? {
+            if let p = vc.presentedViewController { return p }
+            for child in vc.children { if let p = find(child) { return p } }
+            return nil
+        }
+        return find(host)
+    }
     var sheetController: UISheetPresentationController? { presented?.sheetPresentationController }
+
+    /// Read from the host's current traits every time, never cached: a trait override changed after the mount is seen on
+    /// the next read.
+    var form: PresentationForm { host.traitCollection.horizontalSizeClass == .regular ? .column : .sheet }
+
+    /// The controls list (the Form's collection view) when it is part of the window's own hierarchy: a column.
+    var columnList: UICollectionView? {
+        func find(_ v: UIView) -> UICollectionView? {
+            if let c = v as? UICollectionView { return c }
+            if v is MTKView { return nil }
+            for sub in v.subviews { if let c = find(sub) { return c } }
+            return nil
+        }
+        return find(window)
+    }
+
+    /// A narrow window (the Duo's portrait inner display) gets the column laid over the board, with the system's dimming,
+    /// instead of beside it: the board then reaches under the column, whatever device inset the trailing edge has.
+    var columnOverlaysBoard: Bool {
+        guard form == .column, let column = columnFrame, let mtk else { return false }
+        return mtk.convert(mtk.bounds, to: window).maxX > column.minX + 1
+    }
+
+    /// The column's strip of the window (from the controls list's leading edge to the trailing edge), in window
+    /// coordinates; nil while there is no column. Beside a wide window the board is narrower by this width; in a narrow
+    /// one the system lays the column over the board instead.
+    var columnFrame: CGRect? {
+        guard form == .column, let list = columnList else { return nil }
+        let frame = list.convert(list.bounds, to: window)
+        guard frame.width > 0 else { return nil }
+        return CGRect(x: frame.minX, y: 0, width: window.bounds.width - frame.minX, height: window.bounds.height)
+    }
 
     func show() {
         if fixture.replays {
@@ -167,7 +233,9 @@ final class GalleryMount {
         return nil
     }
 
+    /// The sheet's frame, or the column's in `.column`.
     var sheetFrame: CGRect? {
+        if form == .column { return columnFrame }
         guard let v = presented?.view else { return nil }
         return v.convert(v.bounds, to: window)
     }
@@ -183,24 +251,43 @@ final class GalleryMount {
         }
         renderer = mtk.delegate as? FractalRenderer
         guard renderer != nil else { throw GalleryFailure("the MTKView has no FractalRenderer delegate") }
+        try await settlePresentation()
+    }
+
+    /// The presentation part of `settleLayout()`, also called by a test after it changes the size class: a sheet is waited
+    /// for (with the detent applied for a medium or large one), a column is waited for beside a narrower board and with no
+    /// presented controller; then the frame is stable.
+    func settlePresentation() async throws {
         guard fixture.sheet != .none else { return }
-        try await waitUntil(5, "the sheet presented") {
-            guard let p = presented else { return false }
-            return !p.isBeingPresented && p.transitionCoordinator == nil && sheetController != nil
-        }
-        if fixture.size == .regularWidth, let presented {
-            // The sheet takes its adaptation from the phone, but its content can be told the regular width.
-            presented.traitOverrides.horizontalSizeClass = .regular
-        }
-        if fixture.sheet == .medium || fixture.sheet == .large {
-            let controller = sheetController!
-            let ids = controller.detents.map(\.identifier)
-            guard ids.count == 3, ids.contains(.medium), ids.contains(.large) else {
-                throw GalleryFailure("unexpected sheet detents: \(ids.map(\.rawValue))")
+        switch form {
+        case .sheet:
+            try await waitUntil(5, "the sheet presented") {
+                guard let p = presented else { return false }
+                return !p.isBeingPresented && p.transitionCoordinator == nil && sheetController != nil
             }
-            let wanted: UISheetPresentationController.Detent.Identifier = fixture.sheet == .medium ? .medium : .large
-            controller.animateChanges { controller.selectedDetentIdentifier = wanted }
-            try await waitUntil(5, "detent \(wanted.rawValue) selected") { controller.selectedDetentIdentifier == wanted }
+            if fixture.size.forcesRegularWidth, let presented {
+                presented.traitOverrides.horizontalSizeClass = .regular
+            }
+            if fixture.sheet == .medium || fixture.sheet == .large {
+                let controller = sheetController!
+                let ids = controller.detents.map(\.identifier)
+                guard ids.count == 3, ids.contains(.medium), ids.contains(.large) else {
+                    throw GalleryFailure("unexpected sheet detents: \(ids.map(\.rawValue))")
+                }
+                let wanted: UISheetPresentationController.Detent.Identifier = fixture.sheet == .medium ? .medium : .large
+                if controller.selectedDetentIdentifier != wanted {
+                    controller.animateChanges { controller.selectedDetentIdentifier = wanted }
+                    try await waitUntil(5, "detent \(wanted.rawValue) selected") { controller.selectedDetentIdentifier == wanted }
+                }
+            }
+        case .column:
+            try await waitUntil(5, "the controls column beside the board (no sheet)") {
+                window.layoutIfNeeded()
+                guard presented == nil, columnFrame != nil, let list = columnList else { return false }
+                // Not while the column is still sliding in from beyond the trailing edge.
+                return list.convert(list.bounds, to: window).maxX <= window.bounds.width + 1
+            }
+            if let presented { throw GalleryFailure("a sheet is presented where a column is due: \(presented)") }
         }
         try await waitStableSheetFrame()
     }
@@ -213,7 +300,7 @@ final class GalleryMount {
             let frame = sheetFrame
             if let frame, frame == last { same += 1 } else { same = 0 }
             last = frame
-            return same >= 3 && presented?.transitionCoordinator == nil
+            return same >= 3 && presented?.transitionCoordinator == nil && (frame != nil || fixture.sheet == .none)
         }
     }
 
@@ -221,7 +308,7 @@ final class GalleryMount {
     /// (bounded) until `ScrimSettling` finds the fitted scrim of the board region flat over its last samples. Only where a
     /// board region and a scrim exist (the medium detent).
     func settleScrim() async throws {
-        guard fixture.sheet == .medium, let region = fractalRegion() else { return }
+        guard (fixture.sheet == .medium && form == .sheet) || columnOverlaysBoard, let region = fractalRegion() else { return }
         _ = try await drawFrame()
         var samples: [Double] = []
         let deadline = Date().addingTimeInterval(4)
@@ -232,26 +319,61 @@ final class GalleryMount {
         }
     }
 
-    /// A capture-sized image of the reference render multiplied by `gain` (a pure gain: no offset), for the tests.
+    /// A capture-sized (window-sized, at the capture scale) image of the reference render multiplied by `gain` (a pure
+    /// gain: no offset), for the tests. The reference is drawn at the MTKView's frame in the window and the rest is
+    /// black, so `validate` samples the same geometry from it as from a capture, beside a column too.
     func gainedReference(of state: ViewState, gain: Double) throws -> UIImage {
         let reference = try referenceImage(of: state)
-        let w = reference.width, h = reference.height
+        let rw = reference.width, rh = reference.height
+        var refBytes = [UInt8](repeating: 0, count: rw * rh * 4)
+        let rctx = CGContext(data: &refBytes, width: rw, height: rh, bitsPerComponent: 8, bytesPerRow: rw * 4,
+                             space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+        rctx.draw(reference, in: CGRect(x: 0, y: 0, width: rw, height: rh))
+        for i in stride(from: 0, to: refBytes.count, by: 4) {
+            for c in 0..<3 { refBytes[i + c] = UInt8(max(0, min(255, (Double(refBytes[i + c]) * gain).rounded()))) }
+        }
+        guard let gained = rctx.makeImage() else { throw GalleryFailure("gained reference: no image") }
+        let scale = fixture.size.scale
+        let w = Int((window.bounds.width * scale).rounded()), h = Int((window.bounds.height * scale).rounded())
         var bytes = [UInt8](repeating: 0, count: w * h * 4)
         let ctx = CGContext(data: &bytes, width: w, height: h, bitsPerComponent: 8, bytesPerRow: w * 4,
                             space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
-        ctx.draw(reference, in: CGRect(x: 0, y: 0, width: w, height: h))
-        for i in stride(from: 0, to: bytes.count, by: 4) {
-            for c in 0..<3 { bytes[i + c] = UInt8(max(0, min(255, (Double(bytes[i + c]) * gain).rounded()))) }
-        }
+        ctx.setFillColor(red: 0, green: 0, blue: 0, alpha: 1)
+        ctx.fill(CGRect(x: 0, y: 0, width: w, height: h))
+        let board = mtk.convert(mtk.bounds, to: window)
+        // CGContext is y-up; the window's frame is y-down.
+        ctx.draw(gained, in: CGRect(x: board.minX * scale, y: CGFloat(h) - board.maxY * scale,
+                                    width: board.width * scale, height: board.height * scale))
         guard let image = ctx.makeImage() else { throw GalleryFailure("gained reference: no image") }
-        return UIImage(cgImage: image, scale: CGFloat(w) / window.bounds.width, orientation: .up)
+        return UIImage(cgImage: image, scale: scale, orientation: .up)
+    }
+
+    /// Draws a frame and takes `sample` until two successive samples are equal (an animation has ended), bounded at 3 s.
+    func settled<T: Equatable>(_ what: String, _ sample: () throws -> T) async throws -> T {
+        var last: T?
+        let deadline = Date().addingTimeInterval(3)
+        while true {
+            _ = try await drawFrame()
+            let now = try sample()
+            if let last, last == now { return now }
+            last = now
+            if Date() > deadline { throw GalleryFailure("timeout (3 s): \(what) did not settle") }
+            try await Task.sleep(nanoseconds: 100_000_000)
+        }
+    }
+
+    /// The peek capsule moves with an animation when the fold regions change: wait until two successive captures of the
+    /// window are identical. Only where a fold region is seeded.
+    func settlePeek() async throws {
+        guard fixture.foldRegion != nil else { return }
+        _ = try await settled("the peek capsule") { capture().pngData() }
     }
 
     // MARK: scroll
 
     @discardableResult
     func scrollSheetToEnd() async throws -> UIScrollView {
-        guard let root = presented?.view else { throw GalleryFailure("no sheet to scroll") }
+        guard let root = form == .column ? columnList : presented?.view else { throw GalleryFailure("no sheet to scroll") }
         var scrolls: [UIScrollView] = []
         func collect(_ v: UIView) {
             if let s = v as? UIScrollView { scrolls.append(s) }
@@ -352,7 +474,7 @@ final class GalleryMount {
 
     func capture() -> UIImage {
         let format = UIGraphicsImageRendererFormat()
-        format.scale = 2
+        format.scale = fixture.size.scale
         return UIGraphicsImageRenderer(size: window.bounds.size, format: format).image { _ in
             window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
         }
@@ -364,6 +486,11 @@ final class GalleryMount {
     func fractalRegion() -> CGRect? {
         let size = window.bounds.size
         let top = window.safeAreaInsets.top
+        if fixture.sheet != .none, form == .column {
+            // The board stays visible beside a column (also at the large detent), clear of the peek capsule's band.
+            guard let column = columnFrame else { return nil }
+            return CGRect(x: 0, y: top, width: column.minX - 4, height: size.height - top - 140)
+        }
         switch fixture.sheet {
         case .none:
             return CGRect(x: 0, y: top, width: size.width, height: size.height - top - 140)
@@ -433,7 +560,9 @@ final class GalleryMount {
     /// The large detent leaves no board region to check. The fit takes its gain from the pixels it checks, so the band is
     /// what keeps an extra dimming or a brightening from passing as a scrim.
     func scrimBand(_ appearance: GalleryAppearance) -> ClosedRange<Double> {
-        guard fixture.sheet == .medium else { return -Self.scrimTolerance...Self.scrimTolerance }
+        // A column beside the board dims nothing; one laid over it dims it as a medium sheet does.
+        if fixture.sheet != .none, form == .column, !columnOverlaysBoard { return -0.03...0.03 }
+        guard fixture.sheet == .medium || columnOverlaysBoard else { return -Self.scrimTolerance...Self.scrimTolerance }
         let measured = appearance == .light ? 0.200 : 0.479
         return (measured - 0.03)...(measured + 0.03)
     }
@@ -448,11 +577,17 @@ final class GalleryMount {
     /// fit alone would accept any uniform gain, so this is validation modulo that band).
     func validate(_ image: UIImage, expected: ViewState, region: CGRect, scrimBand: ClosedRange<Double>? = nil) throws -> ContentCheck {
         let reference = try referenceImage(of: expected)
-        let refScale = CGFloat(reference.width) / window.bounds.width
-        let a = GalleryPixels.luma64(image.cgImage!, region: region, pixelsPerPoint: image.scale)
-        let b = GalleryPixels.luma64(reference, region: region, pixelsPerPoint: refScale)
-        let a3 = GalleryPixels.rgb64(image.cgImage!, region: region, pixelsPerPoint: image.scale)
-        let b3 = GalleryPixels.rgb64(reference, region: region, pixelsPerPoint: refScale)
+        // The reference has the MTKView's size, which is the window's only while nothing sits beside the board (or a device
+        // inset narrows it): sample the same area of both. The window region is cut to what the board covers first, so the
+        // capture and the reference crops are the same area before they are reduced to 64 x 64.
+        let board = mtk.convert(mtk.bounds, to: window)
+        let area = region.intersection(board)
+        let refScale = CGFloat(reference.width) / mtk.bounds.width
+        let refRegion = mtk.convert(area, from: window)
+        let a = GalleryPixels.luma64(image.cgImage!, region: area, pixelsPerPoint: image.scale)
+        let b = GalleryPixels.luma64(reference, region: refRegion, pixelsPerPoint: refScale)
+        let a3 = GalleryPixels.rgb64(image.cgImage!, region: area, pixelsPerPoint: image.scale)
+        let b3 = GalleryPixels.rgb64(reference, region: refRegion, pixelsPerPoint: refScale)
         let fit = GalleryPixels.scrimFit(captured: a3, reference: b3)
         let band = scrimBand ?? self.scrimBand(appearance)
         var reasons: [String] = []
@@ -489,11 +624,13 @@ final class GalleryMount {
                 guard let frame = sheetFrame else { break }
                 let visible = frame.intersection(window.bounds)
                 var top = visible.minY + 16
-                if let presentedView = presented?.view, let bar = Self.findNavigationBar(presentedView) {
+                let barRoot: UIView? = form == .column ? window : presented?.view
+                if let barRoot, let bar = Self.findNavigationBar(barRoot) {
                     top = max(top, bar.convert(bar.bounds, to: window).maxY)
                 }
                 let rect = CGRect(x: visible.minX + 16, y: top, width: visible.width - 32, height: visible.maxY - 16 - top)
-                regions.append(GalleryRegion(kind, rect))
+                // A column beside the board is opaque: its glass kind is judged as a sheet.
+                regions.append(GalleryRegion(form == .column && !columnOverlaysBoard && kind == .sheetGlass ? .sheet : kind, rect))
             }
         }
         return regions
@@ -639,6 +776,7 @@ enum GalleryHarness {
         let fixture = scenario.fixture
         if fixture.scrollToEnd { try await mount.scrollSheetToEnd() }
         try await mount.settleScrim()
+        try await mount.settlePeek()
 
         var redraws = 0
         var submits = 0
@@ -677,9 +815,11 @@ enum GalleryHarness {
         let regions = mount.measureRegions()
         let total = Int(Date().timeIntervalSince(t0) * 1000)
         let sheet = mount.sheetFrame
-        let detent = mount.sheetController?.selectedDetentIdentifier?.rawValue
+        let detent = mount.form == .column && fixture.sheet != .none
+            ? "column" : mount.sheetController?.selectedDetentIdentifier?.rawValue
         return RenderResult(png: image.pngData()!, regions: regions, readyMs: readyMs, totalMs: total,
                             submits: submits, redraws: redraws, check: check, detent: detent,
-                            sheetHeight: sheet.map { Double($0.intersection(mount.window.bounds).height) })
+                            sheetHeight: sheet.map { Double($0.intersection(mount.window.bounds).height) },
+                            safeLeft: Double(mount.window.safeAreaInsets.left), safeRight: Double(mount.window.safeAreaInsets.right))
     }
 }
