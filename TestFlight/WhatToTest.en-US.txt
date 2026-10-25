@@ -2,8 +2,10 @@
 
 - iPhone Duo, half folded: the fractal name and iteration count (the capsule at the bottom) move off the hinge so they stay readable.
 
+- iPad and iPhone Duo: when the Controls panel slides in or out, the fractal now narrows and widens smoothly with it instead of jumping to its new size.
+
 - iPad: the Controls open as a side panel on the right, like on the Duo; on iPhone they stay a bottom sheet. The fractal keeps the whole screen while the panel is closed.
 
 - Mac: no visible changes in this build.
 
-Please verify: on an iPhone Duo, open the Controls on the inner display, fold and unfold the phone, and half-fold it to see the capsule step off the hinge; on iPad, open and close the Controls and check the fractal still fills the screen; on iPhone, check the Controls still open as a bottom sheet.
+Please verify: on an iPhone Duo or iPad, open and close the Controls and watch the fractal follow the panel smoothly; on the Duo, fold and unfold the phone with the Controls open, and half-fold it to see the capsule step off the hinge; on iPhone, check the Controls still open as a bottom sheet.
