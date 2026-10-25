@@ -20,6 +20,7 @@ struct ContentView: View {
     #if os(iOS)
     @State private var peekSize: CGSize = .zero
     @State private var foldInput = FoldInput(size: .zero, regions: [])
+    @State private var trailingInset: CGFloat = 0
 
     /// What the fold avoidance reads from the layout: the container the peek capsule sits in and the active fold regions in
     /// that same space.
@@ -53,7 +54,9 @@ struct ContentView: View {
                         isActive: scenePhase != .background)
                 .gesture(viewGestures)
                 .allowsHitTesting(!store.isReplaying)
-                .ignoresSafeArea(.all, edges: boardIgnoredEdges)
+                .padding(.trailing, boardTrailingPadding)
+                .animation(.default, value: boardTrailingPadding)
+                .ignoresSafeArea()
 
             #if os(macOS)
             VStack(spacing: 10) {
@@ -75,6 +78,7 @@ struct ContentView: View {
             GeometryReader { proxy in
                 let input = FoldInput(size: proxy.size, regions: activeFoldRegions(proxy))
                 Color.clear.onChange(of: input, initial: true) { foldInput = input }
+                Color.clear.onChange(of: proxy.safeAreaInsets.trailing, initial: true) { _, inset in trailingInset = inset }
             }
         }
         #endif
@@ -140,13 +144,16 @@ struct ContentView: View {
     #endif
 
     /// The board fills the screen. While the inspector column is shown (regular width, controls open) it stops at the column's
-    /// edge, which the column reports as a trailing safe-area inset; closed, the board is full-bleed again, whatever device
-    /// inset (the Duo's status bar side) the trailing edge has.
-    private var boardIgnoredEdges: Edge.Set {
+    /// edge: the column reports itself as a trailing safe-area inset, measured by the geometry reader below the board and
+    /// applied as padding, so the board follows the column's slide with an animation of its own. (Respecting that edge
+    /// through `ignoresSafeArea` instead snaps the board to its final width: the inset arrives in a layout pass of the
+    /// inspector's, outside the animated state change.) Closed, the board is full-bleed again, whatever device inset
+    /// (the Duo's status bar side) the trailing edge has.
+    private var boardTrailingPadding: CGFloat {
         #if os(iOS)
-        return isRegularWidth && showingSheet ? [.top, .bottom, .leading] : .all
+        return isRegularWidth && showingSheet ? trailingInset : 0
         #else
-        return .all
+        return 0
         #endif
     }
 

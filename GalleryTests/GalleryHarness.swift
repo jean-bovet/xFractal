@@ -292,14 +292,20 @@ final class GalleryMount {
         try await waitStableSheetFrame()
     }
 
+    /// Stable: the sheet (or column) frame and the board's frame unchanged over three successive polls. The board is
+    /// part of it because it follows a column with an animation of its own (the padding that stops it at the column),
+    /// which outlasts the column's slide.
     func waitStableSheetFrame() async throws {
         var last: CGRect?
+        var lastBoard: CGRect?
         var same = 0
         try await waitUntil(10, "the sheet frame stable") {
             window.layoutIfNeeded()
             let frame = sheetFrame
-            if let frame, frame == last { same += 1 } else { same = 0 }
+            let board = mtk.convert(mtk.bounds, to: window)
+            if let frame, frame == last, board == lastBoard { same += 1 } else { same = 0 }
             last = frame
+            lastBoard = board
             return same >= 3 && presented?.transitionCoordinator == nil && (frame != nil || fixture.sheet == .none)
         }
     }
