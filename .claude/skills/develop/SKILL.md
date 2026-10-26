@@ -83,10 +83,12 @@ rationale, or nothing.
 ## Gates (run in the worktree)
 
 Two tiers. **Step gates** run after each plan step and each fix round: the build, the warnings check
-and the unit tests; add the UI tests only when the step touches what they drive (navigation, titles,
-accessibility identifiers, launch fixtures), and the preview gallery only when the step changes what a
-screen looks like. The **final gate** runs **once per plan**, on the tree handed back: every gate
-below in full, plus the full gallery when the plan touched UI. Step gates never replace it. After it
+and the unit tests, plus the preview gallery only when the step changes what a screen looks like.
+Step gates never run the UI tests, not even for a step that touches what they drive (navigation,
+titles, accessibility identifiers, launch fixtures): they are slow, and the final gate catches what
+they would. A brief that asks a step gate or a fix round for them is overruled: they wait for the
+final gate. The **final gate** runs **once per plan**, on the tree handed back: every gate
+below in full, the UI tests included, plus the full gallery when the plan touched UI. Step gates never replace it. After it
 passed on a commit G, every later tree (a fix round, the rebase, the squash on `main`) is classified
 by what changed since G and reruns only what its class requires, not the final gate again:
 
@@ -105,6 +107,12 @@ while tracked changes are uncommitted or untracked files are not ignored: commit
   `/private/tmp/<id-slug>-dd`, created once), so every build after the first is incremental. The final
   gate uses a fresh `<dd>`, which also re-surfaces warnings an incremental build would not recompile.
   Logs go to a new scratch directory for every gate run.
+- **Build once, test without building.** Where the platform allows it, a gate builds the tests once
+  for a generic destination (`xcodebuild build-for-testing`) and runs them with `test-without-building`
+  on the leased simulator: a `build` followed by a `test` compiles twice (two destinations), and the
+  lease is held only while tests run. Any later run on the same tree (another test plan, a rerun)
+  reuses those products.
+  xFractal's test gate runs on macOS (one destination, no simulator), so it builds once already.
 - **One build at a time per build folder.** Use the repo's scripts or build wrapper when it has them
   (never call `xcodebuild` around them); otherwise `buildlock --folder <dd> -- xcodebuild …`. The host's
   build slots are shared with other sessions: wait for one, never kill another build.
@@ -120,7 +128,8 @@ while tracked changes are uncommitted or untracked files are not ignored: commit
 - **Red proof.** A regression test is proven red without its fix before it goes green: commit the
   fix first, revert only the fix's lines, run the test and see it fail, restore with
   `git checkout -- <file>` (never a hand-written inverse), then confirm `git status` is clean and grep
-  the tree for any temporary marker. No version bump during feature work.
+  the tree for any temporary marker. A red-proof run builds incrementally in the step gates' `<dd>` and
+  runs only the test class concerned (`xcodebuild test -only-testing:xFractalTests/<Class>`), never the whole suite: the step and final gates run the rest. No version bump during feature work.
 - **Warnings.** Fix every warning the branch touches or reveals, including ones that predate it.
   Deprecations are fixed, never silenced (`@available`, `#warning`, suppression flags); if the fix
   conflicts with a documented decision, update that decision's comment. A build-only warnings check uses
