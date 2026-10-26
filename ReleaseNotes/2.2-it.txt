@@ -1,0 +1,6 @@
+xFractal è pronto per iPhone Duo.
+- iPhone Duo: sullo schermo interno aperto il frattale riempie tutto lo schermo e i Controlli si aprono in un pannello laterale accanto a esso. Il pannello resta aperto quando pieghi il telefono e lo riapri.
+- iPhone Duo piegato a metà: il nome del frattale e il numero di iterazioni si spostano dalla cerniera per restare leggibili.
+- iPad: i Controlli ora si aprono in un pannello laterale a destra invece che in un foglio, e il frattale occupa tutto lo schermo finché il pannello è chiuso.
+- iPad e iPhone Duo: il frattale si restringe e si allarga in modo fluido mentre il pannello scorre.
+- Mac: nessuna modifica visibile in questa versione.

@@ -1,0 +1,6 @@
+xFractal ist bereit für das iPhone Duo.
+- iPhone Duo: Auf dem aufgeklappten Innendisplay füllt das Fraktal den ganzen Bildschirm, und die Steuerung öffnet sich als Seitenleiste daneben. Die Seitenleiste bleibt offen, wenn Sie das Telefon zuklappen und wieder aufklappen.
+- iPhone Duo, halb geklappt: Der Name des Fraktals und die Iterationszahl weichen dem Scharnier aus und bleiben lesbar.
+- iPad: Die Steuerung öffnet sich jetzt als Seitenleiste rechts statt als Blatt, und das Fraktal behält den ganzen Bildschirm, solange die Seitenleiste geschlossen ist.
+- iPad und iPhone Duo: Das Fraktal wird weich schmaler und breiter, während die Seitenleiste ein- und ausgleitet.
+- Mac: Keine sichtbaren Änderungen in dieser Version.

@@ -1,0 +1,6 @@
+xFractal is ready for iPhone Duo.
+- iPhone Duo: on the open inner display the fractal fills the whole screen, and the Controls open as a side panel next to it. The panel stays open when you fold the phone and unfold it again.
+- iPhone Duo, half folded: the fractal name and iteration count move off the hinge so they stay readable.
+- iPad: the Controls now open as a side panel on the right instead of a sheet, and the fractal keeps the whole screen while the panel is closed.
+- iPad and iPhone Duo: the fractal narrows and widens smoothly as the panel slides in and out.
+- Mac: no visible changes in this version.

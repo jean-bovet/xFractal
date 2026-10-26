@@ -1,0 +1,6 @@
+xFractal artık iPhone Duo için hazır.
+- iPhone Duo: Açık iç ekranda fraktal tüm ekranı doldurur ve Kontroller onun yanında bir yan panel olarak açılır. Telefonu katlayıp yeniden açtığınızda panel açık kalır.
+- Yarı katlanmış iPhone Duo: Fraktal adı ve yineleme sayısı, okunabilir kalmak için menteşeden uzaklaşır.
+- iPad: Kontroller artık bir sayfa yerine sağda bir yan panel olarak açılır ve panel kapalıyken fraktal tüm ekranı korur.
+- iPad ve iPhone Duo: Panel kayarak açılıp kapanırken fraktal yumuşak bir şekilde daralır ve genişler.
+- Mac: Bu sürümde görünür bir değişiklik yok.

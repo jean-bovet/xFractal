@@ -1,0 +1,6 @@
+O xFractal está pronto para o iPhone Duo.
+- iPhone Duo: na tela interna aberta, o fractal ocupa a tela inteira e os Controles abrem em um painel lateral ao lado dele. O painel continua aberto quando você dobra o telefone e o desdobra de novo.
+- iPhone Duo meio dobrado: o nome do fractal e o número de iterações se afastam da dobradiça para continuar legíveis.
+- iPad: os Controles agora abrem em um painel lateral à direita em vez de uma folha, e o fractal mantém a tela inteira enquanto o painel está fechado.
+- iPad e iPhone Duo: o fractal estreita e alarga suavemente enquanto o painel desliza.
+- Mac: sem mudanças visíveis nesta versão.

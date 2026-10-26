@@ -1,0 +1,6 @@
+xFractal est prêt pour l'iPhone Duo.
+- iPhone Duo : sur l'écran intérieur ouvert, la fractale occupe tout l'écran et les Réglages s'ouvrent dans un panneau latéral à côté d'elle. Le panneau reste ouvert quand vous pliez le téléphone et le dépliez à nouveau.
+- iPhone Duo à demi plié : le nom de la fractale et le nombre d'itérations s'écartent de la charnière pour rester lisibles.
+- iPad : les Réglages s'ouvrent désormais dans un panneau latéral à droite plutôt que dans une feuille, et la fractale garde tout l'écran tant que le panneau est fermé.
+- iPad et iPhone Duo : la fractale se rétrécit et s'élargit en douceur quand le panneau glisse.
+- Mac : aucun changement visible dans cette version.
