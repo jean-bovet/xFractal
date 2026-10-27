@@ -360,5 +360,10 @@ says land, the feature lands as ONE squashed commit:**
 - Spawning a fresh implementer for each fix round instead of messaging the one that built it.
 - Restating the working agreement in the implementer prompt.
 - Bumping the version or landing without being asked.
+- Broad Codex prompts: they make Codex read much of the repo and run commands, and often stall past 30
+  minutes. Every review prompt names the exact plan section and the few source files (with line ranges) to
+  read, says "read only these; no other commands, no builds or tests", and caps each section at a few
+  one-line findings with a severity. A review not back within about 15 minutes is stopped and rerun
+  narrower; a large diff is reviewed per commit (`git diff <sha>^ <sha>`), not in one `main...HEAD` pass.
 - Adding a `#Preview`, or a screen state without its gallery scenario.
 - Logic left in a view or the Metal glue when it could be pure math in `FractalMath.swift` with a test.

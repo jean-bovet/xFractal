@@ -35,7 +35,8 @@ Refresh the captures first when the UI changed since the last gallery run: the s
 name (`"capture": "<slug>"` or `"<slug>.dark"`). A slide that needs a screen state the gallery does not have gets a
 new gallery scenario (the `/preview-gallery` rules), never a hand-made capture. When the store pages show the app in
 each language, re-render the slides' captures in those languages too (`--only` and `--lang`, see the slides file
-below): stale localized captures show an older UI than the English one.
+below): stale localized captures show an older UI than the English one. A localized capture that is missing falls
+back to English silently: before rendering, list every slide capture missing from each language folder.
 
 ## iPad and Mac
 
@@ -75,7 +76,10 @@ app-store screenshots --app xFractal-iOS --version <v> --locale <locale> --displ
 
 The two iPhone Duo sets have no `--display-type`: the screenshot API has no Duo value (only the App Asset Library's
 `IPHONE_DUO` display class has). Until `app-store` uploads through it, upload them by hand in App Store Connect and
-say so in the report. Sizes, badge and the April 2027 deadline: maestro's `docs/iphone-duo.md`.
+say so in the report. Sizes, badge and the April 2027 deadline: `docs/iphone-duo.md`, next to the tools the global working agreement names.
+
+After the upload, `app-store check --app xFractal-iOS --platform IOS --version <v> --families iphone,ipad` must
+report 0 problems (the Mac set: `--platform MAC_OS --families mac`).
 
 ## The slides file (`AppStore/screenshots.json`)
 

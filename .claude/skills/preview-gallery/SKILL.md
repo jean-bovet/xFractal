@@ -29,11 +29,13 @@ outcome (measurements, thresholds, findings) are in `planning/gallery-scenarios-
 `Tests/` stays the macOS logic tests.
 <!-- /repo-specific -->
 
-**English only**, whatever languages the app ships (`-testLanguage en -testRegion US`). The gallery checks layout and
-appearance; translations are checked by the catalog tests, not by screenshots. Never add a language pass to the gallery.
-The one exception is the App Store screenshots: `--lang fr,de,it,es,pt-BR,ja,tr` exists only for `/app-store-screenshots`, which renders
-the slides' captures with `--only` into `previews/<lang>/` (`previews/ipad/<lang>/`, `previews/mac/<lang>/`). The gallery
-page stays English.
+**English only, in every repo**, whatever languages the app ships (`-testLanguage en -testRegion US`). The gallery
+checks layout and appearance; translations are checked by the repo's catalog tests, not by screenshots. Never add
+a language pass to the gallery. The one exception is the App Store screenshots: a repo whose store pages show the app
+in each store language keeps a `--lang` option in its gallery scripts, used only by `/app-store-screenshots` with
+`--only` the slides' captures, into its own folder per language (`previews/fr/`). The gallery page stays English.
+xFractal is such a repo: `--lang fr,de,it,es,pt-BR,ja,tr` on `scripts/snapshot-gallery.sh` and `scripts/snapshot-mac.sh`
+renders the slides' captures into `previews/<lang>/` (`previews/ipad/<lang>/`, `previews/mac/<lang>/`).
 
 <!-- repo-specific: platforms-and-languages -->
 26 scenarios, 52 images. **The iPhone Duo · inner display group** (9 scenarios) are the fixed-size windows of the
@@ -62,10 +64,10 @@ scripts/snapshot-gallery.sh                     # every scenario; the simulator 
 scripts/snapshot-gallery.sh --only "settings,list" # a subset: comma-separated substrings of names or slugs
 scripts/snapshot-gallery.sh --device ipad       # one device (when the repo renders several)
 scripts/snapshot-gallery.sh --device duo        # the iPhone Duo: outer display and fixed-size inner poses -> previews/duo/
+scripts/snapshot-gallery.sh --no-open           # do not open the page (agents, scripted runs)
 ```
 
-- **Done = `CHECK OK [<lang>]: <n> cards, light and dark complete and correctly lit`** for every language
-  rendered. Then read the new or changed PNGs in both appearances (see Report). `simpool status` shows nothing
+- **Done = `CHECK OK [en]: <n> cards, light and dark complete and correctly lit`**. Then read the new or changed PNGs in both appearances (see Report). `simpool status` shows nothing
   leased by the run.
 - Costs measured on a proven repo (24 GB Mac, iOS 27 simulator): booting the simulator about **6 GB** of RAM;
   a run on a booted one about **0.25 GB**; build tools under 0.3 GB. Warm run: about 1 s per scenario plus a
@@ -79,7 +81,9 @@ scripts/snapshot-gallery.sh --device duo        # the iPhone Duo: outer display 
   scenarios at fixed window sizes, 951 x 669 pt (landscape, the hinge vertical at the centre) and 669 x 951 pt
   (portrait), regular size class both ways, captured at 3x. A custom control that steps off the fold takes its fold
   rectangles from a test-only hook (a 40 pt stand-in hinge at the centre); the OS's real reserved regions are a manual
-  check in Xcode's Device Hub. Model: xFractal. Apple's rules and the audit checklist: maestro's `docs/iphone-duo.md`.
+  check in Xcode's Device Hub. A pose the folded simulator cannot render honestly (its system bars land against the
+  folded screen, not the window) is skipped, never captured badly (see "A screen needs a scenario"). Model: xFractal.
+  Apple's rules and the audit checklist: `docs/iphone-duo.md`, next to the tools the global working agreement names.
 
 <!-- repo-specific: script -->
 `scripts/snapshot-gallery.sh [--only P] [--no-open] [--verbose]` (fallback only: `[--keep-booted] | --shutdown`). Snapshot
@@ -128,6 +132,14 @@ One entry in the scenario list, and nothing in the app:
   others: its background work then cannot change another scenario's view through shared notifiers.
 - A view that draws nothing (an invisible trigger, an empty state that is `EmptyView`) gets no scenario; name it
   in a comment in the scenario file. Live maps can be left out; say so the same way.
+- **Flags for an honest `--check`.** A card that is dark in both appearances by design (a document canvas, a white
+  PDF page, full-bleed imagery) sets `documentCanvas: true` on its scenario: `--check` then judges the pair instead
+  of each image (the dark image's mean luminance at least 0.05 below the light one's). A screen that draws nothing
+  by design sets `drawsNothing: true` (otherwise `--check` fails a blank render). A card a pass cannot render
+  honestly is **skipped, never captured badly**: the test prints `gallery: skipped <slug>: <why>`, the manifest
+  lists it with a `skipped` reason, the page shows "not rendered on this pass", and `--check` accepts the missing
+  pair for that reason only. xFractal's harness has none of the three yet (every scenario renders on every pass;
+  the fractal region has its own validation, see the extras below): add them before a scenario needs one.
 - `scripts/preview-gallery.py --coverage` lists view types no scenario names (informational: most are parts
   of other screens).
 
@@ -159,7 +171,7 @@ One entry in the scenario list, and nothing in the app:
    the PNGs of every folder but `data/` and names files by their relative path (`ipad/x.dark.png`). The
    luminance helper prints `<folder>/<file>`. A repo moving from a flat gallery migrates it in the script (every
    command first moves what is still at the top, resumably, then rebuilds the page), and `snapshot-gallery.sh`
-   reads `data/manifest.json` with a fallback to the old path.
+   reads `data/manifest.json` with a fallback to the old path. Proven in one repo's conversion.
 4. **`scripts/snapshot-gallery.sh`**:
    - The simulator from the machine-wide pool: `SIMULATOR_UDID` if the caller passes one (never released),
      else `simpool acquire --spec iphone --pid $$` (then `ipad`, `duo`, one device after the other), and
@@ -171,18 +183,23 @@ One entry in the scenario list, and nothing in the app:
      it did not boot, a `trap` shuts down the one it booted. A private repo requires the pool.
    - Persistent DerivedData; `-skipPackageUpdates -disableAutomaticPackageResolution` once the packages are
      resolved (otherwise every run resolves remote packages: 75 s measured).
-   - `build-for-testing` once, then per language one `test-without-building -only-testing:<snapshot class>
-     -parallel-testing-enabled NO -enableCodeCoverage NO -testLanguage <lang> -testRegion <region>`.
+   - `build-for-testing` once, then one `test-without-building -only-testing:<snapshot class>
+     -parallel-testing-enabled NO -enableCodeCoverage NO -testLanguage en -testRegion US` (`--lang`, for the
+     store captures only, repeats that run per language).
    - The variables go in **xcodebuild's environment** as `TEST_RUNNER_<NAME>=… xcodebuild …`; written as
      arguments they become build settings and never reach the test.
-   - Import, `--check`, open the page, print the timings (boot, build, test, total).
+   - Import, `--check`, open the page (`--no-open` skips that: agents, scripted runs), print the timings (boot,
+     build, test, total). It keeps the Mac awake for the run (`caffeinate -dims`): a run during which the Mac
+     slept took three times as long. xFractal's script has `--no-open` but no `caffeinate` yet.
 5. **A Mac target**: an app-hosted macOS test renders each scenario with no simulator, **off screen**: a real
    `NSWindow` with an `NSHostingController` (so `.toolbar` and `NavigationSplitView` bridge to AppKit) and an
    `NSAppearance`, never ordered on screen, whose whole layer tree `CARenderer` draws into a Metal texture at 2x.
    It works with the screen locked, flashes nothing, and draws sidebars, toolbar glass, `PDFView` and materials as
    on screen; no ScreenCaptureKit, `cacheDisplay` or unlocked-screen check. The recipe, readiness without a visible
    window, sheets, `PDFView` waits and what differs from an on-screen capture (neutral dark mode, inactive
-   selection, Retina only): [`mac-offscreen-renderer.md`](mac-offscreen-renderer.md).
+   selection, Retina only): [`mac-offscreen-renderer.md`](mac-offscreen-renderer.md). The Mac test also holds a
+   second `buildlock --folder <the host app's container or cache folder> --no-slot`, so two worktrees never run
+   the hosted app at once (`scripts/snapshot-mac.sh` holds only the DerivedData lock so far).
 6. **Optional passes** when the audience needs them: a largest-Dynamic-Type pass, another device family (one
    simulator after the other). Never another language (localized store captures belong to `/app-store-screenshots`).
 
@@ -191,8 +208,9 @@ One entry in the scenario list, and nothing in the app:
 `--check` rebuilds the page from the PNGs on disk and fails on: a scenario of the manifest missing either
 image, a stray PNG no scenario expects (in any folder, or in the wrong platform's folder), a duplicate slug, a light image that is dark or a dark one that is light
 (mean luminance against a threshold), a dark image byte-identical to its light one, an image that cannot be
-decoded. An `--only` run replaces only its own images; the check still covers every scenario. The gallery is
-done only when `--check` passes for every language rendered.
+decoded, and `.preferredColorScheme` or `\.locale` anywhere in the scenario file (a rule xFractal's `--check` does not
+grep for yet). An `--only` run replaces only its own images; the check still covers every scenario. The gallery is
+done only when `--check` passes.
 
 ## Converting a repo (from `#Preview`s)
 
@@ -241,7 +259,7 @@ or saves (`isHydrating`); the previews and the manifest carry no absolute path a
 
 ## Report
 
-The card count (per platform and language), the check line, the timings, the network-call count, and any
+The card count (per platform), the check line, the timings, the network-call count, and any
 scenario that failed with its error's first line. Then the one thing this skill exists for: read at least the
 new or changed screens with the Read tool, **in both appearances** and on every platform rendered, compare them
 with the approved spec when there is one, and say what looks wrong (copy, hierarchy, truncation, an empty state

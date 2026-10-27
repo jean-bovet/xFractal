@@ -151,8 +151,9 @@ commit before that.**
 ## 7. Commit and push `main`
 
 Stage only the files this skill changed — never `git add -A` — and end the commit message with
-the session's attribution trailer. On a resume (§2) the commit already exists: skip straight to the
-push.
+the session's attribution trailer. After the commit, `git diff --name-only HEAD~1 HEAD` must list only
+those files: anything else was not covered by §5. On a resume (§2) the commit already exists: skip
+straight to the push.
 
 ```bash
 git add TestFlight/WhatToTest.en-US.txt xFractal/Info-iOS.plist xFractal/Info-MAS.plist project.yml   # the version files only on a bump

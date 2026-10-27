@@ -74,6 +74,10 @@ git describe --tags --abbrev=0 --match 'v*' <candidate>^   # the last release ta
 git log --format='%h %s' <last-tag>..<candidate>      # what the App Store has not received
 ```
 
+On a **first release** there is no `v*` tag yet: `describe` fails, and the range is the whole history up to
+the candidate (`git log <candidate>`); it is not empty. xFractal is past that: `v1.0` (the Sparkle DMG, see
+above) exists and 2.0 is live untagged, so What's New covers the changes since the live version (§4).
+
 - **Tag on the candidate**: this version is already released. Report `app-store status` and stop.
 - **Tag on another commit**: the candidate's version has shipped before; `/testflight` must bump
   it first. Stop.
@@ -122,7 +126,7 @@ Each prints `PROBLEM`, `CHECK` and `ok` lines. What they cover, and what to judg
 | Privacy manifest | Required-reason APIs (UserDefaults, file timestamps, boot time, disk space, keyboards) used without `PrivacyInfo.xcprivacy` declaring them: ITMS-91053, rejected |
 | Export compliance | No `ITSAppUsesNonExemptEncryption`: every build waits on "Missing Compliance" |
 | Description, keywords, promotional text | Still true of this build: an old description promising removed features (guideline 2.3), a retired domain, an old device ("iPod touch") |
-| Screenshots | A set at the required size for **every** device family the build supports (a newly added iPad needs iPad screenshots); old sets that show an outdated UI |
+| Screenshots | A set at the required size for **every** device family the build supports, in every store locale (a newly added iPad needs iPad screenshots); old sets that show an outdated UI |
 | URLs | Support and marketing URLs on every locale, a privacy policy URL (required), all `https` and returning 200, none on a retired domain |
 | Copyright | Current year |
 | Age rating | Questions Apple added since the last release left unanswered block submission |
@@ -131,7 +135,7 @@ Each prints `PROBLEM`, `CHECK` and `ok` lines. What they cover, and what to judg
 | App Privacy label | Not readable through the API: compare it with what the build collects (permissions, SDKs, network use); an app last updated before 2020 may have none |
 | Features removed since the live version | What's New (§4) must say so; the description must not still promise them |
 
-Two things the checkers do not read, judged by hand (rules and sizes in maestro's `docs/iphone-duo.md`):
+Two things the checkers do not read, judged by hand (rules and sizes in `docs/iphone-duo.md`, next to the tools the global working agreement names):
 
 - **iPhone Duo SDK**: the candidate's iOS build was archived with the iOS 27.1 SDK or later (`xcode-cloud report
   <build> --logs DIR`, then grep the iOS archive log for `iPhoneOS27.1.sdk`; "Latest Release" workflows have had it
@@ -140,6 +144,10 @@ Two things the checkers do not read, judged by hand (rules and sizes in maestro'
 - **iPhone Duo screenshots**: a set for the inner display (2853 x 2007) and one for the outer display (1398 x 2034)
   when the repo has them (`/app-store-screenshots`); they earn the product-page badge now and are required from
   April 2027 for 27.1-SDK apps. They are uploaded by hand in App Store Connect until `app-store` can.
+
+A first release's page starts empty, so the first audit lists the whole page as problems (copyright,
+description, support and privacy URLs, screenshots for every family, the age rating questionnaire, the App
+Review contact): all of them are fixed with the page tools below before going on.
 
 If either checker exits non-zero, or a `CHECK` shows something false, **stop**: list each problem
 with its proposed fix (code fixes follow the repo's own workflow and need a new `/testflight`;
@@ -166,6 +174,10 @@ Read the subjects and bodies of the §2 range. Keep only what a user of the App 
 notice, written from their side: no ticket ids, internal names, file names or "fix for #…"; no
 emoji (App Store Connect rejects some); at most 4000 characters per locale.
 
+**First release: no What's New.** App Store Connect shows no What's New for an app's first version and
+refuses one: skip §4 and §5 (no notes file, no notes commit); the description carries what the app does.
+From the second release on, the full flow applies.
+
 Eight notes files, used for both platforms: `ReleaseNotes/<version>-en-US.txt` first, then its
 translations `-fr-FR.txt`, `-de-DE.txt`, `-it.txt`, `-es-ES.txt` (also used for es-MX), `-pt-BR.txt`,
 `-ja.txt` and `-tr.txt` (the app ships in all of them; use the app's own words from
@@ -182,7 +194,9 @@ the app is now available in French, German, Italian, Spanish, Portuguese, Japane
 (`description-ios-<locale>.txt`, `description-mac-<locale>.txt`, at most 4000 characters), the
 keywords in `AppStore/keywords.txt` (at most 100 bytes per locale), the name and subtitle in
 `AppStore/app-info.txt` (at most 30 characters each). When the range changes what a description
-promises, update the English one and its translations and show them with the notes. 2.0 was
+promises, update the English one and its translations, show them with the notes, stage them with the notes
+commit (§5) and push them with `app-store metadata` in §6 — only when `AppStore/` changed, or `check`
+reports a locale missing something. Refuse any page file that still contains `TODO`. 2.0 was
 en-US only: 2.1 adds `fr-FR`, `de-DE`, `it`, `es-ES`, `es-MX`, `pt-BR`, `ja` and `tr` to the listing (§6).
 
 Show Jean every notes file in full, with the commit list it came from, and ask for a yes or his
@@ -234,6 +248,12 @@ app-store check --app xFractal-iOS --platform MAC_OS --version <version> --famil
 `attach-build` refuses a build that is missing, still processing, expired or internal-only; wait
 for processing, or see "App Store eligible" in §2.
 
+`prepare --release-type` sets the type only when it creates the version; one that already existed keeps
+its type (`app-store status` prints `releaseType=`). **On a first release skip `prepare`**: the version
+already exists, and `prepare` would set a What's New a first version cannot carry; fill the page with
+`app-store metadata`, `age-rating` and `screenshots` instead, then `attach-build` and `check`. A first
+version has no phased release.
+
 `metadata` gets the keywords from `AppStore/keywords.txt` (one `--keywords` per line) and the names
 and subtitles from `AppStore/app-info.txt` (one `--name` and one `--subtitle` per line). `--add-locale` does nothing for a
 locale the version already has, so the same commands serve every release; `metadata` only matters
@@ -241,8 +261,9 @@ when `AppStore/` changed or `check` reports a locale missing something. Each add
 its own screenshots (`/app-store-screenshots`: the headlines in that language, the app in its own
 language where the app has it).
 
-If App Store Connect refuses a step for one platform (What's New, the phased release), stop and
-report the error to Jean.
+When the app ships on several platforms, each has its own version of the same number. If App Store
+Connect refuses a step for one platform (What's New, the phased release), stop and report the error to
+Jean.
 
 Then list Jean's manual steps:
 
@@ -268,12 +289,15 @@ git push origin v<version>
 git ls-remote origin "refs/tags/v<version>"       # must print the candidate's SHA
 ```
 
-No release branch. Tag only once **both** platforms are approved or released; if Jean releases one
-platform first, the tag waits for the other.
+When the app ships on several platforms, tag only once every platform's version is approved: the tag
+says the candidate shipped everywhere. Here: once **both** the `IOS` and the `MAC_OS` version are approved
+or released; if Jean releases one platform first, the tag waits for the other.
+
+No release branch.
 
 ## 8. Report
 
 - the version, the candidate's sha and build number, the range that shipped, the tag;
-- the notes commit;
+- the notes commit (none on a first release);
 - the manual steps still open in App Store Connect, if any;
 - that the next `/testflight` bumps the version.
