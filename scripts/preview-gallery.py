@@ -13,10 +13,15 @@ English lives in previews/, another language in previews/<lang>/. An import touc
 top-level files, never another language's directory. PREVIEW_GALLERY_OUT replaces previews/ (the contract tests).
 
 --check rebuilds the page first, then fails on: a scenario missing either image, a stray PNG no scenario expects, a
-duplicate slug, a dark image byte-identical to its light one, an image that cannot be decoded, an invalid or
-unmeasured region, and the region rules (the fractal drawn, the sheet's background lit, the peek capsule found). The
-fractal fills most of a screen and is legitimately bright or dark, so the mean luminance of a whole image is never
-judged. --measure enforces everything except the peek and sheet thresholds and writes calibration.json with the
+duplicate slug, a dark image byte-identical to its light one, an image that cannot be decoded, a blank render (every
+pixel one colour), an invalid or unmeasured region, the region rules (the fractal drawn, the sheet's background lit,
+the peek capsule found), and `.preferredColorScheme` or `\.locale` in a scenario file (comments excluded: the light
+and dark passes and -testLanguage set them). The fractal fills most of a screen and is legitimately bright or dark,
+so the mean luminance of a whole image is never judged on its own. Flags a scenario writes into the manifest:
+`documentCanvas: true` (dark by design in both appearances: the pair is judged instead, the dark image's mean
+luminance at least DOCUMENT_CANVAS_DELTA below the light one's), `drawsNothing: true` (a blank render is by design),
+`skipped: "<why>"` (not rendered on this pass: the page says so and the missing pair is accepted for that reason
+only). --measure enforces everything except the peek and sheet thresholds and writes calibration.json with the
 numbers those thresholds are set from.
 """
 import argparse
@@ -57,6 +62,14 @@ GLASS_COVERAGE_FLOOR = 0.50
 GLASS_COVERAGE = 0.50
 FRACTAL_MIN_STD = 0.02
 FRACTAL_MEAN = (0.01, 0.98)   # the cold Julia on the Duo's wide inner display measures 0.016
+# A card dark in both appearances by design (`documentCanvas`): the dark render's mean luminance is at least this far
+# below the light one's.
+DOCUMENT_CANVAS_DELTA = 0.05
+# The scenario files --check scans for a forced appearance or language (PREVIEW_GALLERY_SCENARIOS, os.pathsep-separated,
+# replaces them: the contract tests).
+SCENARIO_FILES = [ROOT / "GalleryTests" / "GalleryScenarios.swift", ROOT / "GalleryTests" / "GalleryFixtures.swift"]
+FORBIDDEN_IN_SCENARIOS = [(r"\.preferredColorScheme\b", ".preferredColorScheme (the light and dark passes set the appearance)"),
+                          (r"\\\.locale\b", r"\.locale (-testLanguage sets the language)")]
 
 
 def slugify(text):
@@ -148,11 +161,14 @@ def build_page(manifest, out, lang):
         label, slug = entry["name"], entry["slug"]
         size = entry.get("size")
         wide = isinstance(size, dict) and size.get("w", 0) > size.get("h", 1) * 0.6
+        if entry.get("skipped"):
+            pair = f'<div class="skipped">not rendered on this pass<small>{html.escape(str(entry["skipped"]))}</small></div>'
+        else:
+            pair = (f'<div class="shot shot-light">{slot(slug + ".png", label, "Light")}<span class="tag">Light</span></div>'
+                    f'<div class="shot shot-dark">{slot(slug + ".dark.png", label, "Dark")}<span class="tag">Dark</span></div>')
         return (
             f'<figure id="{html.escape(slug)}"{" class=wide" if wide else ""}><figcaption>{html.escape(label)}</figcaption><div class="pair">'
-            f'<div class="shot shot-light">{slot(slug + ".png", label, "Light")}<span class="tag">Light</span></div>'
-            f'<div class="shot shot-dark">{slot(slug + ".dark.png", label, "Dark")}<span class="tag">Dark</span></div>'
-            f'</div></figure>'
+            f'{pair}</div></figure>'
         )
 
     sections, links = [], []
@@ -203,6 +219,9 @@ figcaption {{ padding:0 4px 8px; font-weight:600; }}
 .shot img, .shot .missing {{ width:100%; display:block; border:1px solid var(--line); border-radius:16px; background:var(--card); box-sizing:border-box; }}
 .shot .missing {{ aspect-ratio:9/19.5; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:12px; background:var(--missing-bg); }}
 .shot .tag {{ display:block; text-align:center; font-size:11px; color:var(--muted); margin-top:4px; }}
+.skipped {{ width:100%; aspect-ratio:9/9; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; text-align:center;
+  padding:12px; box-sizing:border-box; color:var(--muted); font-size:12px; border:1px dashed var(--line); border-radius:16px; background:var(--missing-bg); }}
+.skipped small {{ font-size:11px; }}
 html[data-mode="light"] .shot-dark, html[data-mode="dark"] .shot-light {{ display:none; }}
 html[data-mode="light"] figure, html[data-mode="dark"] figure {{ width:256px; }}
 html[data-mode="light"] figure.wide, html[data-mode="dark"] figure.wide {{ width:480px; }}
@@ -315,18 +334,39 @@ def pixels(region, scale):
     return x0, y0, max(1, round(x + w) - x0), max(1, round(y + h) - y0)
 
 
+def scenario_file_problems():
+    """A forced appearance or language in a scenario file, comments excluded (`// ...` and `/* ... */`)."""
+    paths = os.environ.get("PREVIEW_GALLERY_SCENARIOS")
+    files = [Path(p) for p in paths.split(os.pathsep) if p] if paths is not None else SCENARIO_FILES
+    problems = []
+    for file in files:
+        if not file.is_file():
+            continue
+        text = file.read_text(encoding="utf-8")
+        text = re.sub(r"/\*.*?\*/", lambda m: re.sub(r"[^\n]", " ", m.group()), text, flags=re.S)
+        for number, line in enumerate(text.splitlines(), 1):
+            code = line.split("//", 1)[0]
+            for pattern, what in FORBIDDEN_IN_SCENARIOS:
+                if re.search(pattern, code):
+                    problems.append(f"forbidden in scenario file {file.name}:{number}: {what}")
+    return problems
+
+
 def do_check(lang, measure=False):
     out = output_dir(lang)
     manifest = load_manifest(out)
     build_page(manifest, out, lang)
-    problems = []
+    problems = scenario_file_problems()
     slugs = [e["slug"] for e in manifest]
     for slug in sorted({s for s in slugs if slugs.count(s) > 1}):
         problems.append(f"duplicate slug: {slug}")
+    # A skipped scenario (not rendered on this pass, with its reason) may miss its pair; nothing else may.
+    skipped = {e["slug"] for e in manifest if e.get("skipped")}
     expected = {f"{s}{suffix}" for s in slugs for suffix in (".png", ".dark.png")}
     on_disk = {p.name for p in out.glob("*.png")}
     for file in sorted(expected - on_disk):
-        problems.append(f"missing: {file}")
+        if file.split(".")[0] not in skipped:
+            problems.append(f"missing: {file}")
     for file in sorted(on_disk - expected):
         problems.append(f"stray image (no scenario): {file}")
     for slug in sorted(set(slugs)):
@@ -347,15 +387,28 @@ def do_check(lang, measure=False):
     if error:
         problems.append("luminance helper failed: " + error)
         decoded = [None] * len(present)
+    luminance = {}   # file -> (mean, std) of the whole image
     for file, answer in zip(present, decoded):
         if answer is None:
             problems.append(f"undecodable image: {file}")
         sizes[file] = (int(answer[0]), int(answer[1])) if answer else None
+        luminance[file] = (answer[2], answer[3]) if answer else None
     for e in manifest:
         slug = e["slug"]
         light, dark = sizes.get(f"{slug}.png"), sizes.get(f"{slug}.dark.png")
         if light is None or dark is None:
             continue
+        # A blank render (every pixel one colour) is a screen that did not draw, unless it draws nothing by design.
+        if not e.get("drawsNothing"):
+            for file in (f"{slug}.png", f"{slug}.dark.png"):
+                if luminance[file][1] == 0:
+                    problems.append(f"blank render (every pixel one colour): {file}; a screen that draws nothing by design sets drawsNothing")
+        # Dark in both appearances by design: the pair is judged, the dark render darker than the light one.
+        if e.get("documentCanvas"):
+            delta = luminance[f"{slug}.png"][0] - luminance[f"{slug}.dark.png"][0]
+            if delta < DOCUMENT_CANVAS_DELTA:
+                problems.append(f"document canvas not darker in dark: {slug} (light {luminance[f'{slug}.png'][0]:.3f}, "
+                                f"dark {luminance[f'{slug}.dark.png'][0]:.3f}: light - dark {delta:.3f} < {DOCUMENT_CANVAS_DELTA:.2f})")
         if light != dark:
             problems.append(f"image size mismatch: {slug} (light {light[0]} x {light[1]}, dark {dark[0]} x {dark[1]})")
             sizes[f"{slug}.png"] = sizes[f"{slug}.dark.png"] = None
@@ -500,6 +553,7 @@ def do_check(lang, measure=False):
             print("  " + problem)
         sys.exit(1)
     print(f"CHECK OK [{lang}]: {len(manifest)} cards, light and dark complete and correctly rendered"
+          + (f" ({len(skipped)} skipped, not rendered on this pass)" if skipped else "")
           + (" (measure mode: peek and sheet thresholds not enforced)" if measure else ""))
 
 

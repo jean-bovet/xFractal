@@ -27,6 +27,10 @@ final class SnapshotGalleryTests: XCTestCase {
         var diagnostics: Diagnostics?
         var fold: Fold?
         var safeArea: SafeArea?
+        /// The fixture's flags for an honest `--check`, written only when set (see GalleryFixture).
+        var documentCanvas: Bool?
+        var drawsNothing: Bool?
+        var skipped: String?
     }
 
     /// The Duo pass labels its captures the outer display: a leased Duo may be reused in another posture, so the screen is
@@ -73,7 +77,16 @@ final class SnapshotGalleryTests: XCTestCase {
             var entry = ManifestEntry(name: scenario.name, group: scenario.group, slug: scenario.slug,
                                       size: .init(w: scenario.fixture.size.points.width, h: scenario.fixture.size.points.height),
                                       kinds: scenario.fixture.regions.map(\.rawValue), regions: nil, diagnostics: nil,
-                                      fold: scenario.fixture.foldRegion.map { .init(x: $0.minX, y: $0.minY, w: $0.width, h: $0.height) })
+                                      fold: scenario.fixture.foldRegion.map { .init(x: $0.minX, y: $0.minY, w: $0.width, h: $0.height) },
+                                      documentCanvas: scenario.fixture.documentCanvas ? true : nil,
+                                      drawsNothing: scenario.fixture.drawsNothing ? true : nil)
+            if let why = scenario.fixture.skipped {
+                // Skipped, never captured badly: listed with its reason, the pair left out.
+                print("gallery: skipped \(scenario.slug): \(why)")
+                entry.skipped = why
+                entries.append(entry)
+                continue
+            }
             if selected {
                 var results: [GalleryAppearance: RenderResult] = [:]
                 for appearance in [GalleryAppearance.light, .dark] {

@@ -67,6 +67,14 @@ struct GalleryFixture {
     /// A stand-in for the fold region the system reports (hinge at x 475.5, 40 pt wide with its margins): the peek
     /// capsule must clear it. nil = no fold.
     var foldRegion: CGRect? = nil
+    /// Dark in both appearances by design (a document canvas, full-bleed imagery): `--check` judges the pair instead of
+    /// each image (the dark render's mean luminance at least 0.05 below the light one's).
+    var documentCanvas = false
+    /// Draws nothing by design: `--check` accepts the blank render (otherwise a render whose pixels are all one colour fails).
+    var drawsNothing = false
+    /// A card this pass cannot render honestly: not rendered, the reason printed and written to the manifest, the page
+    /// says "not rendered on this pass" and `--check` accepts the missing pair for that reason only. nil = rendered.
+    var skipped: String? = nil
 
     var slug: String {
         name.lowercased().replacingOccurrences(of: "[^a-z0-9]+", with: "-", options: .regularExpression)

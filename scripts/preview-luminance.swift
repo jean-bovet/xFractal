@@ -1,7 +1,8 @@
 // Pixel jobs for scripts/preview-gallery.py, read from stdin as one JSON array per line (paths may hold spaces;
 // coordinates in pixels), one answer per line:
 //
-//   ["decode", FILE]             -> "width height" after decoding every pixel (a truncated PNG answers -1)
+//   ["decode", FILE]             -> "width height mean std" after decoding every pixel: the size and the whole image's
+//                                   luminance (0...1; std 0 = every pixel one colour). A truncated PNG answers -1
 //   ["share", LIGHT, DARK, X, Y, W, H, DELTA] -> the share of the region's pixels where LIGHT is brighter than DARK by more than DELTA
 //   ["stats", FILE, X, Y, W, H]  -> "mean std share>=0.85 share<=0.20" of the region's luminance (0...1)
 //   ["diff", LIGHT, DARK, X, Y, W, H] -> "found bx by bw bh lightMean darkMean blobArea components outsideShare": the
@@ -115,7 +116,12 @@ func diff(_ lightPath: String, _ darkPath: String, _ f: [Int]) -> String {
 
 func decode(_ path: String) -> String {
     guard let g = load(path) else { return "-1" }
-    return "\(g.width) \(g.height)"
+    var sum = 0.0, sumSq = 0.0
+    for v in g.values { sum += v; sumSq += v * v }
+    let n = Double(g.values.count)
+    let mean = sum / n
+    let std = max(sumSq / n - mean * mean, 0).squareRoot()
+    return String(format: "%d %d %.5f %.5f", g.width, g.height, mean, std)
 }
 
 func share(_ lightPath: String, _ darkPath: String, _ f: [Int], _ delta: Double) -> String {

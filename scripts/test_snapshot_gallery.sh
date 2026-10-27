@@ -132,6 +132,8 @@ esac
 exit 0
 STUB
     printf '#!/bin/bash\necho "xcodegen $*" >> "$STUB_LOG"\nmkdir -p xFractal.xcodeproj && touch xFractal.xcodeproj/project.pbxproj\n' > "$T/bin/xcodegen"
+    # caffeinate only logs its call (the real one would hold the Mac awake until the script's pid ends).
+    printf '#!/bin/bash\necho "caffeinate $*" >> "$STUB_LOG"\n' > "$T/bin/caffeinate"
     # pgrep and ps answer the process-start-time identity only when STUB_PGREP is set.
     printf '#!/bin/bash\n[ -n "$STUB_PGREP" ] && echo 4242 || exit 1\n' > "$T/bin/pgrep"
     printf '#!/bin/bash\necho "$STUB_LSTART"\n' > "$T/bin/ps"
@@ -354,6 +356,20 @@ owned_run() {   # a normal run on a shut-down simulator: boots it, runs, shuts i
     expect owned_run "shut down its own boot" called "simctl shutdown $UDID"
     expect owned_run "marker removed" marker_absent
     expect owned_run "network: none is printed" grep -q "network: none" "$T/out.log"
+    expect owned_run "kept the Mac awake for its own lifetime" called "caffeinate -dims -w "
+    expect owned_run "one caffeinate, not one per locked process" [ "$(grep -c "^caffeinate " "$STUB_LOG")" = 1 ]
+}
+
+given_udid() {   # SIMULATOR_UDID (fallback): the caller's simulator is used as it is, never created, booted or shut down
+    setup Shutdown
+    SIMULATOR_UDID="$OTHER" gallery --no-open; local status=$?
+    expect given_udid "exits zero" [ "$status" = 0 ]
+    expect given_udid "built on the caller's simulator" called "xcodebuild build-for-testing .*-destination id=$OTHER"
+    expect given_udid "tested on the caller's simulator" called "xcodebuild test-without-building .*-destination id=$OTHER"
+    expect given_udid "no simctl create" not_called "simctl create"
+    expect given_udid "no simctl boot" not_called "simctl boot"
+    expect given_udid "no simctl shutdown" not_called "simctl shutdown"
+    expect given_udid "no marker written" marker_absent
 }
 
 # --- queries and other simulators ---
@@ -546,7 +562,20 @@ pool_run() {
     expect pool_run "no parallel testing" called "test-without-building .*-parallel-testing-enabled NO"
     expect pool_run "released the lease" called "simpool release $POOL_UDID --app ch.arizonasoftware.xfractal"
     expect pool_run "released after the test" bash -c 'grep -n "test-without-building\|simpool release" "$0" | tail -1 | grep -q "simpool release"' "$STUB_LOG"
+    expect pool_run "kept the Mac awake for its own lifetime" called "caffeinate -dims -w "
     no_simctl_lifecycle pool_run
+}
+
+pool_given_udid() {   # SIMULATOR_UDID with the pool: the caller's simulator, no lease taken, nothing released
+    pool_setup
+    SIMULATOR_UDID="$OTHER" gallery --no-open; local status=$?
+    expect pool_given_udid "exits zero" [ "$status" = 0 ]
+    expect pool_given_udid "reached CHECK OK" grep -q "CHECK OK" "$T/out.log"
+    expect pool_given_udid "no lease" not_called "simpool acquire"
+    expect pool_given_udid "nothing released" not_called "simpool release"
+    expect pool_given_udid "tested on the caller's simulator" called "xcodebuild test-without-building .*-destination id=$OTHER"
+    expect pool_given_udid "still under buildlock" called "buildlock --folder $T/dd --log .*test-en.log --no-slot -- xcodebuild test-without-building"
+    no_simctl_lifecycle pool_given_udid
 }
 
 pool_ipad() {   # --device ipad: an iPad from the pool, its gallery in previews/ipad/, the iPhone gallery untouched
@@ -678,12 +707,12 @@ pool_signalled_term_build() { pool_signalled TERM build; }
 pool_signalled_term_test() { pool_signalled TERM test; }
 pool_signalled_hup_test() { pool_signalled HUP test; }
 
-POOL_CASES="pool_run pool_ipad pool_duo pool_unknown_device pool_french pool_regions pool_unknown_language pool_keep_booted pool_stale_marker pool_acquire_fails pool_build_fails pool_test_fails pool_check_fails
+POOL_CASES="pool_run pool_given_udid pool_ipad pool_duo pool_unknown_device pool_french pool_regions pool_unknown_language pool_keep_booted pool_stale_marker pool_acquire_fails pool_build_fails pool_test_fails pool_check_fails
 pool_signalled_int_acquire pool_signalled_int_build pool_signalled_int_test pool_signalled_term_build pool_signalled_term_test
 pool_signalled_hup_test"
 
 ALL="pending_marker interrupted_retry delayed_identity boot_not_booted fallback_identity identity_source_change
-stale_marker borrowed borrowed_run owned no_create keep_booted owned_run failed_list_shutdown failed_list_run waits_for_other
+stale_marker borrowed borrowed_run owned no_create keep_booted owned_run given_udid failed_list_shutdown failed_list_run waits_for_other
 appears_before_boot appears_before_build appears_before_test build_fails test_fails import_fails check_fails
 interrupted_readiness signalled_int_bootstatus signalled_int_build signalled_int_test signalled_term_bootstatus signalled_term_build
 signalled_term_test signalled_hup_bootstatus signalled_hup_build signalled_hup_test signalled_term_bootstatus_ignoring_term

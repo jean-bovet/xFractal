@@ -20,13 +20,15 @@
 # --verbose        also print the test's per-render timing lines
 # --shutdown       fallback only: shut down the simulator this script booted, and nothing else; never creates or boots one
 #
-# One run at a time (a lock in the shared git directory, held across worktrees).
+# One run at a time (a lock in the shared git directory, held across worktrees). The Mac stays awake for the whole run
+# (`caffeinate -dims`, released when the script ends).
 #
 # The simulator comes from the machine-wide pool when `simpool` and `buildlock` are on PATH: `simpool acquire --spec
 # iphone` (iPhone 17 Pro, iOS 27.0) leases a booted simulator to this script, waiting when the pool is full, and the
 # cleanup gives it back with `simpool release` (still booted) on success, failure and INT/TERM/HUP. The script then
 # never boots, shuts down, creates or erases a simulator, and both xcodebuild commands run under `buildlock` on the
-# DerivedData folder (the test without a build slot).
+# DerivedData folder (the test without a build slot). A caller that already holds a booted simulator passes its UDID
+# in SIMULATOR_UDID: the script uses that one (pool or fallback), and never leases, releases, boots or shuts it down.
 #
 # Fallback, without those tools: one simulator at a time; the script's own simulator is "xFractal Agent" (created when
 # missing) and a simulator of anyone else is never touched. At the start the script
@@ -92,6 +94,13 @@ if [ "$DEVICE" = duo ]; then
     GALLERY="${PREVIEW_GALLERY_OUT:-$ROOT/previews}"
     case "$GALLERY" in */duo) ;; *) GALLERY="$GALLERY/duo" ;; esac   # the locked re-run parses the options again
     export PREVIEW_GALLERY_OUT="$GALLERY"
+fi
+
+# The Mac stays awake until this process ends (a run during which it slept took three times as long). `caffeinate`
+# does not pass signals on to a command it runs, so it waits for the pid instead; started once, by the outermost process.
+if [ -z "${XFRACTAL_GALLERY_CAFFEINATED:-}" ] && command -v caffeinate > /dev/null; then
+    caffeinate -dims -w $$ > /dev/null 2>&1 &
+    export XFRACTAL_GALLERY_CAFFEINATED=1
 fi
 
 # One run at a time, across the main checkout and its worktrees. XFRACTAL_SNAPSHOT_LOCK is for the lifecycle tests.
@@ -246,8 +255,11 @@ fail_if_others() {
     others="$(sim_query others "$UDID")" || exit 1
     [ -z "$others" ] || { echo "another simulator appeared ($others); not $1" >&2; exit 1; }
 }
-UDID=""
-if [ "$POOL" = 0 ]; then
+# The caller's simulator (SIMULATOR_UDID): used as it is, never leased, released, booted or shut down.
+UDID="${SIMULATOR_UDID:-}"
+if [ -n "$UDID" ]; then
+    echo "using simulator $UDID (SIMULATOR_UDID: the caller's, left as it is)"
+elif [ "$POOL" = 0 ]; then
     # Our simulator, created when missing (never another project's).
     UDID="$(sim_query udid "$SIM_NAME")" || exit 1
     if [ -z "$UDID" ]; then
@@ -336,7 +348,9 @@ if [ ! -d xFractal.xcodeproj ] || [ project.yml -nt xFractal.xcodeproj/project.p
 fi
 
 T_BOOT0=$(now)
-if [ "$POOL" = 1 ]; then
+if [ -n "${SIMULATOR_UDID:-}" ]; then
+    :    # the caller's simulator: nothing to lease or boot
+elif [ "$POOL" = 1 ]; then
     # Leased to this script's process ($$): waits, interruptibly, while the pool is full.
     LEASE_OUT="$WORK/lease"
     : > "$LEASE_OUT"

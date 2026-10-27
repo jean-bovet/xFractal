@@ -9,8 +9,12 @@
 #
 # Needs a Retina display (the test fails by name on 1x). The test runs hosted by the sandboxed Mac app, whose container
 # macOS keeps other processes out of: it prints each PNG as base64 lines, which this script decodes. The xcodebuild run
-# is under `buildlock` when it is on PATH. No simulator.
+# is under `buildlock` when it is on PATH: the DerivedData lock (with a build slot) inside a second lock, without a
+# slot, on the app's container, so two worktrees never run the hosted app at once. The Mac stays awake for the run
+# (`caffeinate -dims`). No simulator.
 set -euo pipefail
+
+if command -v caffeinate > /dev/null; then caffeinate -dims -w $$ > /dev/null 2>&1 & fi
 
 LANGS=(en)
 while [ $# -gt 0 ]; do
@@ -31,7 +35,8 @@ LOG="$(mktemp -t xfractal-mac-gallery)"
 trap 'rm -f "$LOG"' EXIT
 
 cd "$ROOT"
-LOCK=(); command -v buildlock > /dev/null && LOCK=(buildlock --folder "$DD" --)
+CONTAINER="$HOME/Library/Containers/ch.arizonasoftware.xfractal"
+LOCK=(); command -v buildlock > /dev/null && LOCK=(buildlock --folder "$CONTAINER" --no-slot -- buildlock --folder "$DD" --)
 for lang in "${LANGS[@]}"; do
     OUT="$ROOT/previews/mac"; [ "$lang" = en ] || OUT="$OUT/$lang"
     case "$lang" in en) region=US ;; ja) region=JP ;; *-*) region="${lang#*-}" ;; *) region="$(echo "$lang" | tr a-z A-Z)" ;; esac

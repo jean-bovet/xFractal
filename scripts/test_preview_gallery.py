@@ -109,7 +109,8 @@ class GalleryTestCase(unittest.TestCase):
         self.env = {**os.environ, "PREVIEW_GALLERY_OUT": str(self.out)}
 
     def small(self, light=(240, 240, 240), dark=(20, 20, 20)):
-        return Image(46, 100, light).png(), Image(46, 100, dark).png()
+        """A light and a dark image that drew something (a band of stripes: a blank render fails the check)."""
+        return Image(46, 100, light).stripes(0, 0, 46, 8).png(), Image(46, 100, dark).stripes(0, 0, 46, 8).png()
 
     def source(self, manifest=MANIFEST, only=None, images=None, name="src"):
         """A snapshot-test output directory: both images of every manifest entry (or of `only`).
@@ -235,8 +236,8 @@ class ImportTests(GalleryTestCase):
         before = {p.name: p.read_bytes() for p in self.out.glob("*.png")}
         directory = self.root / "partial"
         directory.mkdir()
-        (directory / "mid-screen.png").write_bytes(Image(23, 50, (240, 240, 240)).png())
-        (directory / "mid-screen.dark.png").write_bytes(Image(23, 50, (20, 20, 20)).png())
+        (directory / "mid-screen.png").write_bytes(Image(23, 50, (240, 240, 240)).stripes(0, 0, 23, 4).png())
+        (directory / "mid-screen.dark.png").write_bytes(Image(23, 50, (20, 20, 20)).stripes(0, 0, 23, 4).png())
         (directory / "manifest.json").write_text(json.dumps(MANIFEST))
         done = self.run_script("--import", str(directory), "--partial")
         self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
@@ -376,7 +377,7 @@ class MetadataTests(GalleryTestCase):
                 return struct.pack(">I", len(body)) + inner + struct.pack(">I", zlib.crc32(inner))
             head = data[:33]   # signature + IHDR
             return head + chunk(b"eXIf", b"MM\x00*") + chunk(b"tEXt", b"Comment\x00hello") + chunk(b"iTXt", b"k\x00\x00\x00\x00\x00v") + data[33:]
-        light, dark = Image(46, 100, (240, 240, 240)), Image(46, 100, (20, 20, 20))
+        light, dark = Image(46, 100, (240, 240, 240)).stripes(0, 0, 46, 8), Image(46, 100, (20, 20, 20)).stripes(0, 0, 46, 8)
         directory = self.root / "meta"
         directory.mkdir()
         for e in MANIFEST:
@@ -391,6 +392,83 @@ class MetadataTests(GalleryTestCase):
                 self.assertNotIn(kind, data, f"{png.name} still has {kind!r}")
             self.assertEqual(data[:8], b"\x89PNG\r\n\x1a\n")
         self.assertEqual(self.check().returncode, 0)
+
+
+class FlagTests(GalleryTestCase):
+    """The manifest flags a scenario sets for an honest check: documentCanvas, drawsNothing, skipped."""
+
+    def flagged(self, images=None, **flags):
+        manifest = [plain("Zeta screen", "Second group", "zeta-screen"), {**plain("Flat screen", "First group", "flat-screen"), **flags}]
+        self.imported(manifest=manifest, images={"flat-screen": images} if images else None)
+        return self.check()
+
+    def test_blank_render_fails(self):
+        blank = Image(46, 100, gray(128)).png()
+        done = self.flagged(images=(blank, Image(46, 100, gray(30)).stripes(0, 0, 46, 8).png()))
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("blank render (every pixel one colour): flat-screen.png", done.stdout)
+        self.assertNotIn("flat-screen.dark.png", done.stdout)
+
+    def test_draws_nothing_accepts_a_blank_render(self):
+        done = self.flagged(images=(Image(46, 100, gray(250)).png(), Image(46, 100, gray(10)).png()), drawsNothing=True)
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+
+    def test_document_canvas_judges_the_pair(self):
+        # Dark in both appearances: fine when the dark render is darker by at least 0.05 ...
+        dark_pair = (Image(46, 100, gray(60)).stripes(0, 0, 46, 8), Image(46, 100, gray(30)).stripes(0, 0, 46, 8))
+        done = self.flagged(images=dark_pair, documentCanvas=True)
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        # ... not when the two are as dark as each other.
+        same = (Image(46, 100, gray(30)).stripes(0, 0, 46, 8), Image(46, 100, gray(28)).stripes(0, 0, 46, 8))
+        done = self.flagged(images=same, documentCanvas=True)
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("document canvas not darker in dark: flat-screen", done.stdout)
+
+    def test_skipped_accepts_the_missing_pair_with_its_reason(self):
+        manifest = [plain("Zeta screen", "Second group", "zeta-screen"),
+                    {**plain("Folded pose", "First group", "folded-pose"), "skipped": "the folded simulator cannot show this pose"}]
+        self.imported(manifest=manifest, only={"zeta-screen"})
+        done = self.check()
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        self.assertIn("CHECK OK [en]: 2 cards", done.stdout)
+        self.assertIn("(1 skipped, not rendered on this pass)", done.stdout)
+        page = (self.out / "index.html").read_text(encoding="utf-8")
+        figure = page.split('<figure id="folded-pose"')[1].split("</figure>")[0]
+        self.assertIn("not rendered on this pass", figure)
+        self.assertIn("the folded simulator cannot show this pose", figure)
+        self.assertNotIn("folded-pose.png", figure)
+
+    def test_missing_pair_without_a_reason_still_fails(self):
+        manifest = [plain("Zeta screen", "Second group", "zeta-screen"), plain("Folded pose", "First group", "folded-pose")]
+        self.imported(manifest=manifest, only={"zeta-screen"})
+        done = self.check()
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("missing: folded-pose.png", done.stdout)
+
+
+class ScenarioFileTests(GalleryTestCase):
+    """--check scans the scenario files: no forced appearance or language, outside comments."""
+
+    def scan(self, text):
+        file = self.root / "GalleryFixtures.swift"
+        file.write_text(text, encoding="utf-8")
+        self.env["PREVIEW_GALLERY_SCENARIOS"] = str(file)
+        self.imported()
+        return self.check()
+
+    def test_forced_appearance_fails(self):
+        done = self.scan("let v = ContentView()\n    .preferredColorScheme(.dark)\n")
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("forbidden in scenario file GalleryFixtures.swift:2: .preferredColorScheme", done.stdout)
+
+    def test_forced_locale_fails(self):
+        done = self.scan('let v = ContentView().environment(\\.locale, Locale(identifier: "fr"))\n')
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("forbidden in scenario file GalleryFixtures.swift:1: \\.locale", done.stdout)
+
+    def test_comments_are_not_scanned(self):
+        done = self.scan("// never .preferredColorScheme here\n/* nor\n .environment(\\.locale, x) */\nlet v = ContentView()\n")
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
 
 
 class RegionTests(GalleryTestCase):
