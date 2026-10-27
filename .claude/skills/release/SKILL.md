@@ -143,7 +143,8 @@ Two things the checkers do not read, judged by hand (rules and sizes in `docs/ip
   the report, and never call such a build Duo-ready.
 - **iPhone Duo screenshots**: a set for the inner display (2853 x 2007) and one for the outer display (1398 x 2034)
   when the repo has them (`/app-store-screenshots`); they earn the product-page badge now and are required from
-  April 2027 for 27.1-SDK apps. They are uploaded by hand in App Store Connect until `app-store` can.
+  April 2027 for 27.1-SDK apps. `check` lists them as `IPHONE_DUO: <n> (asset library)`; they are uploaded with
+  `app-store screenshots --display-class IPHONE_DUO` (that skill, §4), never by hand.
 
 A first release's page starts empty, so the first audit lists the whole page as problems (copyright,
 description, support and privacy URLs, screenshots for every family, the age rating questionnaire, the App

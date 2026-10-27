@@ -90,7 +90,8 @@ scripts/snapshot-gallery.sh --no-open           # do not open the page (agents, 
 test `xFractalGalleryTests/SnapshotGalleryTests`, variables `XFRACTAL_SNAPSHOT_DIR` and `XFRACTAL_SNAPSHOT_ONLY`. Simulator:
 a lease from the pool, `simpool acquire --spec iphone --pid $$` (iPhone 17 Pro, iOS 27.0, 402 x 874 pt at 2x), given back
 with `simpool release <udid> --app ch.arizonasoftware.xfractal` by the exit trap on success, failure and INT/TERM/HUP; the
-script never boots, shuts down, creates or erases one. Both `xcodebuild` commands run under `buildlock --folder <DerivedData>`
+script never boots, shuts down, creates or erases one. `SIMULATOR_UDID` names the caller's simulator instead (pool or
+fallback: used as it is, never leased, released, booted or shut down). Both `xcodebuild` commands run under `buildlock --folder <DerivedData>`
 (the test with `--no-slot`), DerivedData `${XFRACTAL_SNAPSHOT_DD:-~/Library/Developer/Xcode/DerivedData/xFractal-snapshots}`.
 The run builds once and runs the whole gallery target, so the plain harness tests gate every render. An `--only` run in a
 fresh checkout fails the check (it covers every scenario): run the whole gallery once first.
@@ -138,8 +139,9 @@ One entry in the scenario list, and nothing in the app:
   by design sets `drawsNothing: true` (otherwise `--check` fails a blank render). A card a pass cannot render
   honestly is **skipped, never captured badly**: the test prints `gallery: skipped <slug>: <why>`, the manifest
   lists it with a `skipped` reason, the page shows "not rendered on this pass", and `--check` accepts the missing
-  pair for that reason only. xFractal's harness has none of the three yet (every scenario renders on every pass;
-  the fractal region has its own validation, see the extras below): add them before a scenario needs one.
+  pair for that reason only. xFractal: the three are fields of `GalleryFixture` (`documentCanvas`, `drawsNothing`,
+  `skipped`), written to the manifest by `SnapshotGalleryTests`; no scenario sets one today (every scenario renders
+  on every pass; the fractal region has its own validation, see the extras below).
 - `scripts/preview-gallery.py --coverage` lists view types no scenario names (informational: most are parts
   of other screens).
 
@@ -190,7 +192,8 @@ One entry in the scenario list, and nothing in the app:
      arguments they become build settings and never reach the test.
    - Import, `--check`, open the page (`--no-open` skips that: agents, scripted runs), print the timings (boot,
      build, test, total). It keeps the Mac awake for the run (`caffeinate -dims`): a run during which the Mac
-     slept took three times as long. xFractal's script has `--no-open` but no `caffeinate` yet.
+     slept took three times as long. xFractal's scripts hold it with `caffeinate -dims -w <pid>` (`caffeinate` does
+     not pass signals on to a command it runs).
 5. **A Mac target**: an app-hosted macOS test renders each scenario with no simulator, **off screen**: a real
    `NSWindow` with an `NSHostingController` (so `.toolbar` and `NavigationSplitView` bridge to AppKit) and an
    `NSAppearance`, never ordered on screen, whose whole layer tree `CARenderer` draws into a Metal texture at 2x.
@@ -199,7 +202,8 @@ One entry in the scenario list, and nothing in the app:
    window, sheets, `PDFView` waits and what differs from an on-screen capture (neutral dark mode, inactive
    selection, Retina only): [`mac-offscreen-renderer.md`](mac-offscreen-renderer.md). The Mac test also holds a
    second `buildlock --folder <the host app's container or cache folder> --no-slot`, so two worktrees never run
-   the hosted app at once (`scripts/snapshot-mac.sh` holds only the DerivedData lock so far).
+   the hosted app at once (xFractal's `scripts/snapshot-mac.sh`: `~/Library/Containers/ch.arizonasoftware.xfractal`
+   around the DerivedData lock).
 6. **Optional passes** when the audience needs them: a largest-Dynamic-Type pass, another device family (one
    simulator after the other). Never another language (localized store captures belong to `/app-store-screenshots`).
 
@@ -208,9 +212,10 @@ One entry in the scenario list, and nothing in the app:
 `--check` rebuilds the page from the PNGs on disk and fails on: a scenario of the manifest missing either
 image, a stray PNG no scenario expects (in any folder, or in the wrong platform's folder), a duplicate slug, a light image that is dark or a dark one that is light
 (mean luminance against a threshold), a dark image byte-identical to its light one, an image that cannot be
-decoded, and `.preferredColorScheme` or `\.locale` anywhere in the scenario file (a rule xFractal's `--check` does not
-grep for yet). An `--only` run replaces only its own images; the check still covers every scenario. The gallery is
-done only when `--check` passes.
+decoded, a blank render (every pixel one colour) without `drawsNothing`, and `.preferredColorScheme` or `\.locale`
+anywhere in the scenario files (xFractal's `--check` scans `GalleryScenarios.swift` and `GalleryFixtures.swift`,
+comments excluded). An `--only` run replaces only its own images; the check still covers every scenario. The gallery
+is done only when `--check` passes.
 
 ## Converting a repo (from `#Preview`s)
 

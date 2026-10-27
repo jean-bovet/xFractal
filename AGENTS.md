@@ -115,8 +115,8 @@ app-store-screenshots                # -> .build/app-store-screenshots/<locale>/
 - iPad: `app-store-screenshots --config AppStore/screenshots-ipad.json --captures previews/ipad` (2048 x 2732,
   `APP_IPAD_PRO_3GEN_129`, the same slides and headlines in iPad frames). Mac: `--config AppStore/screenshots-mac.json`
   (2880 x 1800, `APP_DESKTOP`: the real window under a centred one-line headline; the hero says "scroll", not "pinch").
-iPhone Duo (rendered, not uploaded yet): `--config AppStore/screenshots-duo-outer.json` and `AppStore/screenshots-duo-inner.json`
-with `--captures previews/duo` (`/app-store-screenshots` has the commands).
+iPhone Duo: `--config AppStore/screenshots-duo-outer.json` and `AppStore/screenshots-duo-inner.json` with `--captures previews/duo`,
+both sets uploaded together per locale with `app-store screenshots --display-class IPHONE_DUO` (`/app-store-screenshots` has the commands).
 
 The product page header and the search results asset (iOS 27, no text, one image each for every language) are the same
 command with `--config AppStore/header.json` (3840 x 1646: the whole yellow Mandelbrot, centered, no phone) and
