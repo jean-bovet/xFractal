@@ -207,6 +207,14 @@ One entry in the scenario list, and nothing in the app:
 6. **Optional passes** when the audience needs them: a largest-Dynamic-Type pass, another device family (one
    simulator after the other). Never another language (localized store captures belong to `/app-store-screenshots`).
 
+## Looking at a gallery as an agent
+
+Read the contact sheet, not the PNGs: `contact-sheet previews/en -o <scratch>/iphone.png` (one sheet
+per platform folder, light and dark side by side, labelled; the other passes are `previews/ipad/en`,
+`previews/duo/en` and `previews/mac/en`) and look at that; open a single PNG only to
+check one detail. Every image read stays in the context for the rest of the session, and a gallery pass
+has fifty of them.
+
 ## The gate: `--check`
 
 `--check` rebuilds the page from the PNGs on disk and fails on: a scenario of the manifest missing either
