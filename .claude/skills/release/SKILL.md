@@ -84,7 +84,8 @@ above) exists and 2.0 is live untagged, so What's New covers the changes since t
 - **No tag, range empty**: nothing to release. Stop.
 - **No tag, and `git log --format=%s <candidate>..main` has `Release notes <version>`**: an earlier
   run stopped after §5. Keep those notes, re-run §6 (`prepare` is idempotent) and continue. A notes
-  file without that commit is only a draft: §4 rewrites it from the range.
+  file without that commit is only a draft: §4 rewrites it from the range. A first release has no
+  notes commit: a resumed run simply repeats §2b and §6, both read-only or idempotent.
 - Otherwise it is a **new release** of that range.
 
 **CI.** Find the Xcode Cloud run of the candidate's commit (`xcode-cloud builds --limit 10`) and
@@ -144,7 +145,8 @@ Two things the checkers do not read, judged by hand (rules and sizes in `docs/ip
 - **iPhone Duo screenshots**: a set for the inner display (2853 x 2007) and one for the outer display (1398 x 2034)
   when the repo has them (`/app-store-screenshots`); they earn the product-page badge now and are required from
   April 2027 for 27.1-SDK apps. `check` lists them as `IPHONE_DUO: <n> (asset library)`; they are uploaded with
-  `app-store screenshots --display-class IPHONE_DUO` (that skill, §4), never by hand.
+  `app-store screenshots --display-class IPHONE_DUO` (both sets' files in one call per locale, the inner display's
+  slides then the outer's: that skill, §4), never by hand.
 
 A first release's page starts empty, so the first audit lists the whole page as problems (copyright,
 description, support and privacy URLs, screenshots for every family, the age rating questionnaire, the App
@@ -264,6 +266,12 @@ locale the version already has, so the same commands serve every release; `metad
 when `AppStore/` changed or `check` reports a locale missing something. Each added locale then gets
 its own screenshots (`/app-store-screenshots`: the headlines in that language, the app in its own
 language where the app has it).
+
+The product page header and search results images (`/app-store-screenshots`, `AppStore/header.json` and
+`AppStore/search-results.json`) are uploaded here, once Jean approved the renders and only when they changed:
+`app-store creative --app xFractal-iOS --placement header --version <version> FILE`, then `--placement search` with
+the other file. Both are text-less, so one upload each serves every locale (a localized image would take one call
+per locale with `--locale <l>`).
 
 When the app ships on several platforms, each has its own version of the same number. If App Store
 Connect refuses a step for one platform (What's New, the phased release), stop and report the error to

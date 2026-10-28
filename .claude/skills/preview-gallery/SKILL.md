@@ -31,11 +31,22 @@ outcome (measurements, thresholds, findings) are in `planning/gallery-scenarios-
 
 **English only, in every repo**, whatever languages the app ships (`-testLanguage en -testRegion US`). The gallery
 checks layout and appearance; translations are checked by the repo's catalog tests, not by screenshots. Never add
-a language pass to the gallery. The one exception is the App Store screenshots: a repo whose store pages show the app
-in each store language keeps a `--lang` option in its gallery scripts, used only by `/app-store-screenshots` with
-`--only` the slides' captures, into its own folder per language (`previews/fr/`). The gallery page stays English.
-xFractal is such a repo: `--lang fr,de,it,es,pt-BR,ja,tr,ar,he` on `scripts/snapshot-gallery.sh` and `scripts/snapshot-mac.sh`
-renders the slides' captures into `previews/<lang>/` (`previews/ipad/<lang>/`, `previews/mac/<lang>/`).
+a full language pass to the gallery. Two exceptions share one `--lang` option of the gallery scripts, always with
+`--only`, each language into its own folder (`previews/<platform>/fr/`):
+- **App Store screenshots**: a repo whose store pages show the app in each store language renders the slides'
+  captures per language, used by `/app-store-screenshots`.
+- **Review runs**, on request only (never part of the gate): a translation can be complete and still not **fit**
+  (truncation, overflow), and a right-to-left language (Hebrew, Arabic) must read right to left. The repo lists a
+  **review set** (the store captures plus the screens whose words or direction the catalog changes) and renders it
+  with `--only "<the review set>" --lang <languages>`; the scripts refuse `--lang` for a language other than English
+  without `--only` (not yet in xFractal's scripts: always pass `--only`). Read the result as a contact sheet per
+  language.
+The gallery page that counts, its gate and `CHECK OK [en]` stay English.
+xFractal: `--lang fr,de,it,es,pt-BR,ja,tr,ar,he` on `scripts/snapshot-gallery.sh` and `scripts/snapshot-mac.sh`
+renders into `previews/<lang>/` (`previews/ipad/<lang>/`, `previews/duo/<lang>/`, `previews/mac/<lang>/`). Its review set
+is the store captures (the `--only` list of `/app-store-screenshots`) plus `controls` (every Controls sheet, the screens
+with the most words). Unlike the reference, the gallery script builds a page and runs `--check` for each language folder
+too (the peek check mirrors for `ar` and `he`); a language's result is not the gate.
 
 <!-- repo-specific: platforms-and-languages -->
 26 scenarios, 52 images. **The iPhone Duo · inner display group** (9 scenarios) are the fixed-size windows of the
@@ -122,7 +133,10 @@ One entry in the scenario list, and nothing in the app:
   an optional **settle** wait for a screen that loads or animates, and a builder that returns the view, seeding
   a store first when it needs one.
 - **Never force an appearance or a language** (`.preferredColorScheme`, `.environment(\.locale, …)`): the light
-  and dark passes and `-testLanguage` set them. A state that only existed as a "dark" variant is a plain scenario.
+  and dark passes and `-testLanguage` set them; `--check` scans the scenario files for both. The one admissible
+  exception is a locale forced for its region, not its language (`en_US` to show a 12-hour clock): the line
+  carries `// gallery: allowed, <why>` and `--check` lets that line through (not yet in xFractal's
+  `preview-gallery.py`, which has no such scenario). A state that only existed as a "dark" variant is a plain scenario.
   Dynamic Type variants are fine, as their own scenarios.
 - **Hermetic data.** A fresh in-memory store per scenario. The network is a stub that answers from committed
   fixtures (real API responses, their times shifted to now so screens look live) or fails with a given error,
@@ -138,10 +152,15 @@ One entry in the scenario list, and nothing in the app:
   of each image (the dark image's mean luminance at least 0.05 below the light one's). A screen that draws nothing
   by design sets `drawsNothing: true` (otherwise `--check` fails a blank render). A card a pass cannot render
   honestly is **skipped, never captured badly**: the test prints `gallery: skipped <slug>: <why>`, the manifest
-  lists it with a `skipped` reason, the page shows "not rendered on this pass", and `--check` accepts the missing
-  pair for that reason only. xFractal: the three are fields of `GalleryFixture` (`documentCanvas`, `drawsNothing`,
-  `skipped`), written to the manifest by `SnapshotGalleryTests`; no scenario sets one today (every scenario renders
-  on every pass; the fractal region has its own validation, see the extras below).
+  lists it with a `skipped` reason (the scenario's field `skipped: "<why>"`, per platform when only one pass
+  cannot render it), the page shows "not rendered on this pass", and `--check` accepts the missing
+  pair for that reason only. Full-bleed imagery under chrome (a satellite map) does not darken in the dark
+  appearance at all, so it cannot meet the pair rule either: such a card sets `imagery: true`, which waives the
+  luminance rules for that pair (the byte-identical rule still applies). Measured: a map card at 0.401 light,
+  0.399 dark. xFractal: `documentCanvas`, `drawsNothing` and `skipped` are fields of `GalleryFixture`, written to
+  the manifest by `SnapshotGalleryTests` (`skipped` is one reason for every pass, not per platform); `imagery` is
+  not yet in its fixture or `preview-gallery.py`. No scenario sets one today (every scenario renders on every pass;
+  the fractal region has its own validation, see the extras below).
 - `scripts/preview-gallery.py --coverage` lists view types no scenario names (informational: most are parts
   of other screens).
 
@@ -186,14 +205,23 @@ One entry in the scenario list, and nothing in the app:
    - Persistent DerivedData; `-skipPackageUpdates -disableAutomaticPackageResolution` once the packages are
      resolved (otherwise every run resolves remote packages: 75 s measured).
    - `build-for-testing` once, then one `test-without-building -only-testing:<snapshot class>
-     -parallel-testing-enabled NO -enableCodeCoverage NO -testLanguage en -testRegion US` (`--lang`, for the
-     store captures only, repeats that run per language).
+     -parallel-testing-enabled NO -enableCodeCoverage NO -testLanguage en -testRegion US` (`--lang` repeats that
+     run per language).
    - The variables go in **xcodebuild's environment** as `TEST_RUNNER_<NAME>=… xcodebuild …`; written as
      arguments they become build settings and never reach the test.
+   - The exit trap also runs on INT, TERM and HUP, so an interrupted run still releases its lease (a lease granted
+     while the script is being signalled too).
+   - The `test-without-building` runs under `buildlock --folder <DerivedData> --no-slot`: it compiles nothing, so it
+     holds the folder but not a host build slot.
    - Import, `--check`, open the page (`--no-open` skips that: agents, scripted runs), print the timings (boot,
-     build, test, total). It keeps the Mac awake for the run (`caffeinate -dims`): a run during which the Mac
-     slept took three times as long. xFractal's scripts hold it with `caffeinate -dims -w <pid>` (`caffeinate` does
-     not pass signals on to a command it runs).
+     build, test, total). It keeps the Mac awake for the run (`caffeinate -dims -w $$`, released when the script
+     exits; `caffeinate` does not pass signals on to a command it runs): a run during which the Mac slept took
+     three times as long.
+   - Optional, when the hosted app shares state with the real one (a container, iCloud, defaults): build the gallery
+     hosts under their own bundle id (a `.gallery` suffix through a build setting that is empty in every other
+     build, no iCloud entitlement), so a run never touches the real app's data and the real app may stay open.
+     xFractal does not: the iOS gallery runs in a leased simulator, and the Mac pass locks the app's container
+     instead (item 5).
 5. **A Mac target**: an app-hosted macOS test renders each scenario with no simulator, **off screen**: a real
    `NSWindow` with an `NSHostingController` (so `.toolbar` and `NavigationSplitView` bridge to AppKit) and an
    `NSAppearance`, never ordered on screen, whose whole layer tree `CARenderer` draws into a Metal texture at 2x.
@@ -205,7 +233,8 @@ One entry in the scenario list, and nothing in the app:
    the hosted app at once (xFractal's `scripts/snapshot-mac.sh`: `~/Library/Containers/ch.arizonasoftware.xfractal`
    around the DerivedData lock).
 6. **Optional passes** when the audience needs them: a largest-Dynamic-Type pass, another device family (one
-   simulator after the other). Never another language (localized store captures belong to `/app-store-screenshots`).
+   simulator after the other). Another language only as the `--lang` runs above (store captures, review runs),
+   never a language gallery page that counts.
 
 ## Looking at a gallery as an agent
 
@@ -218,12 +247,16 @@ has fifty of them.
 ## The gate: `--check`
 
 `--check` rebuilds the page from the PNGs on disk and fails on: a scenario of the manifest missing either
-image, a stray PNG no scenario expects (in any folder, or in the wrong platform's folder), a duplicate slug, a light image that is dark or a dark one that is light
-(mean luminance against a threshold), a dark image byte-identical to its light one, an image that cannot be
-decoded, a blank render (every pixel one colour) without `drawsNothing`, and `.preferredColorScheme` or `\.locale`
-anywhere in the scenario files (xFractal's `--check` scans `GalleryScenarios.swift` and `GalleryFixtures.swift`,
-comments excluded). An `--only` run replaces only its own images; the check still covers every scenario. The gallery
-is done only when `--check` passes.
+image (unless its entry is `skipped` with a reason), a stray PNG no scenario expects (in any folder, in the wrong
+platform's folder, or of a skipped scenario), a duplicate slug, a light image that is dark or a dark one that is light
+(mean luminance against a threshold; a `documentCanvas` pair by the pair rule, an `imagery` pair by none), a dark
+image byte-identical to its light one, a blank image (every pixel one colour; unless `drawsNothing`), an image that
+cannot be decoded or is not at the render scale of its scenario's size (2x; 3x for the Duo's inner poses), and
+`.preferredColorScheme` or `\.locale` anywhere in the scenario files (xFractal's `--check` scans
+`GalleryScenarios.swift` and `GalleryFixtures.swift`; a `//` or `/* */` comment is ignored; a line marked
+`// gallery: allowed, <why>` passes). Not yet in xFractal's `preview-gallery.py`: the `imagery` waiver, the
+render-scale check and the `allowed` marker. An `--only` run replaces only its own images; the check still covers
+every scenario. The gallery is done only when `--check` [en] passes.
 
 ## Converting a repo (from `#Preview`s)
 
