@@ -197,8 +197,15 @@ final class GalleryScenarioTests: XCTestCase {
             let list = try XCTUnwrap(mount.columnList, slug)
             let column = try XCTUnwrap(mount.columnFrame, slug)
             let listFrame = list.convert(list.bounds, to: mount.window)
-            XCTAssertEqual(listFrame.maxX, mount.window.bounds.width, accuracy: 1, "\(slug): at the trailing edge")
-            XCTAssertGreaterThanOrEqual(listFrame.minX, column.minX - 1, slug)
+            XCTAssertEqual(mount.trailingEdge(of: listFrame), mount.trailingWindowEdge, accuracy: 1, "\(slug): at the trailing edge")
+            // The list lies beside the board, not under it: judged against the board's frame, which SwiftUI sets by its
+            // own padding, not against the column strip (that one is derived from the list).
+            let boardFrame = mount.mtk.convert(mount.mtk.bounds, to: mount.window)
+            if mount.rightToLeft {
+                XCTAssertLessThanOrEqual(listFrame.maxX, boardFrame.minX + 1, "\(slug): the list ends where the board starts")
+            } else {
+                XCTAssertGreaterThanOrEqual(listFrame.minX, boardFrame.maxX - 1, "\(slug): the list starts where the board ends")
+            }
             let board = mount.mtk.convert(mount.mtk.bounds, to: mount.window)
             XCTAssertEqual(board.width, mount.window.bounds.width - column.width, accuracy: 1, "\(slug): the board is narrower by the column")
             XCTAssertLessThan(board.width, mount.window.bounds.width, slug)
@@ -214,7 +221,13 @@ final class GalleryScenarioTests: XCTestCase {
         _ = try await mount.drawFrame()
         let image = mount.capture()
         let region = try XCTUnwrap(mount.fractalRegion())
-        XCTAssertLessThanOrEqual(region.maxX, try XCTUnwrap(mount.columnFrame).minX)
+        // The region lies beside the column, on the board's side.
+        let strip = try XCTUnwrap(mount.columnFrame)
+        if mount.rightToLeft {
+            XCTAssertGreaterThanOrEqual(region.minX, strip.maxX)
+        } else {
+            XCTAssertLessThanOrEqual(region.maxX, strip.minX)
+        }
         let own = try mount.validate(image, expected: mount.fixture.expectedState, region: region)
         XCTAssertTrue(own.passed, "own reference \(own.mode) \(own.value): \(own.reason ?? "")")
         let other = try mount.validate(image, expected: .defaultState, region: region)
@@ -240,7 +253,7 @@ final class GalleryScenarioTests: XCTestCase {
         XCTAssertNil(mount.presented, "no sheet beside a column")
         let list = try XCTUnwrap(mount.columnList)
         let column = try XCTUnwrap(mount.columnFrame)
-        XCTAssertEqual(list.convert(list.bounds, to: mount.window).maxX, mount.window.bounds.width, accuracy: 1)
+        XCTAssertEqual(mount.trailingEdge(of: list.convert(list.bounds, to: mount.window)), mount.trailingWindowEdge, accuracy: 1)
         XCTAssertLessThan(mount.mtk.convert(mount.mtk.bounds, to: mount.window).width, mount.window.bounds.width)
         XCTAssertGreaterThan(column.width, 0)
         XCTAssertEqual(mount.store.state, edited, "the controls kept the store")
@@ -323,8 +336,13 @@ final class GalleryScenarioTests: XCTestCase {
             }
         }
         let first = try XCTUnwrap(differing.first), last = try XCTUnwrap(differing.last)
-        XCTAssertLessThanOrEqual(Double(first), Double(mount.window.bounds.width) / 2 * scale, "the centred capsule")
-        XCTAssertGreaterThan(Double(last), (hinge.maxX + 60) * scale, "the shifted capsule lies trailing of the fold")
+        if mount.rightToLeft {
+            XCTAssertGreaterThanOrEqual(Double(last), Double(mount.window.bounds.width) / 2 * scale, "the centred capsule")
+            XCTAssertLessThan(Double(first), (hinge.minX - 60) * scale, "the shifted capsule lies trailing of the fold")
+        } else {
+            XCTAssertLessThanOrEqual(Double(first), Double(mount.window.bounds.width) / 2 * scale, "the centred capsule")
+            XCTAssertGreaterThan(Double(last), (hinge.maxX + 60) * scale, "the shifted capsule lies trailing of the fold")
+        }
     }
 
     /// The displayed board is wired to the same store the controls bind: an edit made after a transition reaches the renderer
@@ -339,16 +357,22 @@ final class GalleryScenarioTests: XCTestCase {
         try await mount.waitUntil(3, "the edit is undone \(when)") { mount.renderer.state == state }
     }
 
+    /// A device inset on the trailing side (the Duo's status bar side): right, or left under right to left, so the
+    /// production `safeAreaInsets.trailing` path is the one exercised in both directions.
+    private func trailingInset(_ points: CGFloat, in mount: GalleryMount) -> UIEdgeInsets {
+        mount.rightToLeft ? UIEdgeInsets(top: 0, left: points, bottom: 0, right: 0) : UIEdgeInsets(top: 0, left: 0, bottom: 0, right: points)
+    }
+
     /// Closed controls at regular width leave the board full-bleed, also where the trailing edge has a device inset (the Duo
     /// inner display's status bar side); opened, the board stops at the column.
     func testClosedBoardReachesTheTrailingEdgeDespiteADeviceInset() async throws {
         let board = try await GalleryHarness.mount(GalleryScenarios.scenario("duo-inner-landscape-board-julia"), .light)
         defer { board.teardown() }
-        board.host.additionalSafeAreaInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 84)
+        board.host.additionalSafeAreaInsets = trailingInset(84, in: board)
         board.window.layoutIfNeeded()
         try await board.waitUntil(3, "the board spans the window") {
             board.window.layoutIfNeeded()
-            return abs(board.mtk.convert(board.mtk.bounds, to: board.window).maxX - board.window.bounds.width) < 1
+            return abs(board.trailingEdge(of: board.mtk.convert(board.mtk.bounds, to: board.window)) - board.trailingWindowEdge) < 1
         }
         XCTAssertNil(board.columnFrame)
         _ = try await board.drawFrame()
@@ -362,7 +386,7 @@ final class GalleryScenarioTests: XCTestCase {
     func testOverlayColumnIsRecognisedDespiteADeviceInset() async throws {
         let mount = try await GalleryHarness.mount(GalleryScenarios.scenario("duo-inner-portrait-controls-mandelbrot"), .light)
         defer { mount.teardown() }
-        mount.host.additionalSafeAreaInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 84)
+        mount.host.additionalSafeAreaInsets = trailingInset(84, in: mount)
         try await mount.settlePresentation()
         XCTAssertTrue(mount.columnOverlaysBoard, "the board reaches under the column")
         try await mount.settleScrim()
@@ -400,6 +424,29 @@ final class GalleryScenarioTests: XCTestCase {
         }
         let uniform = try mount.validate(blank, expected: mount.fixture.expectedState, region: region)
         XCTAssertFalse(uniform.passed, "a uniform region must fail (\(uniform.mode) \(uniform.value))")
+    }
+
+    /// The fractal is never mirrored under right to left, and a mirrored one would fail the reference comparison: the
+    /// capture of an asymmetric Julia set passes, the same capture flipped horizontally does not.
+    func testMirroredCaptureFailsTheReference() async throws {
+        let mount = try await GalleryHarness.mount(GalleryScenarios.scenario("board-julia-spiral-chromatic"), .light)
+        defer { mount.teardown() }
+        _ = try await mount.drawFrame()
+        let image = mount.capture()
+        let region = try XCTUnwrap(mount.fractalRegion())
+        let own = try mount.validate(image, expected: mount.fixture.expectedState, region: region)
+        XCTAssertTrue(own.passed, "own reference \(own.mode) \(own.value): \(own.reason ?? "")")
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = image.scale
+        let flipped = UIGraphicsImageRenderer(size: image.size, format: format).image { ctx in
+            ctx.cgContext.translateBy(x: image.size.width, y: 0)
+            ctx.cgContext.scaleBy(x: -1, y: 1)
+            image.draw(at: .zero)
+        }
+        let mirrored = try mount.validate(flipped, expected: mount.fixture.expectedState, region: region)
+        XCTAssertFalse(mirrored.passed, "a mirrored fractal must not match (\(mirrored.mode) \(mirrored.value))")
+        XCTAssertEqual(mirrored.mode, "corr")
+        XCTAssertLessThan(mirrored.value, 0.95)
     }
 
     /// A capture can lag the explicit draw (observed once in a run: the frame showing was still the previous one), so the

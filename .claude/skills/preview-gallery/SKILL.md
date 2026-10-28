@@ -34,7 +34,7 @@ checks layout and appearance; translations are checked by the repo's catalog tes
 a language pass to the gallery. The one exception is the App Store screenshots: a repo whose store pages show the app
 in each store language keeps a `--lang` option in its gallery scripts, used only by `/app-store-screenshots` with
 `--only` the slides' captures, into its own folder per language (`previews/fr/`). The gallery page stays English.
-xFractal is such a repo: `--lang fr,de,it,es,pt-BR,ja,tr` on `scripts/snapshot-gallery.sh` and `scripts/snapshot-mac.sh`
+xFractal is such a repo: `--lang fr,de,it,es,pt-BR,ja,tr,ar,he` on `scripts/snapshot-gallery.sh` and `scripts/snapshot-mac.sh`
 renders the slides' captures into `previews/<lang>/` (`previews/ipad/<lang>/`, `previews/mac/<lang>/`).
 
 <!-- repo-specific: platforms-and-languages -->

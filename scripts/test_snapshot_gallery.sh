@@ -619,12 +619,14 @@ pool_french() {   # --lang fr: the test runs in French (region FR), its gallery 
     expect pool_french "no English page written" [ ! -f "$T/previews/index.html" ]
 }
 
-pool_regions() {   # --lang ja,pt-BR: Japan's region is JP, a locale's region is its own (pt-BR -> BR)
+pool_regions() {   # --lang ja,pt-BR,he,ar: Japan's region is JP, Israel's IL, Saudi Arabia's SA, a locale's region is its own (pt-BR -> BR)
     pool_setup
-    gallery --lang ja,pt-BR --no-open; local status=$?
+    gallery --lang ja,pt-BR,he,ar --no-open; local status=$?
     expect pool_regions "exits zero" [ "$status" = 0 ]
     expect pool_regions "tested in Japanese" called "-testLanguage ja -testRegion JP"
     expect pool_regions "tested in Brazilian Portuguese" called "-testLanguage pt-BR -testRegion BR"
+    expect pool_regions "tested in Hebrew" called "-testLanguage he -testRegion IL"
+    expect pool_regions "tested in Arabic" called "-testLanguage ar -testRegion SA"
     expect pool_regions "page in previews/pt-BR" [ -f "$T/previews/pt-BR/index.html" ]
 }
 

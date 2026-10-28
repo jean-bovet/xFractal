@@ -13,7 +13,7 @@
 # --only PATTERN   comma-separated substrings of scenario names or slugs; renders just those (the check covers all)
 #                  A full run (or one whose PATTERN names "artwork") also renders GalleryFixtures.artwork, the App
 #                  Store creative-asset backgrounds, into previews/artwork/ at full size.
-# --lang en,fr     the languages to render, each one more test run (en, fr, de, it, es, pt-BR, ja, tr): English into previews/ (or
+# --lang en,fr     the languages to render, each one more test run (en, fr, de, it, es, pt-BR, ja, tr, ar, he): English into previews/ (or
 #                  previews/ipad/), another language into its own folder below it (previews/fr/, previews/ipad/fr/)
 # --keep-booted    fallback only: leave the simulator running for the next run (shut it down later with --shutdown)
 # --no-open        do not open the page
@@ -63,7 +63,7 @@ while [ $# -gt 0 ]; do
         --lang)
             IFS=',' read -r -a LANGS <<< "${2:?--lang needs a list such as en}"
             for l in "${LANGS[@]}"; do
-                case "$l" in en|fr|de|it|es|pt-BR|ja|tr) ;; *) echo "--lang is en, fr, de, it, es, pt-BR, ja or tr (got '$l')" >&2; exit 2 ;; esac
+                case "$l" in en|fr|de|it|es|pt-BR|ja|tr|ar|he) ;; *) echo "--lang is en, fr, de, it, es, pt-BR, ja, tr, ar or he (got '$l')" >&2; exit 2 ;; esac
             done
             shift 2 ;;
         --keep-booted) KEEP_BOOTED=1; shift ;;
@@ -411,7 +411,7 @@ T_BUILD1=$(now)
 ARTWORK_DIR=""
 [ "$DEVICE" = iphone ] && case ",$ONLY," in ,,|*artwork*) ARTWORK_DIR="$ROOT/previews/artwork" ;; esac
 
-region() { case "$1" in en) echo US ;; ja) echo JP ;; *-*) echo "${1#*-}" ;; *) echo "$1" | tr a-z A-Z ;; esac; }   # fr -> FR, ja -> JP, pt-BR -> BR
+region() { case "$1" in en) echo US ;; ja) echo JP ;; he) echo IL ;; ar) echo SA ;; *-*) echo "${1#*-}" ;; *) echo "$1" | tr a-z A-Z ;; esac; }   # fr -> FR, ja -> JP, he -> IL, ar -> SA, pt-BR -> BR
 
 FIRST_PAGE=""
 for lang in "${LANGS[@]}"; do

@@ -179,17 +179,18 @@ emoji (App Store Connect rejects some); at most 4000 characters per locale.
 refuses one: skip §4 and §5 (no notes file, no notes commit); the description carries what the app does.
 From the second release on, the full flow applies.
 
-Eight notes files, used for both platforms: `ReleaseNotes/<version>-en-US.txt` first, then its
+Ten notes files, used for both platforms: `ReleaseNotes/<version>-en-US.txt` first, then its
 translations `-fr-FR.txt`, `-de-DE.txt`, `-it.txt`, `-es-ES.txt` (also used for es-MX), `-pt-BR.txt`,
-`-ja.txt` and `-tr.txt` (the app ships in all of them; use the app's own words from
+`-ja.txt`, `-tr.txt`, `-ar-SA.txt` and `-he.txt` (the app ships in all of them; use the app's own words from
 `xFractal/Localizable.xcstrings`; French and German address the user as *vous* / *Sie*, Italian, Spanish
-and Portuguese as *tu* / *você*, Turkish as *siz*, Japanese in polite form). Plain text: a one-line lead, then short `- ` lines;
+and Portuguese as *tu* / *você*, Turkish as *siz*, Japanese in polite form, Hebrew in gender-neutral forms, Arabic in Modern Standard Arabic with formal address). Plain text: a one-line lead, then short `- ` lines;
 match the previous file's tone once there is one (`app-store status` shows the live notes). Say when an
 item concerns only iPhone/iPad or only the Mac.
 
 The rewrite already shipped as 2.0, so What's New describes the changes since the live version;
 `app-store status` shows its notes. The first release with the translated app (2.1) says so first:
-the app is now available in French, German, Italian, Spanish, Portuguese, Japanese and Turkish.
+the app is now available in French, German, Italian, Spanish, Portuguese, Japanese and Turkish. The first release with
+Hebrew and Arabic (2.3) says so first: the app is now also available in Hebrew and Arabic.
 
 **The App Store page.** Every language's description lives in `AppStore/`, one per platform
 (`description-ios-<locale>.txt`, `description-mac-<locale>.txt`, at most 4000 characters), the
@@ -198,7 +199,7 @@ keywords in `AppStore/keywords.txt` (at most 100 bytes per locale), the name and
 promises, update the English one and its translations, show them with the notes, stage them with the notes
 commit (§5) and push them with `app-store metadata` in §6 — only when `AppStore/` changed, or `check`
 reports a locale missing something. Refuse any page file that still contains `TODO`. 2.0 was
-en-US only: 2.1 adds `fr-FR`, `de-DE`, `it`, `es-ES`, `es-MX`, `pt-BR`, `ja` and `tr` to the listing (§6).
+en-US only: 2.1 adds `fr-FR`, `de-DE`, `it`, `es-ES`, `es-MX`, `pt-BR`, `ja` and `tr` to the listing (§6); 2.3 adds `ar-SA` and `he`.
 
 Show Jean every notes file in full, with the commit list it came from, and ask for a yes or his
 edits. Apply edits and show again until approved. **Do not commit before that.**
@@ -224,16 +225,18 @@ For each platform, `<P>` = `IOS` with `<p>` = `ios`, then `<P>` = `MAC_OS` with 
 app-store status --app xFractal-iOS
 app-store prepare --app xFractal-iOS --platform <P> --version <version> --notes-file $N-en-US.txt \
     --notes fr-FR=$N-fr-FR.txt --notes de-DE=$N-de-DE.txt --notes it=$N-it.txt \
-    --notes es-ES=$N-es-ES.txt --notes es-MX=$N-es-ES.txt --notes pt-BR=$N-pt-BR.txt --notes ja=$N-ja.txt --notes tr=$N-tr.txt
+    --notes es-ES=$N-es-ES.txt --notes es-MX=$N-es-ES.txt --notes pt-BR=$N-pt-BR.txt --notes ja=$N-ja.txt --notes tr=$N-tr.txt \
+    --notes ar-SA=$N-ar-SA.txt --notes he=$N-he.txt
 app-store metadata --app xFractal-iOS --platform <P> --version <version> \
     --add-locale fr-FR --add-locale de-DE --add-locale it \
-    --add-locale es-ES --add-locale es-MX --add-locale pt-BR --add-locale ja --add-locale tr \
+    --add-locale es-ES --add-locale es-MX --add-locale pt-BR --add-locale ja --add-locale tr --add-locale ar-SA --add-locale he \
     --name "<locale>=xFractal" … --subtitle "<locale>=…" … \
     --description en-US=AppStore/description-<p>-en-US.txt --description fr-FR=AppStore/description-<p>-fr-FR.txt \
     --description de-DE=AppStore/description-<p>-de-DE.txt --description it=AppStore/description-<p>-it.txt \
     --description es-ES=AppStore/description-<p>-es-ES.txt --description es-MX=AppStore/description-<p>-es-MX.txt \
     --description pt-BR=AppStore/description-<p>-pt-BR.txt --description ja=AppStore/description-<p>-ja.txt \
-    --description tr=AppStore/description-<p>-tr.txt \
+    --description tr=AppStore/description-<p>-tr.txt --description ar-SA=AppStore/description-<p>-ar-SA.txt \
+    --description he=AppStore/description-<p>-he.txt \
     --keywords "<locale>=…" … \
     --support-url https://github.com/jean-bovet/xFractal --marketing-url https://github.com/jean-bovet/xFractal \
     --privacy-url https://jean-bovet.github.io/xFractal/privacy.html \

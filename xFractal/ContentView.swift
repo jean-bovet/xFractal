@@ -282,7 +282,7 @@ struct ContentView: View {
 
     private var iterationControl: some View {
         HStack(spacing: 8) {
-            Text("Iter \(store.state.maxIterations)")
+            Text(store.state.iterationsLabel)
                 .monospacedDigit()
                 .font(.caption)
                 .frame(minWidth: 70, alignment: .leading)
@@ -351,7 +351,7 @@ struct ContentView: View {
                     .font(.caption)
                     .frame(width: 36, alignment: .leading)
                 Slider(value: $store.state.juliaCx, in: -1.5...1.5)
-                Text(String(format: "%.4f", store.state.juliaCx))
+                Text(verbatim: juliaValueLabel(store.state.juliaCx))
                     .monospacedDigit()
                     .font(.caption)
                     .frame(width: 64, alignment: .trailing)
@@ -361,7 +361,7 @@ struct ContentView: View {
                     .font(.caption)
                     .frame(width: 36, alignment: .leading)
                 Slider(value: $store.state.juliaCy, in: -1.5...1.5)
-                Text(String(format: "%.4f", store.state.juliaCy))
+                Text(verbatim: juliaValueLabel(store.state.juliaCy))
                     .monospacedDigit()
                     .font(.caption)
                     .frame(width: 64, alignment: .trailing)
@@ -554,7 +554,7 @@ struct ContentView: View {
                     HStack {
                         Text("Real")
                         Spacer()
-                        Text(String(format: "%.4f", store.state.juliaCx))
+                        Text(verbatim: juliaValueLabel(store.state.juliaCx))
                             .monospacedDigit()
                             .foregroundStyle(.secondary)
                     }
@@ -564,7 +564,7 @@ struct ContentView: View {
                     HStack {
                         Text("Imaginary")
                         Spacer()
-                        Text(String(format: "%.4f", store.state.juliaCy))
+                        Text(verbatim: juliaValueLabel(store.state.juliaCy))
                             .monospacedDigit()
                             .foregroundStyle(.secondary)
                     }

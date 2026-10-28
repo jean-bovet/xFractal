@@ -11,7 +11,9 @@
     "es-MX",
     "pt-BR",
     "ja",
-    "tr"
+    "tr",
+    "ar-SA",
+    "he"
   ],
   "textStyle": "top:120px; left:110px; width:2660px; text-align:center;",
   "slides": [
@@ -57,6 +59,12 @@
         ],
         "tr": [
           { "title": "Sonsuzluğa dalın", "sub": "Yakınlaştırmak için kaydırın, taşımak için sürükleyin; GPU'da gerçek zamanlı çizilir." }
+        ],
+        "ar-SA": [
+          { "title": "انغمس في اللانهاية", "sub": "مرّر للتكبير واسحب للتحريك، ويُرسم كل شيء لحظيًا على معالج الرسومات." }
+        ],
+        "he": [
+          { "title": "צללו אל האינסוף", "sub": "גללו כדי להתקרב וגררו כדי להזיז, בזמן אמת על ה-GPU." }
         ]
       },
       "phones": [
@@ -109,6 +117,12 @@
         ],
         "tr": [
           { "title": "Bir trilyon kat daha derin", "sub": "Derin yakınlaştırma, sıradan bir yakınlaştırma bulanıklaştıktan çok sonra da sürer." }
+        ],
+        "ar-SA": [
+          { "title": "أعمق بتريليون مرة", "sub": "يستمر التكبير العميق طويلًا بعد أن يتحول التكبير العادي إلى ضبابية." }
+        ],
+        "he": [
+          { "title": "עמוק יותר פי טריליון", "sub": "הזום העמוק ממשיך הרבה אחרי שזום רגיל הופך לטשטוש." }
         ]
       },
       "phones": [
@@ -161,6 +175,12 @@
         ],
         "tr": [
           { "title": "Dört fraktal ailesi", "sub": "Mandelbrot, Julia, Newton ve Multibrot." }
+        ],
+        "ar-SA": [
+          { "title": "أربع عائلات كسيرية", "sub": "ماندلبروت وجوليا ونيوتن وMultibrot." }
+        ],
+        "he": [
+          { "title": "ארבע משפחות של פרקטלים", "sub": "מנדלברוט, ז'וליה, ניוטון ומולטיברוט." }
         ]
       },
       "phones": [
@@ -213,6 +233,12 @@
         ],
         "tr": [
           { "title": "Her ayrıntıyı şekillendirin", "sub": "Paletler, iterasyonlar ve Julia hazır ayarları parmaklarınızın ucunda." }
+        ],
+        "ar-SA": [
+          { "title": "شكّل كل تفصيل", "sub": "لوحات الألوان والتكرارات وإعدادات جوليا بين يديك." }
+        ],
+        "he": [
+          { "title": "עצבו כל פרט", "sub": "פלטות צבעים, איטרציות והגדרות ז'וליה בקצות האצבעות." }
         ]
       },
       "phones": [

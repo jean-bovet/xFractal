@@ -183,20 +183,32 @@ final class GalleryMount {
         return find(window)
     }
 
+    /// Right to left (Hebrew, Arabic): the column sits at the window's left edge, the board to its right.
+    var rightToLeft: Bool { window.effectiveUserInterfaceLayoutDirection == .rightToLeft }
+
+    /// The window's edge on the trailing side (right, or left under right to left): where a column and a device inset are.
+    var trailingWindowEdge: CGFloat { rightToLeft ? 0 : window.bounds.width }
+
+    /// The edge of `rect` on the trailing side.
+    func trailingEdge(of rect: CGRect) -> CGFloat { rightToLeft ? rect.minX : rect.maxX }
+
     /// A narrow window (the Duo's portrait inner display) gets the column laid over the board, with the system's dimming,
     /// instead of beside it: the board then reaches under the column, whatever device inset the trailing edge has.
     var columnOverlaysBoard: Bool {
         guard form == .column, let column = columnFrame, let mtk else { return false }
-        return mtk.convert(mtk.bounds, to: window).maxX > column.minX + 1
+        let board = mtk.convert(mtk.bounds, to: window)
+        return rightToLeft ? board.minX < column.maxX - 1 : board.maxX > column.minX + 1
     }
 
     /// The column's strip of the window (from the controls list's leading edge to the trailing edge), in window
     /// coordinates; nil while there is no column. Beside a wide window the board is narrower by this width; in a narrow
-    /// one the system lays the column over the board instead.
+    /// one the system lays the column over the board instead. Right to left it runs from the window's left edge to the
+    /// list's right edge.
     var columnFrame: CGRect? {
         guard form == .column, let list = columnList else { return nil }
         let frame = list.convert(list.bounds, to: window)
         guard frame.width > 0 else { return nil }
+        if rightToLeft { return CGRect(x: 0, y: 0, width: frame.maxX, height: window.bounds.height) }
         return CGRect(x: frame.minX, y: 0, width: window.bounds.width - frame.minX, height: window.bounds.height)
     }
 
@@ -285,7 +297,8 @@ final class GalleryMount {
                 window.layoutIfNeeded()
                 guard presented == nil, columnFrame != nil, let list = columnList else { return false }
                 // Not while the column is still sliding in from beyond the trailing edge.
-                return list.convert(list.bounds, to: window).maxX <= window.bounds.width + 1
+                let frame = list.convert(list.bounds, to: window)
+                return rightToLeft ? frame.minX >= -1 : frame.maxX <= window.bounds.width + 1
             }
             if let presented { throw GalleryFailure("a sheet is presented where a column is due: \(presented)") }
         }
@@ -495,6 +508,9 @@ final class GalleryMount {
         if fixture.sheet != .none, form == .column {
             // The board stays visible beside a column (also at the large detent), clear of the peek capsule's band.
             guard let column = columnFrame else { return nil }
+            if rightToLeft {
+                return CGRect(x: column.maxX + 4, y: top, width: size.width - column.maxX - 4, height: size.height - top - 140)
+            }
             return CGRect(x: 0, y: top, width: column.minX - 4, height: size.height - top - 140)
         }
         switch fixture.sheet {

@@ -589,18 +589,21 @@ class FoldTests(GalleryTestCase):
     """A scenario with a `fold` rect (pt): the peek capsule must sit just past its trailing edge."""
     FOLD = {"x": 181, "y": 0, "w": 40, "h": H}
 
-    def fold_case(self, capsule_x):
+    def fold_case(self, capsule_x, lang=None, fold=None, safe=None):
         manifest = [entry("Screen", "Group", "screen", ["peek", "fractal"],
                           {"light": [region("peek", PEEK_BAND), region("fractal", FRACTAL)],
                            "dark": [region("peek", PEEK_BAND), region("fractal", FRACTAL)]})]
-        manifest[0]["fold"] = self.FOLD
+        manifest[0]["fold"] = fold or self.FOLD
+        if safe:
+            manifest[0]["safeArea"] = safe
         images = []
         for capsule in (gray(235), gray(50)):
             img = Image(color=gray(128)).stripes(*FRACTAL)
             img.rect(capsule_x, 790, 120, 40, capsule)
             images.append(img)
-        self.imported(manifest=manifest, images={"screen": tuple(images)})
-        return self.check()
+        flag = ["--lang", lang] if lang else []
+        self.imported(*flag, manifest=manifest, images={"screen": tuple(images)})
+        return self.check(*flag)
 
     def test_capsule_clearing_the_fold_on_the_trailing_side_passes(self):
         done = self.fold_case(221)
@@ -619,6 +622,37 @@ class FoldTests(GalleryTestCase):
         done = self.fold_case(281)
         self.assertEqual(done.returncode, 1)
         self.assertIn("peek capsule has the wrong size or position in screen", done.stdout)
+
+
+    def test_right_to_left_capsule_before_the_fold_passes(self):
+        # Hebrew and Arabic: the trailing side is the left one, so the capsule ends where the fold starts (181).
+        for lang in ("he", "ar"):
+            done = self.fold_case(61, lang)
+            self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+
+    def test_right_to_left_capsule_one_device_inset_out_passes_and_180_pt_out_fails(self):
+        # The gallery's override is physical while the offset mirrors: the capsule lands one inset (84 pt) past the minimal
+        # position (x 61). The inset widens the bound; a capsule 180 pt out fails whatever the inset.
+        inset = {"left": 0, "right": 84}
+        done = self.fold_case(1, "he", safe=inset)          # 60 pt out, within the inset's allowance
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        done = self.fold_case(1, "he")                       # 60 pt out without an inset: too far
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("peek capsule has the wrong size or position in screen", done.stdout)
+        far = {"x": 361, "y": 0, "w": 40, "h": H}            # the capsule (x 61 to 181) ends 180 pt before this fold's mirrored edge
+        done = self.fold_case(61, "ar", fold=far, safe=inset)
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("peek capsule has the wrong size or position in screen", done.stdout)
+
+    def test_right_to_left_capsule_after_the_fold_fails(self):
+        done = self.fold_case(221, "he")
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("peek capsule not on the trailing side of the fold in screen", done.stdout)
+
+    def test_right_to_left_capsule_over_the_fold_fails(self):
+        done = self.fold_case(141, "ar")
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("peek capsule on the fold in screen", done.stdout)
 
 
 class SafeAreaTests(GalleryTestCase):

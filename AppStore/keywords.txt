@@ -7,3 +7,5 @@ es-MX=fractal,newton,multibrot,zoom,matemáticas,caos,complejo,arte,infinito,geo
 pt-BR=fractal,newton,multibrot,zoom,matemática,caos,complexo,arte,infinito,geometria,conjunto
 ja=フラクタル,ニュートン,ズーム,数学,カオス,複素数,アート,無限,幾何学
 tr=fraktal,newton,multibrot,zoom,matematik,kaos,karmaşık,sanat,sonsuz,geometri
+ar-SA=فراكتل,ماندلبروت,جوليا,تكبير,رياضيات,فوضى,فن,لانهاية
+he=פרקטל,מנדלברוט,ז'וליה,זום,מתמטיקה,כאוס,אמנות,אינסוף

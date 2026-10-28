@@ -1,6 +1,6 @@
 ---
 name: app-store-screenshots
-description: Render xFractal's iPhone App Store screenshots (tilted phones, a headline in each of the nine store languages, a pair of screenshots sharing one phone) from the preview-gallery captures with the `app-store-screenshots` command, review them, and upload them once approved. Use when Jean asks for new or updated App Store screenshots, to change a headline, a slide or a phone's angle, or when `/release` says the screenshots must be retaken.
+description: Render xFractal's iPhone App Store screenshots (tilted phones, a headline in each of the eleven store languages, a pair of screenshots sharing one phone) from the preview-gallery captures with the `app-store-screenshots` command, review them, and upload them once approved. Use when Jean asks for new or updated App Store screenshots, to change a headline, a slide or a phone's angle, or when `/release` says the screenshots must be retaken.
 allowed-tools: Read, Edit, Bash, AskUserQuestion
 ---
 
@@ -13,20 +13,20 @@ A public repo names the command, never where it comes from.
 
 The app: xFractal, App Store product `xFractal-iOS` (`--app xFractal-iOS`). The captures come from
 `scripts/snapshot-gallery.sh` (the `/preview-gallery` skill) and land in `previews/`. The slides file covers the iPhone
-6.9" set (`APP_IPHONE_67`, 1320 x 2868). Store languages, in order: en-US, fr-FR, de-DE, it, es-ES, es-MX, pt-BR, ja, tr (both Spanish pages use the `es`
+6.9" set (`APP_IPHONE_67`, 1320 x 2868). Store languages, in order: en-US, fr-FR, de-DE, it, es-ES, es-MX, pt-BR, ja, tr, ar-SA, he (both Spanish pages use the `es`
 captures). What the captures cannot
 show: the app's own text is in the store language only when the slides' captures were rendered in it, else English;
 the captures are 2x (804 px wide). The localized captures, right before rendering the slides (the gallery itself stays
-English): `scripts/snapshot-gallery.sh --only "board-julia,board-mandelbrot-deep-zoom-chromatic,board-mandelbrot-first-launch,board-multibrot,board-newton,controls-julia-large" --lang fr,de,it,es,pt-BR,ja,tr`
+English): `scripts/snapshot-gallery.sh --only "board-julia,board-mandelbrot-deep-zoom-chromatic,board-mandelbrot-first-launch,board-multibrot,board-newton,controls-julia-large" --lang fr,de,it,es,pt-BR,ja,tr,ar,he`
 (`previews/fr/`, …), the same with `--device ipad` (`previews/ipad/fr/`, …), and `scripts/snapshot-mac.sh --lang
-fr,de,it,es,pt-BR,ja,tr` (its four windows are the Mac slides: `previews/mac/fr/`, …). Keep the `--only` list in step with the
+fr,de,it,es,pt-BR,ja,tr,ar,he` (its four windows are the Mac slides: `previews/mac/fr/`, …). Keep the `--only` list in step with the
 `capture` names in `AppStore/screenshots.json`.
 
 iPhone Duo, two sets, one config each (`displayType` `IPHONE_DUO`), uploaded together per locale (§4):
 
-- Outer display, 1398 x 2034: `scripts/snapshot-gallery.sh --device duo --only "<slides' captures>" --lang fr,de,it,es,pt-BR,ja,tr`
+- Outer display, 1398 x 2034: `scripts/snapshot-gallery.sh --device duo --only "<slides' captures>" --lang fr,de,it,es,pt-BR,ja,tr,ar,he`
   (captures into `previews/duo/`), then `app-store-screenshots --config AppStore/screenshots-duo-outer.json --captures previews/duo`.
-- Inner display, 2853 x 2007 (landscape): `scripts/snapshot-gallery.sh --device duo --only "duo-inner-landscape" --lang fr,de,it,es,pt-BR,ja,tr`,
+- Inner display, 2853 x 2007 (landscape): `scripts/snapshot-gallery.sh --device duo --only "duo-inner-landscape" --lang fr,de,it,es,pt-BR,ja,tr,ar,he`,
   then `app-store-screenshots --config AppStore/screenshots-duo-inner.json --captures previews/duo`.
 
 ## 1. Captures
@@ -67,12 +67,19 @@ should not be, a pair's two halves line up. Then show Jean and wait for his go. 
 ## 4. Upload
 
 Only inside `/release`, or when Jean asks: one call per language and display type, the files in their numbered order
-(a pair's two halves must stay neighbours):
+(a pair's two halves must stay neighbours; the right-to-left exception is below):
 
 ```sh
 app-store screenshots --app xFractal-iOS --version <v> --locale <locale> --display-type APP_IPHONE_67 \
   .build/app-store-screenshots/<locale>/*.png
 ```
+
+Hebrew (`he`) and Arabic (`ar-SA`) are right to left, and the renderer lays their headlines out right to left. Whether
+their storefronts show a locale's screenshots right to left too is unverified until the first upload: open the live page
+on a device set to Hebrew, then Arabic. If the carousel runs right to left, the deep-zoom pair's phone only meets across
+the seam when `b` is displayed to the right of `a`: swap the pair's two captions in the `ar-SA` and `he` `text` arrays of
+the slides files and upload the pair's two files in reverse order for those two locales (`03-deep-zoom-b.png` before
+`02-deep-zoom-a.png` in the file list); no renderer change is needed.
 
 The two iPhone Duo sets go through the App Asset Library, not a display type: one call per locale with both sets'
 files in page order (the inner display's slides, then the outer's; at most 10 together, PNG without alpha at

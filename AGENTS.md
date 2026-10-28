@@ -24,7 +24,7 @@ buildlock --folder "$PWD/.build/DerivedData" -- \
   -destination 'platform=macOS' -derivedDataPath "$PWD/.build/DerivedData"
 ```
 
-The `xFractal-MAS` scheme's test action runs `xFractalTests` (73 tests, one of them the skipped Mac window capture; hosted by the Mac app; no simulator). Tests must
+The `xFractal-MAS` scheme's test action runs `xFractalTests` (82 tests, one of them the skipped Mac window capture; hosted by the Mac app; no simulator). Tests must
 pass before any commit. Without a signing team the app is signed ad hoc and the tests still run; if signing fails
 anyway, add `CODE_SIGNING_ALLOWED=NO`. Without `buildlock` on `PATH`, run the `xcodebuild` part alone.
 
@@ -45,8 +45,8 @@ There is no Sparkle and no DMG any more. `docs/appcast.xml` is frozen for the in
 ## Languages
 
 English (source), French, German and Italian (the Swiss four, as Departure), plus Spanish (`es`), Brazilian Portuguese
-(`pt-BR`), Japanese (`ja`) and Turkish (`tr`). Every user-facing string goes in
-`xFractal/Localizable.xcstrings` (one catalog for both apps) with all seven translations; `LocalizationTests` fails on a
+(`pt-BR`), Japanese (`ja`), Turkish (`tr`), Arabic (`ar`) and Hebrew (`he`). Every user-facing string goes in
+`xFractal/Localizable.xcstrings` (one catalog for both apps) with all nine translations; `LocalizationTests` fails on a
 key that misses one, and on a stale key. Math notation and bare numbers use `Text(verbatim:)` so they stay out of the
 catalog. After adding or changing strings, sync the catalog headless and translate the new keys:
 
@@ -56,7 +56,7 @@ catalog. After adding or changing strings, sync the catalog headless and transla
 ~/GitHub/maestro/bin/catalog-sync --check --skip-build   # "catalog unchanged" before committing
 ```
 
-The App Store page has nine: en-US, fr-FR, de-DE, it, es-ES, es-MX, pt-BR, ja and tr (both Spanish pages share the
+The App Store page has eleven: en-US, fr-FR, de-DE, it, es-ES, es-MX, pt-BR, ja, tr, ar-SA and he (both Spanish pages share the
 `es` text and captures). Descriptions, keywords, names and subtitles are in `AppStore/` (the `/release` skill loads them).
 
 ## Preview gallery (no `#Preview`)
@@ -71,20 +71,20 @@ scripts/snapshot-gallery.sh                 # all 26 scenarios -> previews/index
 scripts/snapshot-gallery.sh --only "julia"  # a subset
 scripts/snapshot-gallery.sh --device ipad   # the same scenarios on the iPad Pro 13-inch -> previews/ipad/ (Controls are columns there)
 scripts/snapshot-gallery.sh --device duo    # all 26 scenarios on the iPhone Duo -> previews/duo/
-scripts/snapshot-gallery.sh --only "…" --lang fr,de,it,es,pt-BR,ja,tr # store captures only (/app-store-screenshots) -> previews/fr/, …
+scripts/snapshot-gallery.sh --only "…" --lang fr,de,it,es,pt-BR,ja,tr,ar,he # store captures only (/app-store-screenshots) -> previews/fr/, …
 scripts/snapshot-mac.sh                     # the Mac window (Tests/MacWindowSnapshotTests, off screen, 2x) -> previews/mac/
 python3 -m unittest discover -s scripts -p 'test_preview_gallery.py'   # page and check contract tests
 scripts/test_snapshot_gallery.sh                                      # lifecycle tests with stub simctl, simpool and buildlock
 ```
 
 - `GalleryTests/` is the **iOS** test target (`xFractalGalleryTests`, hosted by the app); `Tests/` stays the macOS logic tests
-  (`xcodebuild test -scheme xFractal-MAS`, 73 tests). The plain gallery tests run with every gallery run.
+  (`xcodebuild test -scheme xFractal-MAS`, 82 tests). The plain gallery tests run with every gallery run.
 - The simulator is leased from the machine-wide pool (`simpool acquire --spec iphone`: iPhone 17 Pro, iOS 27.0) and given
   back with `simpool release` when the script ends, on success, failure or interrupt; both `xcodebuild` commands run under
   `buildlock`. The script never boots or shuts down a simulator itself. Without `simpool`/`buildlock` on PATH (a
   contributor's Mac) it falls back to its own **xFractal Agent** simulator, which it creates, boots and shuts down.
 - An `--only` run checks every scenario: in a fresh checkout run the whole gallery once first.
-- The gallery is English only; `--lang fr,de,it,es,pt-BR,ja,tr` exists for the App Store screenshots alone, which render just the slides' captures (`--only`) into `previews/fr/`, … iPhone by default; `--device ipad` renders every scenario on the pool's iPad Pro 13-inch (M5) into its own
+- The gallery is English only; `--lang fr,de,it,es,pt-BR,ja,tr,ar,he` exists for the App Store screenshots alone, which render just the slides' captures (`--only`) into `previews/fr/`, … iPhone by default; `--device ipad` renders every scenario on the pool's iPad Pro 13-inch (M5) into its own
   gallery (`previews/ipad/`, its own simulator without the pool).
   The "iPhone Duo · inner display" group (9 scenarios) and the `--device duo` pass (`previews/duo/`, all 26 scenarios, folded
   outer display) are explained in the `/preview-gallery` skill.
@@ -99,7 +99,7 @@ scripts/test_snapshot_gallery.sh                                      # lifecycl
 
 The iPhone App Store screenshots are rendered from the preview-gallery captures by the `app-store-screenshots`
 command: tilted phones, a headline per store language, and a pair of screenshots that share one phone lying across the
-seam. The slides (captures, phone angles, backgrounds, headlines in the nine store languages) are in
+seam. The slides (captures, phone angles, backgrounds, headlines in the eleven store languages) are in
 `AppStore/screenshots.json`; the `/app-store-screenshots` skill renders, reviews and uploads them.
 
 ```sh
@@ -110,7 +110,7 @@ app-store-screenshots                # -> .build/app-store-screenshots/<locale>/
 - 1320 x 2868 (`APP_IPHONE_67`), at most 10 per language; files are numbered in display order, and a pair
   (`"panels": 2`) must stay adjacent.
 - The captures are 2x (804 px wide). Each store language shows the app in its own language: `/app-store-screenshots`
-  renders the slides' captures with `--only … --lang fr,de,it,es,pt-BR,ja,tr` (the Mac: `scripts/snapshot-mac.sh --lang fr,de,it,es,pt-BR,ja,tr`)
+  renders the slides' captures with `--only … --lang fr,de,it,es,pt-BR,ja,tr,ar,he` (the Mac: `scripts/snapshot-mac.sh --lang fr,de,it,es,pt-BR,ja,tr,ar,he`)
   right before the slides; the gallery itself stays English.
 - iPad: `app-store-screenshots --config AppStore/screenshots-ipad.json --captures previews/ipad` (2048 x 2732,
   `APP_IPAD_PRO_3GEN_129`, the same slides and headlines in iPad frames). Mac: `--config AppStore/screenshots-mac.json`

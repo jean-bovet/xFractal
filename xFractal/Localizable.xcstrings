@@ -44,6 +44,18 @@
             "state" : "translated",
             "value" : "Görünüm"
           }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "מראה"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "المظهر"
+          }
         }
       }
     },
@@ -89,6 +101,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kromatik"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "כרומטי"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "كروماتي"
           }
         }
       }
@@ -136,6 +160,18 @@
             "state" : "translated",
             "value" : "Geçmişi Temizle"
           }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "מחיקת ההיסטוריה"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مسح السجل"
+          }
         }
       }
     },
@@ -181,6 +217,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Soğuk"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "קר"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "بارد"
           }
         }
       }
@@ -228,6 +276,18 @@
             "state" : "translated",
             "value" : "Kontroller"
           }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "פקדים"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عناصر التحكم"
+          }
         }
       }
     },
@@ -273,6 +333,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dendrit"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "דנדריט"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "دندريت"
           }
         }
       }
@@ -320,6 +392,18 @@
             "state" : "translated",
             "value" : "Bitti"
           }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "סיום"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تم"
+          }
         }
       }
     },
@@ -365,6 +449,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Üs"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "חזקה"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الأس"
           }
         }
       }
@@ -412,6 +508,18 @@
             "state" : "translated",
             "value" : "Fraktal"
           }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "פרקטל"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "كسيري"
+          }
         }
       }
     },
@@ -457,6 +565,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Galaksi"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "גלקסיה"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مجرة"
           }
         }
       }
@@ -504,6 +624,18 @@
             "state" : "translated",
             "value" : "Gri"
           }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "אפור"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "رمادي"
+          }
         }
       }
     },
@@ -549,6 +681,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sıcak"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "חם"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ساخن"
           }
         }
       }
@@ -596,51 +740,75 @@
             "state" : "translated",
             "value" : "Sanal kısım"
           }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "חלק מדומה"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الجزء التخيلي"
+          }
         }
       }
     },
-    "Iter %u" : {
+    "Iter %@" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Iter. %u"
+            "value" : "Iter. %@"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Iter. %u"
+            "value" : "Iter. %@"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Itér. %u"
+            "value" : "Itér. %@"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Iter. %u"
+            "value" : "Iter. %@"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "反復 %u"
+            "value" : "反復 %@"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Iter. %u"
+            "value" : "Iter. %@"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "İter. %u"
+            "value" : "İter. %@"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "איט׳ %@"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تكرار %@"
           }
         }
       }
@@ -688,6 +856,18 @@
             "state" : "translated",
             "value" : "İterasyon"
           }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "איטרציות"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التكرارات"
+          }
         }
       }
     },
@@ -733,6 +913,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Julia c"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "c של ז'וליה"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ثابت جوليا c"
           }
         }
       }
@@ -780,6 +972,18 @@
             "state" : "translated",
             "value" : "Palet"
           }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "לוח צבעים"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لوحة الألوان"
+          }
         }
       }
     },
@@ -825,6 +1029,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pertürb."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "הפרעה"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اضطراب"
           }
         }
       }
@@ -872,6 +1088,18 @@
             "state" : "translated",
             "value" : "Pertürbasyon"
           }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "הפרעה"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اضطراب"
+          }
         }
       }
     },
@@ -917,6 +1145,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Polinom"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "פולינום"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "متعددة الحدود"
           }
         }
       }
@@ -964,6 +1204,18 @@
             "state" : "translated",
             "value" : "Tavşan"
           }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ארנב"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أرنب"
+          }
         }
       }
     },
@@ -1009,6 +1261,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gerçel kısım"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "חלק ממשי"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الجزء الحقيقي"
           }
         }
       }
@@ -1056,6 +1320,18 @@
             "state" : "translated",
             "value" : "Yeniden Oynat"
           }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "הפעלה חוזרת"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة العرض"
+          }
         }
       }
     },
@@ -1102,6 +1378,18 @@
             "state" : "translated",
             "value" : "Sıfırla"
           }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "איפוס"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة تعيين"
+          }
         }
       }
     },
@@ -1147,6 +1435,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Görünümü Sıfırla"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "איפוס התצוגה"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة تعيين العرض"
           }
         }
       }
@@ -1197,6 +1497,18 @@
             "state" : "translated",
             "value" : "Yumuşak"
           }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "חלק"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "سلس"
+          }
         }
       }
     },
@@ -1242,6 +1554,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sarmal"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ספירלה"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حلزون"
           }
         }
       }
@@ -1289,6 +1613,18 @@
             "state" : "translated",
             "value" : "Durdur"
           }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "עצירה"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إيقاف"
+          }
         }
       }
     },
@@ -1335,6 +1671,18 @@
             "state" : "translated",
             "value" : "Oynatmayı Durdur"
           }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "עצירת ההפעלה החוזרת"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إيقاف إعادة العرض"
+          }
         }
       }
     },
@@ -1380,6 +1728,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tür"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "סוג"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "النوع"
           }
         }
       }

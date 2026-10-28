@@ -71,6 +71,7 @@
 		18509C12A184E78D7EEA3721 /* GalleryHarness.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryHarness.swift; sourceTree = "<group>"; };
 		18C8130277DB3D3D20E3457B /* SmoothCountTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmoothCountTests.swift; sourceTree = "<group>"; };
 		2396520D58CDE1A88573F2E4 /* Info-MAS.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Info-MAS.plist"; sourceTree = "<group>"; };
+		249820A7B9271014347F06CD /* xFractal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = xFractal.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		27C57B1DCFA96AFD4CD81894 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 		2C774DBE32462FD5E6407A76 /* Info-iOS.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Info-iOS.plist"; sourceTree = "<group>"; };
 		3778BC8F838EA04FD122150F /* MacWindowSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacWindowSnapshotTests.swift; sourceTree = "<group>"; };
@@ -99,12 +100,11 @@
 		B8468AC469168044D38C6389 /* GalleryFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryFixtures.swift; sourceTree = "<group>"; };
 		C132A4E8F7B356B669C02A77 /* PanCenterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanCenterTests.swift; sourceTree = "<group>"; };
 		C4D0A074EC8B8AFC10B58FEC /* FractalRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FractalRenderer.swift; sourceTree = "<group>"; };
-		CCE26032AAA375D7FA4AB446 /* xFractal-iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "xFractal-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		CD84500F7C5D3D7D0ED5BBBD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D07C06CB50C75B4F73F08207 /* CodableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodableTests.swift; sourceTree = "<group>"; };
+		DE9D5257CFDBE5A0B13C1DFD /* xFractal.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = xFractal.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E23F36C516A8B84E3A387846 /* xFractalGalleryTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = xFractalGalleryTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5A090F2699AEE4C4849083A /* xFractalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = xFractalTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		FEA2B529E890F0DBDCF514D0 /* xFractal-MAS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "xFractal-MAS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -140,8 +140,8 @@
 		4063203829F357D0FC235E19 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				CCE26032AAA375D7FA4AB446 /* xFractal-iOS.app */,
-				FEA2B529E890F0DBDCF514D0 /* xFractal-MAS.app */,
+				249820A7B9271014347F06CD /* xFractal.app */,
+				DE9D5257CFDBE5A0B13C1DFD /* xFractal.app */,
 				E23F36C516A8B84E3A387846 /* xFractalGalleryTests.xctest */,
 				F5A090F2699AEE4C4849083A /* xFractalTests.xctest */,
 			);
@@ -227,7 +227,7 @@
 			packageProductDependencies = (
 			);
 			productName = "xFractal-iOS";
-			productReference = CCE26032AAA375D7FA4AB446 /* xFractal-iOS.app */;
+			productReference = DE9D5257CFDBE5A0B13C1DFD /* xFractal.app */;
 			productType = "com.apple.product-type.application";
 		};
 		394EFEC6EB33E3E562418663 /* xFractal-MAS */ = {
@@ -245,7 +245,7 @@
 			packageProductDependencies = (
 			);
 			productName = "xFractal-MAS";
-			productReference = FEA2B529E890F0DBDCF514D0 /* xFractal-MAS.app */;
+			productReference = 249820A7B9271014347F06CD /* xFractal.app */;
 			productType = "com.apple.product-type.application";
 		};
 		B3B0AB439F4DBE813643E17D /* xFractalTests */ = {
@@ -294,10 +294,12 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				Base,
+				ar,
 				de,
 				en,
 				es,
 				fr,
+				he,
 				it,
 				ja,
 				"pt-BR",
@@ -544,6 +546,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.10;
 			};
@@ -609,6 +612,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.10;
 			};

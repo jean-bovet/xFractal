@@ -78,6 +78,12 @@ struct ViewState: Codable, Equatable {
         set { centerX = newValue.x; centerY = newValue.y }
     }
 
+    /// The Mac HUD's iteration label. Foundation formats an integer interpolation in the locale's own digits (Eastern
+    /// Arabic-Indic under ar-SA); the app shows Western digits everywhere, so the count goes in as a `String`.
+    var iterationsLabel: LocalizedStringResource {
+        LocalizedStringResource("Iter \(String(maxIterations))")
+    }
+
     static let defaultState = defaults(for: .mandelbrot)
 
     static func defaults(for type: FractalType) -> ViewState {
@@ -348,4 +354,11 @@ final class StateStore: ObservableObject {
         saveJournalWork?.cancel()
         saveJournalWork = nil
     }
+}
+
+/// A Julia constant's part as shown beside its slider, four decimals. Wrapped in a left-to-right isolate: a number with a
+/// leading minus sign has no strong character, so in a right-to-left paragraph (Hebrew, Arabic) the sign would land on
+/// its right ("0.1230-").
+func juliaValueLabel(_ value: Double) -> String {
+    "\u{2066}" + String(format: "%.4f", value) + "\u{2069}"
 }

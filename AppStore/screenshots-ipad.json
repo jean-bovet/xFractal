@@ -11,7 +11,9 @@
     "es-MX",
     "pt-BR",
     "ja",
-    "tr"
+    "tr",
+    "ar-SA",
+    "he"
   ],
   "slides": [
     {
@@ -56,6 +58,12 @@
         ],
         "tr": [
           { "title": "Sonsuzluğa\ndalın", "sub": "Yakınlaştırmak için iki parmağınızı açın, kaydırmak için sürükleyin; GPU'da gerçek zamanlı çizilir." }
+        ],
+        "ar-SA": [
+          { "title": "انغمس في\nاللانهاية", "sub": "اقرص للتكبير واسحب للتحريك، ويُرسم كل شيء لحظيًا على معالج الرسومات." }
+        ],
+        "he": [
+          { "title": "צללו אל\nהאינסוף", "sub": "צבטו כדי להתקרב וגררו כדי להזיז, בזמן אמת על ה-GPU." }
         ]
       },
       "phones": [
@@ -130,6 +138,14 @@
         "tr": [
           { "title": "Bir trilyon kat\ndaha derin", "sub": "Mandelbrot kümesinin herhangi bir köşesine yakınlaşın…" },
           { "title": "ve her ayrıntı\nnet kalır", "sub": "Derin yakınlaştırma, sıradan bir yakınlaştırma bulanıklaştıktan çok sonra da sürer." }
+        ],
+        "ar-SA": [
+          { "title": "أعمق بتريليون\nمرة", "sub": "كبّر أي ركن من مجموعة ماندلبروت…" },
+          { "title": "وكل تفصيل\nيبقى واضحًا", "sub": "يستمر التكبير العميق طويلًا بعد أن يتحول التكبير العادي إلى ضبابية." }
+        ],
+        "he": [
+          { "title": "עמוק יותר\nפי טריליון", "sub": "הגדילו כל פינה בקבוצת מנדלברוט…" },
+          { "title": "וכל פרט\nנשאר חד", "sub": "הזום העמוק ממשיך הרבה אחרי שזום רגיל הופך לטשטוש." }
         ]
       },
       "phones": [
@@ -182,6 +198,12 @@
         ],
         "tr": [
           { "title": "Dört fraktal\nailesi", "sub": "Mandelbrot, Julia, Newton ve Multibrot." }
+        ],
+        "ar-SA": [
+          { "title": "أربع عائلات\nكسيرية", "sub": "ماندلبروت وجوليا ونيوتن وMultibrot." }
+        ],
+        "he": [
+          { "title": "ארבע משפחות\nשל פרקטלים", "sub": "מנדלברוט, ז'וליה, ניוטון ומולטיברוט." }
         ]
       },
       "phones": [
@@ -244,6 +266,12 @@
         ],
         "tr": [
           { "title": "Her ayrıntıyı\nşekillendirin", "sub": "Paletler, iterasyonlar ve Julia hazır ayarları parmaklarınızın ucunda." }
+        ],
+        "ar-SA": [
+          { "title": "شكّل كل\nتفصيل", "sub": "لوحات الألوان والتكرارات وإعدادات جوليا بين يديك." }
+        ],
+        "he": [
+          { "title": "עצבו כל\nפרט", "sub": "פלטות צבעים, איטרציות והגדרות ז'וליה בקצות האצבעות." }
         ]
       },
       "phones": [

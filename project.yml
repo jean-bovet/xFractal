@@ -25,6 +25,7 @@ settings:
     DEAD_CODE_STRIPPING: YES
     ENABLE_USER_SCRIPT_SANDBOXING: YES
     STRING_CATALOG_GENERATE_SYMBOLS: YES
+    SWIFT_EMIT_LOC_STRINGS: YES  # catalog-sync (maestro) refuses to sync a catalog target without it
     # Xcode 27.1 "Update to Recommended Settings".
     CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED: YES
 
@@ -47,6 +48,7 @@ targets:
 
   xFractal-iOS:
     type: application
+    productName: xFractal  # keeps the schemes' BuildableName xFractal.app, as Xcode saves them
     platform: iOS
     sources:
       - path: xFractal
@@ -87,6 +89,7 @@ targets:
   # Keep the target and scheme name: the Xcode Cloud workflows reference it.
   xFractal-MAS:
     type: application
+    productName: xFractal  # keeps the schemes' BuildableName xFractal.app, as Xcode saves them
     platform: macOS
     sources:
       - path: xFractal

@@ -48,6 +48,7 @@ PEEK_OUTSIDE_CEILING = 0.005
 PEEK_WIDTH = (120, 380)
 PEEK_HEIGHT = (28, 60)
 PEEK_CENTER_TOLERANCE = 40
+RTL_LANGUAGES = ("he", "ar")   # the trailing side is the left one: the peek capsule sits before a fold, not after it
 PEEK_FOLD_SLACK = 2   # pt: the detector's box can start a pixel or two inside the capsule's edge (iPad pass: 495.0 vs 495.5)
 SHEET_COVERAGE_FLOOR = 0.50
 SHEET_COVERAGE = 0.50   # half the smallest measured coverage is 0.434: the floor wins
@@ -516,15 +517,25 @@ def do_check(lang, measure=False):
             fold = folds.get(slug)
             if fold:
                 # Beside a fold the capsule sits just past its trailing edge: off the fold, on its trailing side, and no
-                # further than the tolerance from the minimal position.
-                left, fold_right = bx / scale, fold["x"] + fold["w"]
-                minimal_centre = fold_right + w_pt / 2
-                centre_off = abs((bx + bw / 2) / scale - minimal_centre)
-                if left < fold_right - PEEK_FOLD_SLACK and left + w_pt > fold["x"]:
-                    problems.append(f"peek capsule on the fold in {slug}: x {left:.0f} ... {left + w_pt:.0f} pt, fold {fold['x']:.0f} ... {fold_right:.0f}")
+                # further than the tolerance from the minimal position. Right to left the trailing side is the left one:
+                # x is mirrored into the left-to-right frame first, so one rule serves both directions. The gallery's
+                # fold override is a physical rectangle while the peek's offset mirrors, so right to left the capsule lands
+                # one device inset further out than the minimal position: the inset widens the tolerance (the production
+                # regions mirror too: an owed check on a real half-folded Duo).
+                fold_x, fold_w = fold["x"], fold["w"]
+                left = bx / scale
+                tolerance = PEEK_CENTER_TOLERANCE
+                if lang in RTL_LANGUAGES:
+                    left, fold_x = width_pt - (left + w_pt), width_pt - (fold_x + fold_w)
+                    safe = safes.get(slug) or {}
+                    tolerance += safe.get("left", 0) + safe.get("right", 0)
+                fold_right = fold_x + fold_w
+                centre_off = abs(left + w_pt / 2 - (fold_right + w_pt / 2))
+                if left < fold_right - PEEK_FOLD_SLACK and left + w_pt > fold_x:
+                    problems.append(f"peek capsule on the fold in {slug}: x {left:.0f} ... {left + w_pt:.0f} pt, fold {fold_x:.0f} ... {fold_right:.0f}")
                 elif left < fold_right - PEEK_FOLD_SLACK:
                     problems.append(f"peek capsule not on the trailing side of the fold in {slug}")
-                elif centre_off > PEEK_CENTER_TOLERANCE:
+                elif centre_off > tolerance:
                     problems.append(f"peek capsule has the wrong size or position in {slug}: {centre_off:.0f} pt past the minimal position beside the fold")
                 if not (PEEK_WIDTH[0] <= w_pt <= PEEK_WIDTH[1] and PEEK_HEIGHT[0] <= h_pt <= PEEK_HEIGHT[1]):
                     problems.append(f"peek capsule has the wrong size or position in {slug}: {w_pt:.0f} x {h_pt:.0f} pt")
