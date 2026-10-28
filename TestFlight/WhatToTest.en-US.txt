@@ -1,11 +1,7 @@
-- iPhone Duo: xFractal is now built for the Duo. On the open inner display the fractal fills the whole screen, and the Controls open as a side panel next to the fractal instead of a sheet. The panel stays open when you fold the phone to the outer display and unfold it again.
+- Hebrew and Arabic: xFractal is now available in both languages on iPhone, iPad and Mac. With the device set to Hebrew or Arabic, the Controls, the panel and the buttons are laid out right to left, while the fractal itself, its coordinates and its numbers stay exactly as they are and are never mirrored.
 
-- iPhone Duo, half folded: the fractal name and iteration count (the capsule at the bottom) move off the hinge so they stay readable.
+- All languages: the iteration count at the bottom of the screen and the Julia constant always show Western digits (0 to 9), also when the system language uses other digits.
 
-- iPad and iPhone Duo: when the Controls panel slides in or out, the fractal now narrows and widens smoothly with it instead of jumping to its new size.
+- No other visible changes: this build also carries the tooling behind the gallery and the screenshots.
 
-- iPad: the Controls open as a side panel on the right, like on the Duo; on iPhone they stay a bottom sheet. The fractal keeps the whole screen while the panel is closed.
-
-- Mac: no visible changes in this build.
-
-Please verify: on an iPhone Duo or iPad, open and close the Controls and watch the fractal follow the panel smoothly; on the Duo, fold and unfold the phone with the Controls open, and half-fold it to see the capsule step off the hinge; on iPhone, check the Controls still open as a bottom sheet.
+Please verify: switch the device to Hebrew or Arabic and check that the Controls and the panel read right to left while the fractal and its numbers are unchanged; on an iPad or iPhone Duo, check the side panel opens on the correct side and the fractal follows it; in your usual language, check the iteration count still updates as you zoom.
