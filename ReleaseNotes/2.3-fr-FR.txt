@@ -1,0 +1,2 @@
+xFractal parle désormais aussi l'hébreu et l'arabe.
+- Désormais disponible en hébreu et en arabe, sur iPhone, iPad et Mac : les réglages et le panneau sont disposés de droite à gauche, tandis que la fractale, ses coordonnées et ses nombres restent inchangés.

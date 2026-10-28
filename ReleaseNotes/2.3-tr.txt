@@ -1,0 +1,2 @@
+xFractal artık İbranice ve Arapça da konuşuyor.
+- Artık iPhone, iPad ve Mac'te İbranice ve Arapça olarak kullanılabilir: denetimler ve panel sağdan sola yerleşir; fraktal, koordinatları ve sayıları ise olduğu gibi kalır.

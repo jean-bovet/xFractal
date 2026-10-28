@@ -1,0 +1,2 @@
+xFractal spricht jetzt auch Hebräisch und Arabisch.
+- Jetzt auf Hebräisch und Arabisch verfügbar, auf iPhone, iPad und Mac: Steuerung und Seitenfenster sind von rechts nach links angeordnet, während das Fraktal, seine Koordinaten und seine Zahlen unverändert bleiben.
