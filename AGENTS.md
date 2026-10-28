@@ -67,12 +67,12 @@ The iOS app has no `#Preview`: every screen state is a scenario in `GalleryTests
 needs a scenario; the `/preview-gallery` skill has the rules, the limits and the calibrated checks.
 
 ```sh
-scripts/snapshot-gallery.sh                 # all 26 scenarios -> previews/index.html (gitignored), then CHECK OK
+scripts/snapshot-gallery.sh                 # all 26 scenarios -> previews/en/index.html (gitignored), then CHECK OK
 scripts/snapshot-gallery.sh --only "julia"  # a subset
-scripts/snapshot-gallery.sh --device ipad   # the same scenarios on the iPad Pro 13-inch -> previews/ipad/ (Controls are columns there)
-scripts/snapshot-gallery.sh --device duo    # all 26 scenarios on the iPhone Duo -> previews/duo/
+scripts/snapshot-gallery.sh --device ipad   # the same scenarios on the iPad Pro 13-inch -> previews/ipad/en/ (Controls are columns there)
+scripts/snapshot-gallery.sh --device duo    # all 26 scenarios on the iPhone Duo -> previews/duo/en/
 scripts/snapshot-gallery.sh --only "…" --lang fr,de,it,es,pt-BR,ja,tr,ar,he # store captures only (/app-store-screenshots) -> previews/fr/, …
-scripts/snapshot-mac.sh                     # the Mac window (Tests/MacWindowSnapshotTests, off screen, 2x) -> previews/mac/
+scripts/snapshot-mac.sh                     # the Mac window (Tests/MacWindowSnapshotTests, off screen, 2x) -> previews/mac/en/
 python3 -m unittest discover -s scripts -p 'test_preview_gallery.py'   # page and check contract tests
 scripts/test_snapshot_gallery.sh                                      # lifecycle tests with stub simctl, simpool and buildlock
 ```
@@ -85,8 +85,8 @@ scripts/test_snapshot_gallery.sh                                      # lifecycl
   contributor's Mac) it falls back to its own **xFractal Agent** simulator, which it creates, boots and shuts down.
 - An `--only` run checks every scenario: in a fresh checkout run the whole gallery once first.
 - The gallery is English only; `--lang fr,de,it,es,pt-BR,ja,tr,ar,he` exists for the App Store screenshots alone, which render just the slides' captures (`--only`) into `previews/fr/`, … iPhone by default; `--device ipad` renders every scenario on the pool's iPad Pro 13-inch (M5) into its own
-  gallery (`previews/ipad/`, its own simulator without the pool).
-  The "iPhone Duo · inner display" group (9 scenarios) and the `--device duo` pass (`previews/duo/`, all 26 scenarios, folded
+  gallery (`previews/ipad/en/`, its own simulator without the pool).
+  The "iPhone Duo · inner display" group (9 scenarios) and the `--device duo` pass (`previews/duo/en/`, all 26 scenarios, folded
   outer display) are explained in the `/preview-gallery` skill.
 - The Mac app has no simulator: `scripts/snapshot-mac.sh` runs `MacWindowSnapshotTests` (skipped in normal runs), which
   mounts the real `ContentView` in a window never put on screen and draws it with `CARenderer` at 2x (title bar, HUD,
@@ -103,7 +103,7 @@ seam. The slides (captures, phone angles, backgrounds, headlines in the eleven s
 `AppStore/screenshots.json`; the `/app-store-screenshots` skill renders, reviews and uploads them.
 
 ```sh
-scripts/snapshot-gallery.sh          # the captures, into previews/
+scripts/snapshot-gallery.sh          # the captures, into previews/en/
 app-store-screenshots                # -> .build/app-store-screenshots/<locale>/NN-<slide>.png + index.html
 ```
 

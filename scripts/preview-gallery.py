@@ -2,15 +2,17 @@
 """Build and check the xFractal preview gallery (planning/gallery-scenarios-plan.md).
 
 The snapshot test (GalleryTests/SnapshotGalleryTests) writes `<slug>.png`, `<slug>.dark.png` and `manifest.json` into a
-directory; this script imports them into previews/ (gitignored) and builds previews/index.html: one card per scenario
+directory; this script imports them into previews/<lang>/ (gitignored) and builds previews/<lang>/index.html: one card per scenario
 with light and dark side by side, sections and cards in the manifest's order.
 
     scripts/preview-gallery.py --import DIR [--partial] [--lang en]   # replace the language's gallery (--partial: only DIR's files)
     scripts/preview-gallery.py --check [--lang en] [--measure]        # every scenario complete and correctly rendered
     scripts/preview-gallery.py --coverage                             # views no scenario names (informational)
 
-English lives in previews/, another language in previews/<lang>/. An import touches only its own language's
-top-level files, never another language's directory. PREVIEW_GALLERY_OUT replaces previews/ (the contract tests).
+Every language, English included, lives in its own folder: previews/en/, previews/fr/, ... Nothing sits at the root of
+previews/ (previews/artwork/ holds the store artwork). An import replaces its own folder and never touches another.
+PREVIEW_GALLERY_OUT replaces previews/ (the contract tests).
+An English import also deletes the old layout's *.png, index.html and manifest.json at the root of previews/ (one-time cleanup).
 
 --check rebuilds the page first, then fails on: a scenario missing either image, a stray PNG no scenario expects, a
 duplicate slug, a dark image byte-identical to its light one, an image that cannot be decoded, a blank render (every
@@ -79,7 +81,7 @@ def slugify(text):
 
 def output_dir(lang):
     base = Path(os.environ.get("PREVIEW_GALLERY_OUT") or ROOT / "previews")
-    return base if lang == "en" else base / lang
+    return base / lang
 
 
 def load_manifest(out):
@@ -113,6 +115,11 @@ def do_import(source, partial, lang):
         sys.exit(f"{source} has no manifest.json: the snapshot test did not finish")
     pngs = sorted(source.glob("*.png"))
     out.mkdir(parents=True, exist_ok=True)
+    if lang == "en":
+        # One-time cleanup of the old layout, which kept English at the root: a bare root capture would win over en/.
+        for stale in [*out.parent.glob("*.png"), out.parent / "index.html", out.parent / "manifest.json"]:
+            if stale.is_file():
+                stale.unlink()
     manifest = json.loads(source_manifest.read_text(encoding="utf-8"))
     rendered = {p.name[:-len(".dark.png")] if p.name.endswith(".dark.png") else p.name[:-len(".png")] for p in pngs}
     if partial and not (out / "manifest.json").exists():
@@ -137,7 +144,7 @@ def do_import(source, partial, lang):
         merged += [e for e in manifest if e["slug"] not in known and (lang == "en" or e["slug"] in rendered)]
         manifest = merged
     elif not partial:
-        # Only this language's top-level files: previews/fr/ survives an English import.
+        # This language's folder only: previews/fr/ survives an English import.
         for stale in [*out.glob("*.png"), out / "manifest.json", out / "index.html", out / "calibration.json"]:
             if stale.is_file():
                 stale.unlink()

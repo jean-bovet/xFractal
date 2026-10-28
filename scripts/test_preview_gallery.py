@@ -108,6 +108,11 @@ class GalleryTestCase(unittest.TestCase):
         self.out = self.root / "previews"
         self.env = {**os.environ, "PREVIEW_GALLERY_OUT": str(self.out)}
 
+    @property
+    def en(self):
+        """English is a folder like any other language: previews/en/."""
+        return self.out / "en"
+
     def small(self, light=(240, 240, 240), dark=(20, 20, 20)):
         """A light and a dark image that drew something (a band of stripes: a blank render fails the check)."""
         return Image(46, 100, light).stripes(0, 0, 46, 8).png(), Image(46, 100, dark).stripes(0, 0, 46, 8).png()
@@ -167,7 +172,7 @@ class CheckTests(GalleryTestCase):
         done = self.check()
         self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
         self.assertIn("CHECK OK [en]: 3 cards", done.stdout)
-        page = (self.out / "index.html").read_text(encoding="utf-8")
+        page = (self.en / "index.html").read_text(encoding="utf-8")
         for e in MANIFEST:
             self.assertIn(f"<figcaption>{html.escape(e['name'])}</figcaption>", page)
         self.assertIn("Alpha &lt;b&gt; &amp; &quot;q&quot;", page)
@@ -189,21 +194,21 @@ class CheckTests(GalleryTestCase):
 
     def test_missing_image(self):
         self.imported()
-        (self.out / "mid-screen.dark.png").unlink()
+        (self.en / "mid-screen.dark.png").unlink()
         done = self.check()
         self.assertEqual(done.returncode, 1)
         self.assertIn("missing: mid-screen.dark.png", done.stdout)
 
     def test_stray_png(self):
         self.imported()
-        (self.out / "ghost.png").write_bytes(self.small()[0])
+        (self.en / "ghost.png").write_bytes(self.small()[0])
         done = self.check()
         self.assertEqual(done.returncode, 1)
         self.assertIn("stray image (no scenario): ghost.png", done.stdout)
 
     def test_undecodable_png(self):
         self.imported()
-        (self.out / "mid-screen.png").write_bytes(b"not a png")
+        (self.en / "mid-screen.png").write_bytes(b"not a png")
         done = self.check()
         self.assertEqual(done.returncode, 1)
         self.assertIn("undecodable image: mid-screen.png", done.stdout)
@@ -217,15 +222,15 @@ class CheckTests(GalleryTestCase):
 
     def test_check_rebuilds_page(self):
         self.imported()
-        (self.out / "index.html").unlink()
+        (self.en / "index.html").unlink()
         self.assertEqual(self.check().returncode, 0)
-        self.assertTrue((self.out / "index.html").exists())
+        self.assertTrue((self.en / "index.html").exists())
 
     def test_page_and_manifest_have_no_absolute_paths(self):
         self.imported()
         self.check()
         for name in ("index.html", "manifest.json"):
-            text = (self.out / name).read_text(encoding="utf-8")
+            text = (self.en / name).read_text(encoding="utf-8")
             self.assertNotIn("/Users/", text, name)
             self.assertNotIn(str(self.root), text, name)
 
@@ -233,7 +238,7 @@ class CheckTests(GalleryTestCase):
 class ImportTests(GalleryTestCase):
     def test_partial_import_preserves(self):
         self.imported()
-        before = {p.name: p.read_bytes() for p in self.out.glob("*.png")}
+        before = {p.name: p.read_bytes() for p in self.en.glob("*.png")}
         directory = self.root / "partial"
         directory.mkdir()
         (directory / "mid-screen.png").write_bytes(Image(23, 50, (240, 240, 240)).stripes(0, 0, 23, 4).png())
@@ -241,7 +246,7 @@ class ImportTests(GalleryTestCase):
         (directory / "manifest.json").write_text(json.dumps(MANIFEST))
         done = self.run_script("--import", str(directory), "--partial")
         self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
-        after = {p.name: p.read_bytes() for p in self.out.glob("*.png")}
+        after = {p.name: p.read_bytes() for p in self.en.glob("*.png")}
         self.assertEqual(set(after), set(before))
         for name in before:
             if name.startswith("mid-screen"):
@@ -262,7 +267,7 @@ class ImportTests(GalleryTestCase):
         done = self.run_script("--import", str(self.source(manifest=partial, only={"two"}, images={"two": (light, dark)}, name="p")),
                                "--partial")
         self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
-        merged = {e["slug"]: e for e in json.loads((self.out / "manifest.json").read_text())}
+        merged = {e["slug"]: e for e in json.loads((self.en / "manifest.json").read_text())}
         self.assertEqual(merged["one"]["regions"], manifest[0]["regions"], "an unrendered scenario keeps its last regions")
         self.assertEqual(merged["two"]["regions"]["light"][0]["y"], 100, "a rendered scenario takes the new regions")
         self.assertEqual(self.check().returncode, 0)
@@ -305,7 +310,7 @@ class ImportTests(GalleryTestCase):
         done = self.run_script("--import", str(self.source(manifest=today, only={"two"}, images={"two": (light, dark)}, name="p")),
                                "--partial")
         self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
-        self.assertEqual([e["slug"] for e in json.loads((self.out / "manifest.json").read_text())], ["two", "three"])
+        self.assertEqual([e["slug"] for e in json.loads((self.en / "manifest.json").read_text())], ["two", "three"])
         check = self.check()
         self.assertNotEqual(check.returncode, 0)
         self.assertIn("missing: three.png", check.stdout)
@@ -313,11 +318,14 @@ class ImportTests(GalleryTestCase):
     def test_full_import_replaces_own_language_only(self):
         self.imported("--lang", "fr")
         french = {p.name: p.read_bytes() for p in (self.out / "fr").glob("*")}
-        self.out.mkdir(exist_ok=True)
-        (self.out / "stale-en.png").write_bytes(self.small()[0])
+        (self.out / "artwork").mkdir()
+        (self.out / "artwork" / "bg.png").write_bytes(self.small()[0])
+        self.en.mkdir(parents=True, exist_ok=True)
+        (self.en / "stale-en.png").write_bytes(self.small()[0])
         self.imported(name="src-en")
-        self.assertFalse((self.out / "stale-en.png").exists())
+        self.assertFalse((self.en / "stale-en.png").exists())
         self.assertEqual({p.name: p.read_bytes() for p in (self.out / "fr").glob("*")}, french)
+        self.assertTrue((self.out / "artwork" / "bg.png").is_file())
         self.assertEqual(self.check("--lang", "fr").returncode, 0)
         self.assertEqual(self.check().returncode, 0)
 
@@ -329,7 +337,38 @@ class ImportTests(GalleryTestCase):
         self.assertIn("CHECK OK [en]: 3 cards", en.stdout)
         self.assertIn("CHECK OK [fr]: 2 cards", fr.stdout)
         self.assertIn("Écran un", (self.out / "fr" / "index.html").read_text(encoding="utf-8"))
-        self.assertNotIn("Écran un", (self.out / "index.html").read_text(encoding="utf-8"))
+        self.assertNotIn("Écran un", (self.en / "index.html").read_text(encoding="utf-8"))
+
+
+class EnglishFolderTests(GalleryTestCase):
+    def test_output_dir_of_english_is_en(self):
+        self.imported()
+        self.assertTrue((self.en / "manifest.json").is_file())
+        self.assertEqual(sorted(p.name for p in self.out.iterdir()), ["en"], "nothing at the root of previews/")
+
+    def test_import_lands_in_en_and_the_page_is_en_index(self):
+        self.imported()
+        self.assertTrue((self.en / "index.html").is_file())
+        self.assertTrue((self.en / "mid-screen.png").is_file())
+        self.assertFalse((self.out / "index.html").exists())
+
+    def test_english_import_removes_the_old_root_layout(self):
+        self.imported("--lang", "fr")
+        (self.out / "artwork").mkdir()
+        (self.out / "artwork" / "bg.png").write_bytes(self.small()[0])
+        (self.out / "board-julia.png").write_bytes(self.small()[0])
+        (self.out / "index.html").write_text("old")
+        (self.out / "manifest.json").write_text("[]")
+        self.imported(name="src-en")
+        for name in ("board-julia.png", "index.html", "manifest.json"):
+            self.assertFalse((self.out / name).exists(), name)
+        self.assertTrue((self.out / "artwork" / "bg.png").is_file())
+        self.assertTrue((self.out / "fr" / "manifest.json").is_file())
+
+    def test_check_reads_en(self):
+        self.imported()
+        (self.en / "mid-screen.dark.png").unlink()
+        self.assertIn("missing: mid-screen.dark.png", self.check().stdout)
 
 
 class ImageValidityTests(GalleryTestCase):
@@ -386,7 +425,7 @@ class MetadataTests(GalleryTestCase):
         (directory / "manifest.json").write_text(json.dumps(MANIFEST))
         done = self.run_script("--import", str(directory))
         self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
-        for png in self.out.glob("*.png"):
+        for png in self.en.glob("*.png"):
             data = png.read_bytes()
             for kind in (b"eXIf", b"tEXt", b"iTXt", b"zTXt"):
                 self.assertNotIn(kind, data, f"{png.name} still has {kind!r}")
@@ -432,7 +471,7 @@ class FlagTests(GalleryTestCase):
         self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
         self.assertIn("CHECK OK [en]: 2 cards", done.stdout)
         self.assertIn("(1 skipped, not rendered on this pass)", done.stdout)
-        page = (self.out / "index.html").read_text(encoding="utf-8")
+        page = (self.en / "index.html").read_text(encoding="utf-8")
         figure = page.split('<figure id="folded-pose"')[1].split("</figure>")[0]
         self.assertIn("not rendered on this pass", figure)
         self.assertIn("the folded simulator cannot show this pose", figure)
@@ -546,7 +585,7 @@ class RegionTests(GalleryTestCase):
         manifest = [entry("Screen", "Group", "screen", ["fractal"],
                           {"light": [region("fractal", FRACTAL)], "dark": [region("fractal", FRACTAL)]})]
         self.imported(manifest=manifest, images={"screen": (light, dark)})
-        (self.out / "screen.png").write_bytes(b"\x89PNG\r\n\x1a\n" + b"\x00" * 40)
+        (self.en / "screen.png").write_bytes(b"\x89PNG\r\n\x1a\n" + b"\x00" * 40)
         done = self.check()
         self.assertEqual(done.returncode, 1)
         self.assertIn("undecodable image: screen.png", done.stdout)
@@ -734,20 +773,20 @@ class MeasureTests(GalleryTestCase):
         done = self.sheet_case(mutate=heavy, measure=True)
         self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
         self.assertIn("calibration screen", done.stdout)
-        calibration = json.loads((self.out / "calibration.json").read_text())
+        calibration = json.loads((self.en / "calibration.json").read_text())
         self.assertLess(calibration["screen"]["sheet_light_coverage"], 0.3)
         self.assertGreater(calibration["screen"]["sheet_dark_coverage"], 0.9)
 
     def test_measure_mode_reports_peek(self):
         done = self.board_case(light_capsule=gray(100), dark_capsule=gray(160), measure=True)
         self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
-        calibration = json.loads((self.out / "calibration.json").read_text())
+        calibration = json.loads((self.en / "calibration.json").read_text())
         self.assertLess(calibration["screen"]["peek"]["separation"], 0)
         self.assertEqual(calibration["screen"]["peek"]["components"], 1)
 
     def test_measure_mode_still_enforces_structure(self):
         self.imported()
-        (self.out / "mid-screen.dark.png").unlink()
+        (self.en / "mid-screen.dark.png").unlink()
         done = self.check("--measure")
         self.assertEqual(done.returncode, 1)
         self.assertIn("missing: mid-screen.dark.png", done.stdout)

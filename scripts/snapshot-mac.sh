@@ -1,11 +1,11 @@
 #!/bin/bash
 # Renders the Mac app's window for the Mac App Store screenshots (Tests/MacWindowSnapshotTests: the real ContentView in
-# a window never on screen, drawn at 2x) and copies the PNGs into previews/mac/ (gitignored).
+# a window never on screen, drawn at 2x) and copies the PNGs into previews/mac/<lang>/ (gitignored).
 #
 #   scripts/snapshot-mac.sh [--lang en,fr,de,it,es,pt-BR,ja,tr,ar,he]
 #
-# --lang  the languages to render, one test run each: English into previews/mac/, another language into
-#         previews/mac/<lang>/ (the app's own text in that language)
+# --lang  the languages to render, one test run each, each into previews/mac/<lang>/ (previews/mac/en/ for
+#         English; the app's own text in that language)
 #
 # Needs a Retina display (the test fails by name on 1x). The test runs hosted by the sandboxed Mac app, whose container
 # macOS keeps other processes out of: it prints each PNG as base64 lines, which this script decodes. The xcodebuild run
@@ -38,7 +38,7 @@ cd "$ROOT"
 CONTAINER="$HOME/Library/Containers/ch.arizonasoftware.xfractal"
 LOCK=(); command -v buildlock > /dev/null && LOCK=(buildlock --folder "$CONTAINER" --no-slot -- buildlock --folder "$DD" --)
 for lang in "${LANGS[@]}"; do
-    OUT="$ROOT/previews/mac"; [ "$lang" = en ] || OUT="$OUT/$lang"
+    OUT="$ROOT/previews/mac/$lang"
     case "$lang" in en) region=US ;; ja) region=JP ;; he) region=IL ;; ar) region=SA ;; *-*) region="${lang#*-}" ;; *) region="$(echo "$lang" | tr a-z A-Z)" ;; esac
     # TEST_RUNNER_<name> in xcodebuild's environment reaches the test process as <name>.
     TEST_RUNNER_XFRACTAL_MAC_SNAPSHOT=1 "${LOCK[@]}" xcodebuild test -project xFractal.xcodeproj -scheme xFractal-MAS \

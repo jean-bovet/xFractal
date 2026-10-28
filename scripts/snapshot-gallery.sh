@@ -1,20 +1,20 @@
 #!/bin/bash
 # Renders every GalleryScenarios entry (light + dark) with one run of the xFractalGalleryTests target, imports the PNGs
-# into previews/ and checks the gallery (planning/gallery-scenarios-plan.md).
+# into previews/en/ and checks the gallery (planning/gallery-scenarios-plan.md).
 #
 #   scripts/snapshot-gallery.sh [--device iphone|ipad|duo] [--only PATTERN] [--lang en] [--keep-booted] [--no-open] [--verbose]
 #   scripts/snapshot-gallery.sh --shutdown
 #
-# --device ipad    render on the pool's iPad (iPad Pro 13-inch (M5), the App Store's 13" screenshots) into previews/ipad/
-#                  instead of the iPhone 17 Pro into previews/ (the artwork, device-independent, comes with iPhone runs)
-# --device duo     render on the pool's iPhone Duo (iOS 27.1, spec duo) into previews/duo/. The simulator must be folded: the
+# --device ipad    render on the pool's iPad (iPad Pro 13-inch (M5), the App Store's 13" screenshots) into previews/ipad/en/
+#                  instead of the iPhone 17 Pro into previews/en/ (the artwork, device-independent, comes with iPhone runs)
+# --device duo     render on the pool's iPhone Duo (iOS 27.1, spec duo) into previews/duo/en/. The simulator must be folded: the
 #                  test fails before rendering unless the screen is the 466 x 678 pt outer display and compact. The inner
 #                  display's scenarios are fixed-size windows with the regular trait, on every pass
 # --only PATTERN   comma-separated substrings of scenario names or slugs; renders just those (the check covers all)
 #                  A full run (or one whose PATTERN names "artwork") also renders GalleryFixtures.artwork, the App
 #                  Store creative-asset backgrounds, into previews/artwork/ at full size.
-# --lang en,fr     the languages to render, each one more test run (en, fr, de, it, es, pt-BR, ja, tr, ar, he): English into previews/ (or
-#                  previews/ipad/), another language into its own folder below it (previews/fr/, previews/ipad/fr/)
+# --lang en,fr     the languages to render, each one more test run (en, fr, de, it, es, pt-BR, ja, tr, ar, he): each language into its own folder (previews/en/, previews/fr/;
+#                  previews/ipad/en/, previews/ipad/fr/ on the iPad)
 # --keep-booted    fallback only: leave the simulator running for the next run (shut it down later with --shutdown)
 # --no-open        do not open the page
 # --verbose        also print the test's per-render timing lines
@@ -440,8 +440,7 @@ for lang in "${LANGS[@]}"; do
     [ "$DEVICE" = duo ] && { grep -E "^gallery: duo screen " "$WORK/test-$lang.log" | sed "s/^/[$lang] /" || true; }
     if [ -z "$FIRST_PAGE" ]; then
         GALLERY="${PREVIEW_GALLERY_OUT:-$ROOT/previews}"
-        FIRST_PAGE="$GALLERY/index.html"
-        [ "$lang" = en ] || FIRST_PAGE="$GALLERY/$lang/index.html"
+        FIRST_PAGE="$GALLERY/$lang/index.html"
     fi
 done
 

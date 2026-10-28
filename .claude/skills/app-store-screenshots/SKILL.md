@@ -12,7 +12,7 @@ The screenshots are rendered, never hand-made: the app's preview gallery capture
 A public repo names the command, never where it comes from.
 
 The app: xFractal, App Store product `xFractal-iOS` (`--app xFractal-iOS`). The captures come from
-`scripts/snapshot-gallery.sh` (the `/preview-gallery` skill) and land in `previews/`. The slides file covers the iPhone
+`scripts/snapshot-gallery.sh` (the `/preview-gallery` skill) and land in `previews/en/` (every language has its own folder; `app-store-screenshots` resolves `en-US` to the `en/` folder by itself, so `--captures previews` / `previews/ipad` / `previews/duo` stay as they are). The slides file covers the iPhone
 6.9" set (`APP_IPHONE_67`, 1320 x 2868). Store languages, in order: en-US, fr-FR, de-DE, it, es-ES, es-MX, pt-BR, ja, tr, ar-SA, he (both Spanish pages use the `es`
 captures). What the captures cannot
 show: the app's own text is in the store language only when the slides' captures were rendered in it, else English;
@@ -40,10 +40,10 @@ back to English silently: before rendering, list every slide capture missing fro
 
 ## iPad and Mac
 
-- iPad: `scripts/snapshot-gallery.sh --device ipad` (captures into `previews/ipad/`), then
+- iPad: `scripts/snapshot-gallery.sh --device ipad` (captures into `previews/ipad/en/`), then
   `app-store-screenshots --config AppStore/screenshots-ipad.json --captures previews/ipad` (2048 x 2732,
   `APP_IPAD_PRO_3GEN_129`: the iPhone's slides and headlines, `"device": "ipad"` frames).
-- Mac: `scripts/snapshot-mac.sh` (the real window, into `previews/mac/`), then
+- Mac: `scripts/snapshot-mac.sh` (the real window, into `previews/mac/en/`), then
   `app-store-screenshots --config AppStore/screenshots-mac.json` (2880 x 1800, `APP_DESKTOP`: `"device": "window"`
   under a centred headline, `textStyle`). Upload with `--app xFractal-iOS --platform MAC_OS --display-type
   APP_DESKTOP`; the Mac version is its own version in App Store Connect.

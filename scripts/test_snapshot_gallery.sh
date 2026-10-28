@@ -177,7 +177,8 @@ done
 shift
 if [ -n "$log" ]; then exec "$@" >> "$log" 2>&1; else exec "$@"; fi
 STUB
-    chmod +x "$T/bin/simpool" "$T/bin/buildlock"
+    printf '#!/bin/bash\necho "open $*" >> "$STUB_LOG"\n' > "$T/bin/open"
+    chmod +x "$T/bin/simpool" "$T/bin/buildlock" "$T/bin/open"
 }
 
 expect() {   # $1 = case name, $2 = condition description, rest = test command
@@ -566,6 +567,18 @@ pool_run() {
     no_simctl_lifecycle pool_run
 }
 
+pool_opens_the_en_page() {   # without --no-open the page that opens is the English one, in its en/ folder
+    pool_setup
+    gallery; local status=$?
+    expect pool_opens_the_en_page "exits zero" [ "$status" = 0 ]
+    expect pool_opens_the_en_page "page in previews/en" [ -f "$T/previews/en/index.html" ]
+    expect pool_opens_the_en_page "nothing at the root of previews" [ ! -f "$T/previews/index.html" ]
+    expect pool_opens_the_en_page "opened previews/en/index.html" called "open .*previews/en/index.html"
+    pool_setup
+    gallery --device ipad; status=$?
+    expect pool_opens_the_en_page "ipad: opened previews/ipad/en/index.html" called "open .*previews/ipad/en/index.html"
+}
+
 pool_given_udid() {   # SIMULATOR_UDID with the pool: the caller's simulator, no lease taken, nothing released
     pool_setup
     SIMULATOR_UDID="$OTHER" gallery --no-open; local status=$?
@@ -584,7 +597,8 @@ pool_ipad() {   # --device ipad: an iPad from the pool, its gallery in previews/
     expect pool_ipad "exits zero" [ "$status" = 0 ]
     expect pool_ipad "leased an ipad" called "simpool acquire --spec ipad --pid "
     expect pool_ipad "never an iphone" not_called "simpool acquire --spec iphone"
-    expect pool_ipad "page in previews/ipad" [ -f "$T/previews/ipad/index.html" ]
+    expect pool_ipad "page in previews/ipad/en" [ -f "$T/previews/ipad/en/index.html" ]
+    expect pool_ipad "nothing at the root of previews/ipad" [ ! -f "$T/previews/ipad/index.html" ]
     expect pool_ipad "no iPhone page written" [ ! -f "$T/previews/index.html" ]
     expect pool_ipad "released the lease" called "simpool release $POOL_UDID"
     no_simctl_lifecycle pool_ipad
@@ -596,7 +610,8 @@ pool_duo() {   # --device duo: an iPhone Duo from the pool, its gallery in previ
     expect pool_duo "exits zero" [ "$status" = 0 ]
     expect pool_duo "leased a duo" called "simpool acquire --spec duo --pid "
     expect pool_duo "never an iphone" not_called "simpool acquire --spec iphone"
-    expect pool_duo "page in previews/duo" [ -f "$T/previews/duo/index.html" ]
+    expect pool_duo "page in previews/duo/en" [ -f "$T/previews/duo/en/index.html" ]
+    expect pool_duo "nothing at the root of previews/duo" [ ! -f "$T/previews/duo/index.html" ]
     expect pool_duo "no iPhone page written" [ ! -f "$T/previews/index.html" ]
     expect pool_duo "the device reaches the test" bash -c 'grep -q "TEST_RUNNER_XFRACTAL_SNAPSHOT_DEVICE=duo" "$0"' "$STUB_LOG"
     expect pool_duo "released the lease" called "simpool release $POOL_UDID"
@@ -616,7 +631,7 @@ pool_french() {   # --lang fr: the test runs in French (region FR), its gallery 
     expect pool_french "exits zero" [ "$status" = 0 ]
     expect pool_french "tested in French" called "-testLanguage fr -testRegion FR"
     expect pool_french "page in previews/fr" [ -f "$T/previews/fr/index.html" ]
-    expect pool_french "no English page written" [ ! -f "$T/previews/index.html" ]
+    expect pool_french "no English page written" [ ! -f "$T/previews/en/index.html" ]
 }
 
 pool_regions() {   # --lang ja,pt-BR,he,ar: Japan's region is JP, Israel's IL, Saudi Arabia's SA, a locale's region is its own (pt-BR -> BR)
@@ -709,7 +724,7 @@ pool_signalled_term_build() { pool_signalled TERM build; }
 pool_signalled_term_test() { pool_signalled TERM test; }
 pool_signalled_hup_test() { pool_signalled HUP test; }
 
-POOL_CASES="pool_run pool_given_udid pool_ipad pool_duo pool_unknown_device pool_french pool_regions pool_unknown_language pool_keep_booted pool_stale_marker pool_acquire_fails pool_build_fails pool_test_fails pool_check_fails
+POOL_CASES="pool_run pool_opens_the_en_page pool_given_udid pool_ipad pool_duo pool_unknown_device pool_french pool_regions pool_unknown_language pool_keep_booted pool_stale_marker pool_acquire_fails pool_build_fails pool_test_fails pool_check_fails
 pool_signalled_int_acquire pool_signalled_int_build pool_signalled_int_test pool_signalled_term_build pool_signalled_term_test
 pool_signalled_hup_test"
 
