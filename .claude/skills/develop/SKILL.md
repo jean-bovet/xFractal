@@ -172,7 +172,7 @@ while tracked changes are uncommitted or untracked files are not ignored: commit
     -destination 'platform=macOS' -derivedDataPath <dd>
   ```
 
-  Green is `** TEST SUCCEEDED **` with the test count (71 today, more with each new test); `** TEST
+  Green is `** TEST SUCCEEDED **` with the test count (82 today, one of them skipped, more with each new test); `** TEST
   FAILED **`, a lower count or zero tests is red. macOS only, no simulator. Without a signing team the
   app is signed ad hoc; if signing still fails, add `CODE_SIGNING_ALLOWED=NO`.
 - **Warnings gate:** zero warnings in our own sources (Swift and `Shaders.metal`), both platforms, each

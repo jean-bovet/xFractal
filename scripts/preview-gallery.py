@@ -16,14 +16,19 @@ An English import also deletes the old layout's *.png, index.html and manifest.j
 
 --check rebuilds the page first, then fails on: a scenario missing either image, a stray PNG no scenario expects, a
 duplicate slug, a dark image byte-identical to its light one, an image that cannot be decoded, a blank render (every
-pixel one colour), an invalid or unmeasured region, the region rules (the fractal drawn, the sheet's background lit,
-the peek capsule found), and `.preferredColorScheme` or `\.locale` in a scenario file (comments excluded: the light
-and dark passes and -testLanguage set them). The fractal fills most of a screen and is legitimately bright or dark,
+pixel one colour), an image not at the render scale of its scenario's size (RENDER_SCALE: 2x, 3x for the Duo's inner
+poses), an invalid or unmeasured region, the region rules (the fractal drawn, the sheet's background lit, the peek
+capsule found), and `.preferredColorScheme` or `\.locale` in a scenario file (comments excluded: the light and dark
+passes and -testLanguage set them; a `\.locale` line marked `// gallery: allowed, <why>` passes: a locale forced for
+its region, not its language). A skipped scenario's image on disk is stray. The fractal fills most of a screen and is legitimately bright or dark,
 so the mean luminance of a whole image is never judged on its own. Flags a scenario writes into the manifest:
 `documentCanvas: true` (dark by design in both appearances: the pair is judged instead, the dark image's mean
 luminance at least DOCUMENT_CANVAS_DELTA below the light one's), `drawsNothing: true` (a blank render is by design),
-`skipped: "<why>"` (not rendered on this pass: the page says so and the missing pair is accepted for that reason
-only). --measure enforces everything except the peek and sheet thresholds and writes calibration.json with the
+`imagery: true` (full-bleed imagery that does not darken in the dark appearance: every rule that compares the light
+render's luminance with the dark one's is waived for the pair, the byte-identical rule still applies), `skipped:
+"<why>"` (not rendered on this pass: the page says so and the missing pair is accepted for that reason only; the test
+resolves a per-pass reason into this field). PREVIEW_GALLERY_RENDER_SCALE=off turns the render-scale check off (the
+contract tests' synthetic images only). --measure enforces everything except the peek and sheet thresholds and writes calibration.json with the
 numbers those thresholds are set from.
 """
 import argparse
@@ -71,12 +76,27 @@ DOCUMENT_CANVAS_DELTA = 0.05
 # The scenario files --check scans for a forced appearance or language (PREVIEW_GALLERY_SCENARIOS, os.pathsep-separated,
 # replaces them: the contract tests).
 SCENARIO_FILES = [ROOT / "GalleryTests" / "GalleryScenarios.swift", ROOT / "GalleryTests" / "GalleryFixtures.swift"]
+# A locale forced for its region, not its language (`en_US` for a 12-hour clock), says so in its line's comment.
+ALLOWED_MARKER = re.compile(r"//\s*gallery:\s*allowed,\s*\S")
+# The capture scale of a scenario's size (GallerySize.scale): the Duo's inner display poses at 3x, everything else at 2x.
+RENDER_SCALE = 2
+DUO_INNER_SIZES = {(951, 669), (669, 951)}
+DUO_INNER_RENDER_SCALE = 3
+LOCALE_PATTERN = r"\\\.locale\b"
 FORBIDDEN_IN_SCENARIOS = [(r"\.preferredColorScheme\b", ".preferredColorScheme (the light and dark passes set the appearance)"),
-                          (r"\\\.locale\b", r"\.locale (-testLanguage sets the language)")]
+                          (LOCALE_PATTERN, r"\.locale (-testLanguage sets the language)")]
 
 
 def slugify(text):
     return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
+
+
+def render_scale(entry):
+    """The scale a scenario's images are captured at, from its size in points."""
+    size = entry.get("size") or {}
+    if (round(size.get("w", 0)), round(size.get("h", 0))) in DUO_INNER_SIZES:
+        return DUO_INNER_RENDER_SCALE
+    return RENDER_SCALE
 
 
 def output_dir(lang):
@@ -132,9 +152,11 @@ def do_import(source, partial, lang):
         # A new scenario this run did not render enters the English gallery, where the check then reports it
         # missing until a full run renders it; it stays out of a language folder, which holds the slides' captures
         # only.
+        # A scenario this pass skips takes this run's entry too: the skip reason is the current one.
         existing = load_manifest(out)
         by_slug = {e["slug"]: e for e in manifest}
-        merged = [by_slug.pop(e["slug"]) if e["slug"] in rendered and e["slug"] in by_slug else e
+        fresh = rendered | {e["slug"] for e in manifest if e.get("skipped")}
+        merged = [by_slug.pop(e["slug"]) if e["slug"] in fresh and e["slug"] in by_slug else e
                   for e in existing if e["slug"] in by_slug or e["slug"] in rendered]
         for gone in {e["slug"] for e in existing} - {e["slug"] for e in merged}:
             for stale in (out / f"{gone}.png", out / f"{gone}.dark.png"):
@@ -150,6 +172,12 @@ def do_import(source, partial, lang):
                 stale.unlink()
     for png in pngs:
         (out / png.name).write_bytes(strip_metadata(png.read_bytes()))
+    # A scenario skipped on this pass keeps no image of an earlier run (it would be stray).
+    for e in manifest:
+        if e.get("skipped"):
+            for stale in (out / f"{e['slug']}.png", out / f"{e['slug']}.dark.png"):
+                if stale.is_file():
+                    stale.unlink()
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
     build_page(manifest, out, lang)
     print(f"imported {len(pngs)} image(s) into {out}/")
@@ -343,7 +371,8 @@ def pixels(region, scale):
 
 
 def scenario_file_problems():
-    """A forced appearance or language in a scenario file, comments excluded (`// ...` and `/* ... */`)."""
+    """A forced appearance or language in a scenario file, comments excluded (`// ...` and `/* ... */`). A `\\.locale`
+    line whose comment says `// gallery: allowed, <why>` passes; a forced appearance never does."""
     paths = os.environ.get("PREVIEW_GALLERY_SCENARIOS")
     files = [Path(p) for p in paths.split(os.pathsep) if p] if paths is not None else SCENARIO_FILES
     problems = []
@@ -353,9 +382,10 @@ def scenario_file_problems():
         text = file.read_text(encoding="utf-8")
         text = re.sub(r"/\*.*?\*/", lambda m: re.sub(r"[^\n]", " ", m.group()), text, flags=re.S)
         for number, line in enumerate(text.splitlines(), 1):
-            code = line.split("//", 1)[0]
+            code, _, comment = line.partition("//")
+            allowed = bool(ALLOWED_MARKER.search("//" + comment)) if comment else False
             for pattern, what in FORBIDDEN_IN_SCENARIOS:
-                if re.search(pattern, code):
+                if re.search(pattern, code) and not (allowed and pattern == LOCALE_PATTERN):
                     problems.append(f"forbidden in scenario file {file.name}:{number}: {what}")
     return problems
 
@@ -370,13 +400,15 @@ def do_check(lang, measure=False):
         problems.append(f"duplicate slug: {slug}")
     # A skipped scenario (not rendered on this pass, with its reason) may miss its pair; nothing else may.
     skipped = {e["slug"] for e in manifest if e.get("skipped")}
-    expected = {f"{s}{suffix}" for s in slugs for suffix in (".png", ".dark.png")}
+    # A skipped scenario expects no image: one on disk is stray (an earlier pass's capture).
+    imagery = {e["slug"] for e in manifest if e.get("imagery")}
+    expected = {f"{s}{suffix}" for s in slugs if s not in skipped for suffix in (".png", ".dark.png")}
+    of_skipped = {f"{s}{suffix}" for s in skipped for suffix in (".png", ".dark.png")}
     on_disk = {p.name for p in out.glob("*.png")}
     for file in sorted(expected - on_disk):
-        if file.split(".")[0] not in skipped:
-            problems.append(f"missing: {file}")
+        problems.append(f"missing: {file}")
     for file in sorted(on_disk - expected):
-        problems.append(f"stray image (no scenario): {file}")
+        problems.append(f"stray image ({'skipped scenario' if file in of_skipped else 'no scenario'}): {file}")
     for slug in sorted(set(slugs)):
         light, dark = out / f"{slug}.png", out / f"{slug}.dark.png"
         if light.exists() and dark.exists() and light.read_bytes() == dark.read_bytes():
@@ -412,7 +444,7 @@ def do_check(lang, measure=False):
                 if luminance[file][1] == 0:
                     problems.append(f"blank render (every pixel one colour): {file}; a screen that draws nothing by design sets drawsNothing")
         # Dark in both appearances by design: the pair is judged, the dark render darker than the light one.
-        if e.get("documentCanvas"):
+        if e.get("documentCanvas") and slug not in imagery:
             delta = luminance[f"{slug}.png"][0] - luminance[f"{slug}.dark.png"][0]
             if delta < DOCUMENT_CANVAS_DELTA:
                 problems.append(f"document canvas not darker in dark: {slug} (light {luminance[f'{slug}.png'][0]:.3f}, "
@@ -425,6 +457,13 @@ def do_check(lang, measure=False):
         if want.get("w") and want.get("h") and abs(light[0] / light[1] - want["w"] / want["h"]) > 0.01 * want["w"] / want["h"]:
             problems.append(f"image does not match the manifest size: {slug} ({light[0]} x {light[1]} for {want['w']} x {want['h']} pt)")
             sizes[f"{slug}.png"] = sizes[f"{slug}.dark.png"] = None
+            continue
+        if want.get("w") and want.get("h") and os.environ.get("PREVIEW_GALLERY_RENDER_SCALE") != "off":
+            scale = render_scale(e)
+            if abs(light[0] - want["w"] * scale) > 1 or abs(light[1] - want["h"] * scale) > 1:
+                problems.append(f"image not at the render scale: {slug} ({light[0]} x {light[1]} for {want['w']:g} x {want['h']:g} pt"
+                                f" at {scale}x: {round(want['w'] * scale)} x {round(want['h'] * scale)} expected)")
+                sizes[f"{slug}.png"] = sizes[f"{slug}.dark.png"] = None
     for e in manifest:
         slug, kinds = e["slug"], e.get("kinds", [])
         light_file, dark_file = f"{slug}.png", f"{slug}.dark.png"
@@ -494,7 +533,7 @@ def do_check(lang, measure=False):
         elif kind == "glassshare":
             share = answer[0]
             record["glass_coverage"] = share
-            if not measure and share < max(GLASS_COVERAGE, GLASS_COVERAGE_FLOOR):
+            if not measure and slug not in imagery and share < max(GLASS_COVERAGE, GLASS_COVERAGE_FLOOR):
                 problems.append(f"translucent sheet separates light from dark over too little of its region in {slug}: "
                                 f"{share:.2f} < {GLASS_COVERAGE:.2f}")
         elif kind == "glass":
@@ -502,12 +541,12 @@ def do_check(lang, measure=False):
             if "glass_light_mean" in record and "glass_dark_mean" in record:
                 delta = record["glass_light_mean"] - record["glass_dark_mean"]
                 record["glass_delta"] = delta
-                if not measure and delta < max(GLASS_DELTA, GLASS_DELTA_FLOOR):
+                if not measure and slug not in imagery and delta < max(GLASS_DELTA, GLASS_DELTA_FLOOR):
                     problems.append(f"translucent sheet does not separate light from dark in {slug}: light - dark {delta:.3f} < {GLASS_DELTA:.2f}")
         elif kind == "sheet":
             share = answer[2] if extra == "light" else answer[3]
             record[f"sheet_{extra}_coverage"] = share
-            if not measure and share < SHEET_COVERAGE:
+            if not measure and slug not in imagery and share < SHEET_COVERAGE:
                 problems.append(f"sheet background not {'light' if extra == 'light' else 'dark'} in the {extra} render of {slug}: "
                                 f"coverage {share:.2f} < {SHEET_COVERAGE:.2f}")
         elif kind == "peek":
@@ -553,7 +592,7 @@ def do_check(lang, measure=False):
                 centre_off = abs((bx + bw / 2) / scale - centre)
                 if not (PEEK_WIDTH[0] <= w_pt <= PEEK_WIDTH[1] and PEEK_HEIGHT[0] <= h_pt <= PEEK_HEIGHT[1]) or centre_off > PEEK_CENTER_TOLERANCE:
                     problems.append(f"peek capsule has the wrong size or position in {slug}: {w_pt:.0f} x {h_pt:.0f} pt, {centre_off:.0f} pt off centre")
-            if not measure:
+            if not measure and slug not in imagery:
                 separation = light_mean - dark_mean
                 if separation < max(PEEK_DELTA, PEEK_DELTA_FLOOR):
                     problems.append(f"peek capsule not distinguishable in {slug}: light - dark {separation:.3f} < {PEEK_DELTA:.3f}")

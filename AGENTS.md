@@ -84,7 +84,7 @@ scripts/test_snapshot_gallery.sh                                      # lifecycl
   `buildlock`. The script never boots or shuts down a simulator itself. Without `simpool`/`buildlock` on PATH (a
   contributor's Mac) it falls back to its own **xFractal Agent** simulator, which it creates, boots and shuts down.
 - An `--only` run checks every scenario: in a fresh checkout run the whole gallery once first.
-- The gallery is English only; `--lang fr,de,it,es,pt-BR,ja,tr,ar,he` exists for the App Store screenshots alone, which render just the slides' captures (`--only`) into `previews/fr/`, … iPhone by default; `--device ipad` renders every scenario on the pool's iPad Pro 13-inch (M5) into its own
+- The gallery is English only; `--lang fr,de,it,es,pt-BR,ja,tr,ar,he` exists for the App Store screenshots alone, which render just the slides' captures (`--only`: the script refuses another language without it) into `previews/fr/`, … iPhone by default; `--device ipad` renders every scenario on the pool's iPad Pro 13-inch (M5) into its own
   gallery (`previews/ipad/en/`, its own simulator without the pool).
   The "iPhone Duo · inner display" group (9 scenarios) and the `--device duo` pass (`previews/duo/en/`, all 26 scenarios, folded
   outer display) are explained in the `/preview-gallery` skill.

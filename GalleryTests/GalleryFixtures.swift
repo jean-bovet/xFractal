@@ -27,6 +27,16 @@ enum GallerySize: Equatable {
     var scale: CGFloat { self == .phone ? 2 : 3 }
 }
 
+/// The gallery pass a run renders (`scripts/snapshot-gallery.sh --device`, XFRACTAL_SNAPSHOT_DEVICE): each has its own folder.
+enum GalleryPass: String {
+    case iphone, ipad, duo
+
+    /// The pass of this run: iphone unless XFRACTAL_SNAPSHOT_DEVICE names another.
+    static var current: GalleryPass {
+        ProcessInfo.processInfo.environment["XFRACTAL_SNAPSHOT_DEVICE"].flatMap(GalleryPass.init(rawValue:)) ?? .iphone
+    }
+}
+
 /// A fractal rendered off screen at a fixed pixel size, with no app UI around it.
 struct GalleryArtwork {
     var name: String
@@ -72,9 +82,17 @@ struct GalleryFixture {
     var documentCanvas = false
     /// Draws nothing by design: `--check` accepts the blank render (otherwise a render whose pixels are all one colour fails).
     var drawsNothing = false
-    /// A card this pass cannot render honestly: not rendered, the reason printed and written to the manifest, the page
-    /// says "not rendered on this pass" and `--check` accepts the missing pair for that reason only. nil = rendered.
+    /// Full-bleed imagery under chrome that does not darken in the dark appearance (a photo, a satellite map): `--check`
+    /// waives every rule comparing the light render's luminance with the dark one's (the byte-identical rule still applies).
+    var imagery = false
+    /// A card no pass can render honestly: not rendered, the reason printed and written to the manifest, the page says
+    /// "not rendered on this pass" and `--check` accepts the missing pair for that reason only. nil = rendered.
     var skipped: String? = nil
+    /// The same, for one pass only (the others render the card): the reason per pass.
+    var skippedOn: [GalleryPass: String] = [:]
+
+    /// Why this card is not rendered on `pass`, or nil when it is.
+    func skipReason(on pass: GalleryPass) -> String? { skipped ?? skippedOn[pass] }
 
     var slug: String {
         name.lowercased().replacingOccurrences(of: "[^a-z0-9]+", with: "-", options: .regularExpression)

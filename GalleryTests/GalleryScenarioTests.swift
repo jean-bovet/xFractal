@@ -15,6 +15,18 @@ final class GalleryScenarioTests: XCTestCase {
         XCTAssertFalse(slugs.contains(""))
     }
 
+    /// `skipped` holds for every pass, `skippedOn` for the passes it names only; the rest render the card.
+    func testSkipReasonIsPerPass() {
+        var fixture = GalleryFixture(name: "Pose", group: "Test", regions: [])
+        XCTAssertNil(fixture.skipReason(on: .iphone))
+        fixture.skippedOn = [.ipad: "no fold on the iPad"]
+        XCTAssertEqual(fixture.skipReason(on: .ipad), "no fold on the iPad")
+        XCTAssertNil(fixture.skipReason(on: .iphone))
+        XCTAssertNil(fixture.skipReason(on: .duo))
+        fixture.skipped = "never honest"
+        for pass in [GalleryPass.iphone, .ipad, .duo] { XCTAssertEqual(fixture.skipReason(on: pass), "never honest") }
+    }
+
     func testArtworkHasAnAppStoreCreativeAssetSize() {
         let names = GalleryFixtures.artwork.map(\.name)
         XCTAssertEqual(Set(names).count, names.count)

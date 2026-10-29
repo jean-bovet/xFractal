@@ -39,8 +39,7 @@ a full language pass to the gallery. Two exceptions share one `--lang` option of
   (truncation, overflow), and a right-to-left language (Hebrew, Arabic) must read right to left. The repo lists a
   **review set** (the store captures plus the screens whose words or direction the catalog changes) and renders it
   with `--only "<the review set>" --lang <languages>`; the scripts refuse `--lang` for a language other than English
-  without `--only` (not yet in xFractal's scripts: always pass `--only`). Read the result as a contact sheet per
-  language.
+  without `--only`. Read the result as a contact sheet per language.
 The gallery page that counts, its gate and `CHECK OK [en]` stay English.
 xFractal: `--lang fr,de,it,es,pt-BR,ja,tr,ar,he` on `scripts/snapshot-gallery.sh` and `scripts/snapshot-mac.sh`
 renders into `previews/<lang>/` (`previews/ipad/<lang>/`, `previews/duo/<lang>/`, `previews/mac/<lang>/`). Its review set
@@ -135,8 +134,7 @@ One entry in the scenario list, and nothing in the app:
 - **Never force an appearance or a language** (`.preferredColorScheme`, `.environment(\.locale, …)`): the light
   and dark passes and `-testLanguage` set them; `--check` scans the scenario files for both. The one admissible
   exception is a locale forced for its region, not its language (`en_US` to show a 12-hour clock): the line
-  carries `// gallery: allowed, <why>` and `--check` lets that line through (not yet in xFractal's
-  `preview-gallery.py`, which has no such scenario). A state that only existed as a "dark" variant is a plain scenario.
+  carries `// gallery: allowed, <why>` and `--check` lets that line through (xFractal has no such scenario). A state that only existed as a "dark" variant is a plain scenario.
   Dynamic Type variants are fine, as their own scenarios.
 - **Hermetic data.** A fresh in-memory store per scenario. The network is a stub that answers from committed
   fixtures (real API responses, their times shifted to now so screens look live) or fails with a given error,
@@ -157,9 +155,11 @@ One entry in the scenario list, and nothing in the app:
   pair for that reason only. Full-bleed imagery under chrome (a satellite map) does not darken in the dark
   appearance at all, so it cannot meet the pair rule either: such a card sets `imagery: true`, which waives the
   luminance rules for that pair (the byte-identical rule still applies). Measured: a map card at 0.401 light,
-  0.399 dark. xFractal: `documentCanvas`, `drawsNothing` and `skipped` are fields of `GalleryFixture`, written to
-  the manifest by `SnapshotGalleryTests` (`skipped` is one reason for every pass, not per platform); `imagery` is
-  not yet in its fixture or `preview-gallery.py`. No scenario sets one today (every scenario renders on every pass;
+  0.399 dark. xFractal: `documentCanvas`, `drawsNothing`, `imagery` and `skipped` are fields of `GalleryFixture`,
+  written to the manifest by `SnapshotGalleryTests`; `skipped` holds for every pass and `skippedOn: [GalleryPass:
+  String]` for the passes it names (`iphone`, `ipad`, `duo`), the test writing this pass's reason as the manifest's
+  `skipped`. In xFractal `imagery` waives every rule comparing the light render's luminance with the dark one's (the
+  `documentCanvas` pair rule, the sheet, glass and peek separations). No scenario sets one today (every scenario renders on every pass;
   the fractal region has its own validation, see the extras below).
 - `scripts/preview-gallery.py --coverage` lists view types no scenario names (informational: most are parts
   of other screens).
@@ -254,8 +254,8 @@ image byte-identical to its light one, a blank image (every pixel one colour; un
 cannot be decoded or is not at the render scale of its scenario's size (2x; 3x for the Duo's inner poses), and
 `.preferredColorScheme` or `\.locale` anywhere in the scenario files (xFractal's `--check` scans
 `GalleryScenarios.swift` and `GalleryFixtures.swift`; a `//` or `/* */` comment is ignored; a line marked
-`// gallery: allowed, <why>` passes). Not yet in xFractal's `preview-gallery.py`: the `imagery` waiver, the
-render-scale check and the `allowed` marker. An `--only` run replaces only its own images; the check still covers
+`// gallery: allowed, <why>` passes). xFractal's render scale comes from the manifest size: the Duo's inner poses
+(951 x 669 and 669 x 951 pt) at 3x, every other size at 2x. An `--only` run replaces only its own images; the check still covers
 every scenario. The gallery is done only when `--check` [en] passes.
 
 ## Converting a repo (from `#Preview`s)

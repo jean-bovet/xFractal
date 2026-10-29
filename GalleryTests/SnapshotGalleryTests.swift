@@ -30,6 +30,7 @@ final class SnapshotGalleryTests: XCTestCase {
         /// The fixture's flags for an honest `--check`, written only when set (see GalleryFixture).
         var documentCanvas: Bool?
         var drawsNothing: Bool?
+        var imagery: Bool?
         var skipped: String?
     }
 
@@ -79,8 +80,9 @@ final class SnapshotGalleryTests: XCTestCase {
                                       kinds: scenario.fixture.regions.map(\.rawValue), regions: nil, diagnostics: nil,
                                       fold: scenario.fixture.foldRegion.map { .init(x: $0.minX, y: $0.minY, w: $0.width, h: $0.height) },
                                       documentCanvas: scenario.fixture.documentCanvas ? true : nil,
-                                      drawsNothing: scenario.fixture.drawsNothing ? true : nil)
-            if let why = scenario.fixture.skipped {
+                                      drawsNothing: scenario.fixture.drawsNothing ? true : nil,
+                                      imagery: scenario.fixture.imagery ? true : nil)
+            if let why = scenario.fixture.skipReason(on: .current) {
                 // Skipped, never captured badly: listed with its reason, the pair left out.
                 print("gallery: skipped \(scenario.slug): \(why)")
                 entry.skipped = why

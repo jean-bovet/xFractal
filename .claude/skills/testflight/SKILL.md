@@ -115,7 +115,7 @@ buildlock --folder "$PWD/.build/DerivedData" -- \
   -destination 'platform=macOS' -derivedDataPath "$PWD/.build/DerivedData"
 ```
 
-macOS unit tests (71), no simulator. Run `xcodegen generate` first if `project.yml` changed (and commit
+macOS unit tests (82, one skipped), no simulator. Run `xcodegen generate` first if `project.yml` changed (and commit
 the regenerated project). Must end with `** TEST SUCCEEDED **`.
 
 Stop on failure. Never gate on an Xcode Cloud run here (see "How a build reaches TestFlight").

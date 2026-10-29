@@ -627,7 +627,7 @@ pool_unknown_device() {
 
 pool_french() {   # --lang fr: the test runs in French (region FR), its gallery in previews/fr/, English untouched
     pool_setup
-    gallery --lang fr --no-open; local status=$?
+    gallery --only board --lang fr --no-open; local status=$?
     expect pool_french "exits zero" [ "$status" = 0 ]
     expect pool_french "tested in French" called "-testLanguage fr -testRegion FR"
     expect pool_french "page in previews/fr" [ -f "$T/previews/fr/index.html" ]
@@ -636,7 +636,7 @@ pool_french() {   # --lang fr: the test runs in French (region FR), its gallery 
 
 pool_regions() {   # --lang ja,pt-BR,he,ar: Japan's region is JP, Israel's IL, Saudi Arabia's SA, a locale's region is its own (pt-BR -> BR)
     pool_setup
-    gallery --lang ja,pt-BR,he,ar --no-open; local status=$?
+    gallery --only board --lang ja,pt-BR,he,ar --no-open; local status=$?
     expect pool_regions "exits zero" [ "$status" = 0 ]
     expect pool_regions "tested in Japanese" called "-testLanguage ja -testRegion JP"
     expect pool_regions "tested in Brazilian Portuguese" called "-testLanguage pt-BR -testRegion BR"
@@ -650,6 +650,22 @@ pool_unknown_language() {
     gallery --lang ko --no-open; local status=$?
     expect pool_unknown_language "exits 2" [ "$status" = 2 ]
     expect pool_unknown_language "no lease" not_called "simpool acquire"
+}
+
+pool_language_needs_only() {   # a language other than English renders the store captures or a review set: never without --only
+    pool_setup
+    gallery --lang fr --no-open; local status=$?
+    expect pool_language_needs_only "fr without --only exits 2" [ "$status" = 2 ]
+    expect pool_language_needs_only "says --only is needed" grep -q -- "--only" "$T/out.log"
+    expect pool_language_needs_only "no lease" not_called "simpool acquire"
+    expect pool_language_needs_only "no build" not_called xcodebuild
+    pool_setup
+    gallery --lang en,de --no-open; status=$?
+    expect pool_language_needs_only "en,de without --only exits 2" [ "$status" = 2 ]
+    expect pool_language_needs_only "no lease for en,de" not_called "simpool acquire"
+    pool_setup
+    gallery --lang en --no-open; status=$?
+    expect pool_language_needs_only "en alone without --only runs" [ "$status" = 0 ]
 }
 
 pool_keep_booted() {   # --keep-booted changes nothing with the pool: released, nothing shut down
@@ -724,7 +740,7 @@ pool_signalled_term_build() { pool_signalled TERM build; }
 pool_signalled_term_test() { pool_signalled TERM test; }
 pool_signalled_hup_test() { pool_signalled HUP test; }
 
-POOL_CASES="pool_run pool_opens_the_en_page pool_given_udid pool_ipad pool_duo pool_unknown_device pool_french pool_regions pool_unknown_language pool_keep_booted pool_stale_marker pool_acquire_fails pool_build_fails pool_test_fails pool_check_fails
+POOL_CASES="pool_run pool_opens_the_en_page pool_given_udid pool_ipad pool_duo pool_unknown_device pool_french pool_regions pool_unknown_language pool_language_needs_only pool_keep_booted pool_stale_marker pool_acquire_fails pool_build_fails pool_test_fails pool_check_fails
 pool_signalled_int_acquire pool_signalled_int_build pool_signalled_int_test pool_signalled_term_build pool_signalled_term_test
 pool_signalled_hup_test"
 

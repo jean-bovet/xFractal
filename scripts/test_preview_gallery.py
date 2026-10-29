@@ -5,7 +5,8 @@
 
 Each test builds small synthetic PNGs in a temp directory (a stand-in for a 402 x 874 pt screen at scale 1), points the
 script at a temp output root through PREVIEW_GALLERY_OUT, and runs the real script (and the real pixel helper). No
-simulator, no project files.
+simulator, no project files. The synthetic images are not at the render scale: PREVIEW_GALLERY_RENDER_SCALE=off, except
+in RenderScaleTests.
 """
 import html
 import json
@@ -106,7 +107,7 @@ class GalleryTestCase(unittest.TestCase):
         self.addCleanup(self._tmp.cleanup)
         self.root = Path(self._tmp.name)
         self.out = self.root / "previews"
-        self.env = {**os.environ, "PREVIEW_GALLERY_OUT": str(self.out)}
+        self.env = {**os.environ, "PREVIEW_GALLERY_OUT": str(self.out), "PREVIEW_GALLERY_RENDER_SCALE": "off"}
 
     @property
     def en(self):
@@ -143,27 +144,27 @@ class GalleryTestCase(unittest.TestCase):
     def check(self, *args):
         return self.run_script("--check", *args)
 
-    def one(self, kinds, regions, images, slug="screen", measure=False):
+    def one(self, kinds, regions, images, slug="screen", measure=False, flags=None):
         """Imports one scenario with real pixels and checks it."""
-        manifest = [entry("Screen", "Group", slug, kinds, regions)]
+        manifest = [{**entry("Screen", "Group", slug, kinds, regions), **(flags or {})}]
         self.imported(manifest=manifest, images={slug: images})
         return self.check(*(["--measure"] if measure else []))
 
-    def board_case(self, light_capsule=gray(235), dark_capsule=gray(50), regions=None, mutate=None, measure=False):
+    def board_case(self, light_capsule=gray(235), dark_capsule=gray(50), regions=None, mutate=None, measure=False, flags=None):
         light, dark = board(light_capsule, dark_capsule)
         if mutate:
             mutate(light, dark)
         both = {"light": [region("peek", PEEK_BAND), region("fractal", FRACTAL)],
                 "dark": [region("peek", PEEK_BAND), region("fractal", FRACTAL)]}
-        return self.one(["peek", "fractal"], regions or both, (light, dark), measure=measure)
+        return self.one(["peek", "fractal"], regions or both, (light, dark), measure=measure, flags=flags)
 
-    def sheet_case(self, light_sheet=gray(246), dark_sheet=gray(20), mutate=None, measure=False, regions=None):
+    def sheet_case(self, light_sheet=gray(246), dark_sheet=gray(20), mutate=None, measure=False, regions=None, flags=None):
         light, dark = sheet_images(light_sheet, dark_sheet)
         if mutate:
             mutate(light, dark)
         both = {"light": [region("sheet", SHEET), region("fractal", (0, 60, W, 200))],
                 "dark": [region("sheet", SHEET), region("fractal", (0, 60, W, 200))]}
-        return self.one(["sheet", "fractal"], regions or both, (light, dark), measure=measure)
+        return self.one(["sheet", "fractal"], regions or both, (light, dark), measure=measure, flags=flags)
 
 
 class CheckTests(GalleryTestCase):
@@ -402,7 +403,7 @@ class ImageValidityTests(GalleryTestCase):
 
     def test_output_path_with_spaces(self):
         self.out = self.root / "my previews"
-        self.env = {**os.environ, "PREVIEW_GALLERY_OUT": str(self.out)}
+        self.env["PREVIEW_GALLERY_OUT"] = str(self.out)
         done = self.board_case()
         self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
 
@@ -434,7 +435,7 @@ class MetadataTests(GalleryTestCase):
 
 
 class FlagTests(GalleryTestCase):
-    """The manifest flags a scenario sets for an honest check: documentCanvas, drawsNothing, skipped."""
+    """The manifest flags a scenario sets for an honest check: documentCanvas, drawsNothing, imagery, skipped."""
 
     def flagged(self, images=None, **flags):
         manifest = [plain("Zeta screen", "Second group", "zeta-screen"), {**plain("Flat screen", "First group", "flat-screen"), **flags}]
@@ -477,6 +478,50 @@ class FlagTests(GalleryTestCase):
         self.assertIn("the folded simulator cannot show this pose", figure)
         self.assertNotIn("folded-pose.png", figure)
 
+    def test_imagery_waives_the_document_canvas_pair_rule(self):
+        same = (Image(46, 100, gray(30)).stripes(0, 0, 46, 8), Image(46, 100, gray(28)).stripes(0, 0, 46, 8))
+        done = self.flagged(images=same, documentCanvas=True, imagery=True)
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+
+    def test_imagery_waives_the_sheet_rule(self):
+        # A region that reads light in the dark render: fails without the flag, passes with it.
+        done = self.sheet_case(dark_sheet=gray(240))
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("sheet background not dark in the dark render of screen", done.stdout)
+        done = self.sheet_case(dark_sheet=gray(240), flags={"imagery": True})
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+
+    def test_imagery_waives_the_peek_separation(self):
+        done = self.board_case(light_capsule=gray(50), dark_capsule=gray(235), flags={"imagery": True})
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        done = self.board_case(light_capsule=gray(50), dark_capsule=gray(235))
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("peek capsule not distinguishable in screen", done.stdout)
+
+    def test_imagery_keeps_the_byte_identical_rule(self):
+        light = Image(46, 100, gray(30)).stripes(0, 0, 46, 8).png()
+        done = self.flagged(images=(light, light), imagery=True)
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("dark identical to light: flat-screen", done.stdout)
+
+    def test_image_of_a_skipped_scenario_is_stray(self):
+        why = "the iPad pass cannot render this pose"
+        manifest = [plain("Zeta screen", "Second group", "zeta-screen"), {**plain("Folded pose", "First group", "folded-pose"), "skipped": why}]
+        self.imported(manifest=manifest, only={"zeta-screen"})
+        (self.en / "folded-pose.dark.png").write_bytes(self.small()[1])
+        done = self.check()
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("stray image (skipped scenario): folded-pose.dark.png", done.stdout)
+
+    def test_import_drops_the_earlier_images_of_a_scenario_now_skipped(self):
+        # Rendered on an earlier run, skipped on this pass (a per-pass reason): the partial import removes its pair.
+        manifest = [plain("Zeta screen", "Second group", "zeta-screen"), plain("Folded pose", "First group", "folded-pose")]
+        self.imported(manifest=manifest)
+        skipped = [plain("Zeta screen", "Second group", "zeta-screen"), {**plain("Folded pose", "First group", "folded-pose"), "skipped": "not on this pass"}]
+        self.imported("--partial", manifest=skipped, only={"zeta-screen"}, name="src2")
+        self.assertFalse((self.en / "folded-pose.png").exists())
+        self.assertEqual(self.check().returncode, 0)
+
     def test_missing_pair_without_a_reason_still_fails(self):
         manifest = [plain("Zeta screen", "Second group", "zeta-screen"), plain("Folded pose", "First group", "folded-pose")]
         self.imported(manifest=manifest, only={"zeta-screen"})
@@ -505,9 +550,56 @@ class ScenarioFileTests(GalleryTestCase):
         self.assertEqual(done.returncode, 1)
         self.assertIn("forbidden in scenario file GalleryFixtures.swift:1: \\.locale", done.stdout)
 
+    def test_allowed_marker_lets_a_locale_line_through(self):
+        done = self.scan('let v = ContentView().environment(\\.locale, Locale(identifier: "en_US"))  // gallery: allowed, a 12-hour clock\n')
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+
+    def test_allowed_marker_without_a_reason_fails(self):
+        done = self.scan('let v = ContentView().environment(\\.locale, Locale(identifier: "en_US"))  // gallery: allowed\n')
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("forbidden in scenario file GalleryFixtures.swift:1: \\.locale", done.stdout)
+
+    def test_allowed_marker_never_lets_a_forced_appearance_through(self):
+        done = self.scan("let v = ContentView().preferredColorScheme(.dark)  // gallery: allowed, looks better\n")
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("forbidden in scenario file GalleryFixtures.swift:1: .preferredColorScheme", done.stdout)
+
     def test_comments_are_not_scanned(self):
         done = self.scan("// never .preferredColorScheme here\n/* nor\n .environment(\\.locale, x) */\nlet v = ContentView()\n")
         self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+
+
+class RenderScaleTests(GalleryTestCase):
+    """--check fails an image not at its scenario's render scale: 2x, 3x for the Duo's inner display poses."""
+
+    def setUp(self):
+        super().setUp()
+        del self.env["PREVIEW_GALLERY_RENDER_SCALE"]
+
+    def scaled(self, w_pt, h_pt, scale):
+        w, h = round(w_pt * scale), round(h_pt * scale)
+        pair = (Image(w, h, gray(240)).stripes(0, 0, w, 8), Image(w, h, gray(20)).stripes(0, 0, w, 8))
+        manifest = [{**plain("Screen", "Group", "screen"), "size": {"w": w_pt, "h": h_pt}}]
+        self.imported(manifest=manifest, images={"screen": pair})
+        return self.check()
+
+    def test_phone_at_2x_passes(self):
+        done = self.scaled(23, 50, 2)
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+
+    def test_phone_at_1x_and_3x_fail(self):
+        for scale in (1, 3):
+            done = self.scaled(23, 50, scale)
+            self.assertEqual(done.returncode, 1, scale)
+            self.assertIn("image not at the render scale: screen", done.stdout)
+            self.assertIn("at 2x: 46 x 100 expected", done.stdout)
+
+    def test_duo_inner_pose_at_3x_passes_and_at_2x_fails(self):
+        done = self.scaled(951, 669, 3)
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        done = self.scaled(669, 951, 2)
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("at 3x: 2007 x 2853 expected", done.stdout)
 
 
 class RegionTests(GalleryTestCase):

@@ -14,7 +14,8 @@
 #                  A full run (or one whose PATTERN names "artwork") also renders GalleryFixtures.artwork, the App
 #                  Store creative-asset backgrounds, into previews/artwork/ at full size.
 # --lang en,fr     the languages to render, each one more test run (en, fr, de, it, es, pt-BR, ja, tr, ar, he): each language into its own folder (previews/en/, previews/fr/;
-#                  previews/ipad/en/, previews/ipad/fr/ on the iPad)
+#                  previews/ipad/en/, previews/ipad/fr/ on the iPad). A language other than English needs --only (the store
+#                  captures or a review set): without it the script exits 2
 # --keep-booted    fallback only: leave the simulator running for the next run (shut it down later with --shutdown)
 # --no-open        do not open the page
 # --verbose        also print the test's per-render timing lines
@@ -73,6 +74,16 @@ while [ $# -gt 0 ]; do
         *) echo "unknown option: $1" >&2; exit 2 ;;
     esac
 done
+
+# The gallery is English only: another language renders the App Store captures or a review set, always with --only.
+if [ -z "$ONLY" ]; then
+    for l in "${LANGS[@]}"; do
+        if [ "$l" != en ]; then
+            echo "--lang $l needs --only: the gallery is English; other languages render the store captures or a review set" >&2
+            exit 2
+        fi
+    done
+fi
 
 # The iPad renders into its own gallery (previews/ipad/) and, without the pool, its own simulator.
 if [ "$DEVICE" = ipad ]; then
