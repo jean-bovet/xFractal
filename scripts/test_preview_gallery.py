@@ -5,8 +5,8 @@
 
 Each test builds small synthetic PNGs in a temp directory (a stand-in for a 402 x 874 pt screen at scale 1), points the
 script at a temp output root through PREVIEW_GALLERY_OUT, and runs the real script (and the real pixel helper). No
-simulator, no project files. The synthetic images are not at the render scale: PREVIEW_GALLERY_RENDER_SCALE=off, except
-in RenderScaleTests.
+simulator, no project files. The synthetic images are not at the render scale, so the script runs through
+WITHOUT_RENDER_SCALE (do_check(check_render_scale=False), a harness no real run uses), except in RenderScaleTests.
 """
 import html
 import json
@@ -21,6 +21,16 @@ from pathlib import Path
 
 SCRIPT = Path(__file__).resolve().parent / "preview-gallery.py"
 W, H = 402, 874
+# Runs the script's main() with the render-scale check off: the only way to turn it off (no flag, no variable).
+WITHOUT_RENDER_SCALE = """
+import functools, importlib.util, sys
+spec = importlib.util.spec_from_file_location("preview_gallery", sys.argv[1])
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+module.do_check = functools.partial(module.do_check, check_render_scale=False)
+sys.argv = sys.argv[1:]
+module.main()
+"""
 
 
 class Image:
@@ -107,7 +117,8 @@ class GalleryTestCase(unittest.TestCase):
         self.addCleanup(self._tmp.cleanup)
         self.root = Path(self._tmp.name)
         self.out = self.root / "previews"
-        self.env = {**os.environ, "PREVIEW_GALLERY_OUT": str(self.out), "PREVIEW_GALLERY_RENDER_SCALE": "off"}
+        self.env = {**os.environ, "PREVIEW_GALLERY_OUT": str(self.out)}
+        self.render_scale_check = False
 
     @property
     def en(self):
@@ -135,7 +146,8 @@ class GalleryTestCase(unittest.TestCase):
         return directory
 
     def run_script(self, *args):
-        return subprocess.run([sys.executable, str(SCRIPT), *args], capture_output=True, text=True, env=self.env)
+        launch = [str(SCRIPT)] if self.render_scale_check else ["-c", WITHOUT_RENDER_SCALE, str(SCRIPT)]
+        return subprocess.run([sys.executable, *launch, *args], capture_output=True, text=True, env=self.env)
 
     def imported(self, *args, **kwargs):
         done = self.run_script("--import", str(self.source(**kwargs)), *args)
@@ -574,7 +586,7 @@ class RenderScaleTests(GalleryTestCase):
 
     def setUp(self):
         super().setUp()
-        del self.env["PREVIEW_GALLERY_RENDER_SCALE"]
+        self.render_scale_check = True
 
     def scaled(self, w_pt, h_pt, scale):
         w, h = round(w_pt * scale), round(h_pt * scale)
@@ -586,6 +598,12 @@ class RenderScaleTests(GalleryTestCase):
     def test_phone_at_2x_passes(self):
         done = self.scaled(23, 50, 2)
         self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+
+    def test_the_old_variable_does_not_turn_the_check_off(self):
+        self.env["PREVIEW_GALLERY_RENDER_SCALE"] = "off"
+        done = self.scaled(23, 50, 1)
+        self.assertEqual(done.returncode, 1, done.stdout + done.stderr)
+        self.assertIn("image not at the render scale: screen", done.stdout)
 
     def test_phone_at_1x_and_3x_fail(self):
         for scale in (1, 3):

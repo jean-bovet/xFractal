@@ -27,8 +27,9 @@ luminance at least DOCUMENT_CANVAS_DELTA below the light one's), `drawsNothing: 
 `imagery: true` (full-bleed imagery that does not darken in the dark appearance: every rule that compares the light
 render's luminance with the dark one's is waived for the pair, the byte-identical rule still applies), `skipped:
 "<why>"` (not rendered on this pass: the page says so and the missing pair is accepted for that reason only; the test
-resolves a per-pass reason into this field). PREVIEW_GALLERY_RENDER_SCALE=off turns the render-scale check off (the
-contract tests' synthetic images only). --measure enforces everything except the peek and sheet thresholds and writes calibration.json with the
+resolves a per-pass reason into this field). Nothing on the command line or in the environment turns the
+render-scale check off: only the contract tests do, by calling do_check(check_render_scale=False) for their synthetic
+images. --measure enforces everything except the peek and sheet thresholds and writes calibration.json with the
 numbers those thresholds are set from.
 """
 import argparse
@@ -390,7 +391,7 @@ def scenario_file_problems():
     return problems
 
 
-def do_check(lang, measure=False):
+def do_check(lang, measure=False, check_render_scale=True):
     out = output_dir(lang)
     manifest = load_manifest(out)
     build_page(manifest, out, lang)
@@ -458,7 +459,7 @@ def do_check(lang, measure=False):
             problems.append(f"image does not match the manifest size: {slug} ({light[0]} x {light[1]} for {want['w']} x {want['h']} pt)")
             sizes[f"{slug}.png"] = sizes[f"{slug}.dark.png"] = None
             continue
-        if want.get("w") and want.get("h") and os.environ.get("PREVIEW_GALLERY_RENDER_SCALE") != "off":
+        if check_render_scale and want.get("w") and want.get("h"):
             scale = render_scale(e)
             if abs(light[0] - want["w"] * scale) > 1 or abs(light[1] - want["h"] * scale) > 1:
                 problems.append(f"image not at the render scale: {slug} ({light[0]} x {light[1]} for {want['w']:g} x {want['h']:g} pt"
