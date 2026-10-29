@@ -150,6 +150,10 @@ while tracked changes are uncommitted or untracked files are not ignored: commit
   app the scheme drives) stays untouched — and `COMPILER_INDEX_STORE_ENABLE=NO` on the command line:
   without a derived-data path Xcode emits an empty `-index-store-path` and clang's hardening flag turns
   into a bare warning. Keep that flag off the project files, so Xcode still indexes.
+  The warnings check compiles **every platform target that compiles the changed sources**, not only the
+  target whose folder changed: a shared package or framework change also builds the iOS (or other) target,
+  because a platform-conditional member called outside its `#if` passes every Mac gate and fails only the CI
+  archive of the other platform.
 - **Docs-only changes** (no code) skip the build gates: `git diff --check`, every link and citation
   still resolves, and the working agreement, plans index and README stay consistent.
 
