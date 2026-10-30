@@ -128,6 +128,15 @@ while tracked changes are uncommitted or untracked files are not ignored: commit
   boot, shut down or touch a simulator by hand. One `-destination` per run and
   `-parallel-testing-enabled NO -collect-test-diagnostics never` on every simulator test run (without the second flag a failing test, so every red proof, makes xcodebuild collect a sysdiagnose-like simulator report for up to 10 minutes; the gates read the log, never that report. To debug a failure nobody can explain, rerun that one test without it). A repo whose scripts still boot their own
   simulator follows the global agreement's rule for those.
+- **Keep the Mac awake.** A gate script that runs simulators or long builds re-executes itself once under
+  `caffeinate -is` (a guard variable such as `<REPO>_CAFFEINATED` so it happens once; `"$@"` and the exit status
+  kept; no re-exec, one notice line, when `caffeinate` is missing). Where the gate is a list of commands rather
+  than a script, each long command runs as `caffeinate -is <command>` (`caffeinate -is buildlock --folder <dd> --
+  xcodebuild test …`). xcodebuild's own "running tests" assertion is
+  only `PreventUserIdleSystemSleep`, which lets a Mac in Maintenance Sleep / DarkWake drop off mid-run: a night gate
+  then stalls for minutes at a time inside XCTest steps and fails with "Timed out while synthesizing event"
+  (measured 2026-10-30: 2 h 45 min instead of 42 min, every gap matching `pmset -g log`). A gate script that
+  re-executes itself has script tests for the re-exec, argument boundaries, the missing tool and signals.
 - **Wait in slices.** A subagent's prompt cache lives five minutes (the parent's, one hour). Inside a
   subagent, no blocking call runs longer than four minutes: a build, a test run, the gallery or a Codex
   round starts in the background with its output in a log, and the agent checks that log every four
@@ -171,7 +180,7 @@ while tracked changes are uncommitted or untracked files are not ignored: commit
 - **Test gate:** the command of `AGENTS.md` § Running the tests, with `<dd>` as the build folder:
 
   ```sh
-  buildlock --folder <dd> -- \
+  caffeinate -is buildlock --folder <dd> -- \
     xcodebuild test -project xFractal.xcodeproj -scheme xFractal-MAS -configuration Debug \
     -destination 'platform=macOS' -derivedDataPath <dd>
   ```
@@ -183,8 +192,8 @@ while tracked changes are uncommitted or untracked files are not ignored: commit
   target built with `-target` (never a scheme):
 
   ```sh
-  buildlock --folder <dd> -- xcodebuild -project xFractal.xcodeproj -target xFractalTests -configuration Debug SYMROOT=<dd>/build-mac COMPILER_INDEX_STORE_ENABLE=NO build
-  buildlock --folder <dd> -- xcodebuild -project xFractal.xcodeproj -target xFractalGalleryTests -sdk iphonesimulator -configuration Debug SYMROOT=<dd>/build-ios COMPILER_INDEX_STORE_ENABLE=NO build
+  caffeinate -is buildlock --folder <dd> -- xcodebuild -project xFractal.xcodeproj -target xFractalTests -configuration Debug SYMROOT=<dd>/build-mac COMPILER_INDEX_STORE_ENABLE=NO build
+  caffeinate -is buildlock --folder <dd> -- xcodebuild -project xFractal.xcodeproj -target xFractalGalleryTests -sdk iphonesimulator -configuration Debug SYMROOT=<dd>/build-ios COMPILER_INDEX_STORE_ENABLE=NO build
   ```
 
   (each test target builds its host app: `xFractal-MAS`, `xFractal-iOS`). Read `grep -E '(warning|error):'`
@@ -193,7 +202,8 @@ while tracked changes are uncommitted or untracked files are not ignored: commit
   step) when a step changes what a screen looks like; a new or changed screen state needs its scenario
   in `GalleryTests/GalleryFixtures.swift` and `GalleryScenarios.swift`. It leases its simulator from the
   pool and runs its builds under `buildlock` (its own DerivedData): never call `xcodebuild` or `simctl`
-  around it. Must end with `CHECK OK`. Never add a `#Preview`.
+  around it. It keeps the Mac awake on its own (`caffeinate -dims -w $$`, bound to the script's process), so it
+  runs without a `caffeinate` prefix. Must end with `CHECK OK`. Never add a `#Preview`.
 - **Script tests:** a change under `scripts/` also runs
   `python3 -m unittest discover -s scripts -p 'test_preview_gallery.py'` and
   `scripts/test_snapshot_gallery.sh`.
