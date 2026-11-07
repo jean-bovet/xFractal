@@ -89,7 +89,8 @@ above) exists and 2.0 is live untagged, so What's New covers the changes since t
 - Otherwise it is a **new release** of that range.
 
 **CI.** Find the Xcode Cloud run of the candidate's commit (`xcode-cloud builds --limit 10`) and
-`report` it: every action passed, including test actions on a run marked SUCCEEDED. Note its
+`report` it: every action passed, including test actions on a run marked SUCCEEDED, and the run has
+zero warnings in our own sources (or the warnings policy the repo states in its own part). Note its
 build number for §6.
 
 Here: `xcode-cloud builds xFractal-iOS --limit 10` and `xcode-cloud report xFractal-iOS <build number>`
@@ -128,6 +129,7 @@ Each prints `PROBLEM`, `CHECK` and `ok` lines. What they cover, and what to judg
 | Export compliance | No `ITSAppUsesNonExemptEncryption`: every build waits on "Missing Compliance" |
 | Description, keywords, promotional text | Still true of this build: an old description promising removed features (guideline 2.3), a retired domain, an old device ("iPod touch") |
 | Screenshots | A set at the required size for **every** device family the build supports, in every store locale (a newly added iPad needs iPad screenshots); old sets that show an outdated UI |
+| App Preview videos | The `<locale>: App Preview videos` `CHECK` line lists each locale's videos: do they still show this build's UI? An outdated video is replaced or removed (`app-store previews`), not left; a locale with none is fine unless the repo ships them |
 | URLs | Support and marketing URLs on every locale, a privacy policy URL (required), all `https` and returning 200, none on a retired domain |
 | Copyright | Current year |
 | Age rating | Questions Apple added since the last release left unanswered block submission |
@@ -154,7 +156,7 @@ Review contact): all of them are fixed with the page tools below before going on
 
 If either checker exits non-zero, or a `CHECK` shows something false, **stop**: list each problem
 with its proposed fix (code fixes follow the repo's own workflow and need a new `/testflight`;
-App Store page fixes use `app-store metadata`, `age-rating` and `screenshots`; pages on the web go
+App Store page fixes use `app-store metadata`, `age-rating`, `screenshots` and `previews`; pages on the web go
 on the non-retired domain), and ask Jean whether to fix them. Resume at §2 once fixed — a code fix
 changes the candidate.
 
@@ -259,6 +261,10 @@ its type (`app-store status` prints `releaseType=`). **On a first release skip `
 already exists, and `prepare` would set a What's New a first version cannot carry; fill the page with
 `app-store metadata`, `age-rating` and `screenshots` instead, then `attach-build` and `check`. A first
 version has no phased release.
+
+**Screenshots: you upload them, Jean only approves.** When §3 or §2b says screenshots need updating, render
+every set, show Jean all the renders in one go, and once he approves, upload them yourself with
+`app-store screenshots` (the Duo sets as §2b says); Jean never uploads by hand.
 
 `metadata` gets the keywords from `AppStore/keywords.txt` (one `--keywords` per line) and the names
 and subtitles from `AppStore/app-info.txt` (one `--name` and one `--subtitle` per line). `--add-locale` does nothing for a

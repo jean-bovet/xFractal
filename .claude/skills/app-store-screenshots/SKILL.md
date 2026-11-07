@@ -17,16 +17,16 @@ The app: xFractal, App Store product `xFractal-iOS` (`--app xFractal-iOS`). The 
 captures). What the captures cannot
 show: the app's own text is in the store language only when the slides' captures were rendered in it, else English;
 the captures are 2x (804 px wide). The localized captures, right before rendering the slides (the gallery itself stays
-English): `scripts/snapshot-gallery.sh --only "board-julia,board-mandelbrot-deep-zoom-chromatic,board-mandelbrot-first-launch,board-multibrot,board-newton,controls-julia-large" --lang fr,de,it,es,pt-BR,ja,tr,ar,he`
-(`previews/fr/`, …), the same with `--device ipad` (`previews/ipad/fr/`, …), and `scripts/snapshot-mac.sh --lang
-fr,de,it,es,pt-BR,ja,tr,ar,he` (its four windows are the Mac slides: `previews/mac/fr/`, …). Keep the `--only` list in step with the
-`capture` names in `AppStore/screenshots.json`.
+English): `scripts/snapshot-gallery.sh --only "$(only AppStore/screenshots.json)" --lang fr,de,it,es,pt-BR,ja,tr,ar,he`
+(`previews/fr/`, …), the same with `--device ipad --only "$(only AppStore/screenshots-ipad.json)"` (`previews/ipad/fr/`, …), and `scripts/snapshot-mac.sh --lang
+fr,de,it,es,pt-BR,ja,tr,ar,he` (its four windows are the Mac slides: `previews/mac/fr/`, …). `only` builds each `--only` list from the slides
+files (§1).
 
 iPhone Duo, two sets, one config each (`displayType` `IPHONE_DUO`), uploaded together per locale (§4):
 
-- Outer display, 1398 x 2034: `scripts/snapshot-gallery.sh --device duo --only "<slides' captures>" --lang fr,de,it,es,pt-BR,ja,tr,ar,he`
+- Outer display, 1398 x 2034: `scripts/snapshot-gallery.sh --device duo --only "$(only AppStore/screenshots-duo-outer.json)" --lang fr,de,it,es,pt-BR,ja,tr,ar,he`
   (captures into `previews/duo/`), then `app-store-screenshots --config AppStore/screenshots-duo-outer.json --captures previews/duo`.
-- Inner display, 2853 x 2007 (landscape): `scripts/snapshot-gallery.sh --device duo --only "duo-inner-landscape" --lang fr,de,it,es,pt-BR,ja,tr,ar,he`,
+- Inner display, 2853 x 2007 (landscape): `scripts/snapshot-gallery.sh --device duo --only "$(only AppStore/screenshots-duo-inner.json)" --lang fr,de,it,es,pt-BR,ja,tr,ar,he`,
   then `app-store-screenshots --config AppStore/screenshots-duo-inner.json --captures previews/duo`.
 
 ## 1. Captures
@@ -35,8 +35,31 @@ Refresh the captures first when the UI changed since the last gallery run: the s
 name (`"capture": "<slug>"` or `"<slug>.dark"`). A slide that needs a screen state the gallery does not have gets a
 new gallery scenario (the `/preview-gallery` rules), never a hand-made capture. When the store pages show the app in
 each language, re-render the slides' captures in those languages too (`--only` and `--lang`, see the slides file
-below): stale localized captures show an older UI than the English one. A localized capture that is missing falls
-back to English silently: before rendering, list every slide capture missing from each language folder.
+below): stale localized captures show an older UI than the English one.
+
+Build the `--only` list from the slides files, never by hand: every phone's `capture`, from the pass's slides files, with
+any `.dark` suffix stripped (`--only` matches scenario slugs; a run renders light and dark):
+
+```sh
+only() { python3 -c "import json,sys;print(','.join(sorted({p['capture'].removesuffix('.dark') for f in sys.argv[1:] for s in json.load(open(f))['slides'] for p in s['phones']})))" "$@"; }
+```
+
+Pre-render check: a missing localized capture falls back to English silently, so list every slide capture, as written
+(`.dark` included), missing in English or in any language folder (a language folder beside each capture, English in `en/`); any output stops the render:
+
+```sh
+python3 -c "
+import json,os
+for f,c in [('AppStore/screenshots.json','previews'),('AppStore/screenshots-ipad.json','previews/ipad'),
+              ('AppStore/screenshots-duo-inner.json','previews/duo'),('AppStore/screenshots-duo-outer.json','previews/duo'),
+              ('AppStore/screenshots-mac.json','previews')]:
+    for s in json.load(open(f))['slides']:
+        for p in s['phones']:
+            d,_,b=p['capture'].rpartition('/')
+            for l in ('en','fr','de','it','es','pt-BR','ja','tr','ar','he'):
+                x=os.path.join(c,d,l,b+'.png')
+                if not os.path.exists(x): print('missing',x)"
+```
 
 ## iPad and Mac
 
@@ -92,6 +115,18 @@ app-store screenshots --app xFractal-iOS --version <v> --locale <locale> --displ
 ```
 
 `app-store check` then lists them as `IPHONE_DUO: <n> (asset library)`. Sizes, badge and the April 2027 deadline: `docs/iphone-duo.md`, next to the tools the global working agreement names.
+
+App Preview videos are not rendered here. A repo that makes them has its own preview generator (a script in the repo, if it
+has one); upload what it produces, once Jean approved it, beside the screenshots: one call per locale, or `--locale all`
+for the same videos on every locale. It replaces the locale's set for that preview type and waits until App Store Connect
+has processed the videos:
+
+```sh
+app-store previews --app xFractal-iOS --version <v> --locale <locale>|all --preview-type IPHONE_67 FILE...
+```
+
+At most 3 videos of 15-30 seconds per set (`IPHONE_67` is the 6.9-inch, 886 x 1920); `--frame` sets the poster frame and
+`--remove-preview-type` deletes an outdated set. `check` lists each locale's videos as `App Preview videos`.
 
 After the upload, `app-store check --app xFractal-iOS --platform IOS --version <v> --families iphone,ipad` must
 report 0 problems (the Mac set: `--platform MAC_OS --families mac`).
@@ -164,6 +199,8 @@ app-store-screenshots --config AppStore/search-results.json      # -> .build/app
   is not. Keep the tilt moderate so the UI stays readable.
 - Headlines in every store language, written in the tone of that language's store description (formal or informal
   address as it does). Keep claims to what the description already says.
+- A new or changed headline in a language Jean does not read gets checked against Apple's glossary and a blind
+  back-translation; record the result in the repo's translation-check review file.
 - No Apple product artwork in the repo: the phone is drawn in CSS by the renderer.
 - The output (`.build/`) and the captures are not committed; the slides file is.
 
