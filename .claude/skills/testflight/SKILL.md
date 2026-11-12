@@ -112,7 +112,7 @@ TestFlight build until `/release` shares that version. `/release` tags the versi
 ## 5. Test gate
 
 ```bash
-buildlock --folder "$PWD/.build/DerivedData" -- \
+caffeinate -is buildlock --folder "$PWD/.build/DerivedData" -- \
   xcodebuild test -project xFractal.xcodeproj -scheme xFractal-MAS -configuration Debug \
   -destination 'platform=macOS' -derivedDataPath "$PWD/.build/DerivedData"
 ```
