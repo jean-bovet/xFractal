@@ -35,7 +35,7 @@ Facts this skill relies on:
   must be set above that in App Store Connect ▸ Xcode Cloud ▸ Settings.
 - **This skill is the only thing that moves `testflight`**, and it only ever fast-forwards it to
   `main`. A request for a TestFlight build is a request for this skill, never a hand push of the
-  branch. Never `--force`.
+  branch. Never `--force`. A repository's first run creates the branch, the same way (§1).
 - It runs in the main conversation: git, a few files, a check or two — no subagent.
 - It ends when `testflight` is pushed (§10). Processing, the build report and the expiry reminder
   are Jean's to ask for later (§11); never wait on Xcode Cloud after the push.
@@ -51,6 +51,7 @@ Facts this skill relies on:
 ```bash
 git rev-parse --abbrev-ref HEAD                      # must be main
 git status --porcelain --untracked-files=all         # must be empty
+git ls-remote --exit-code --heads origin testflight  # exit 2: no such branch yet, the first run (below)
 git fetch origin main testflight --tags              # tags pushed from elsewhere, for §4
 git rev-list --count main..origin/main               # must be 0 (main not behind)
 git merge-base --is-ancestor origin/testflight main  # must succeed
@@ -60,6 +61,11 @@ git merge-base --is-ancestor origin/testflight main  # must succeed
   them. Name them and ask Jean what to do.
 - `origin/testflight` not an ancestor of `main`: something else was pushed there; Jean sorts it out
   by hand.
+- **First run: `origin` has no `testflight` branch yet** (`git ls-remote` exits 2). Fetch with
+  `git fetch origin main --tags` and skip the ancestor check: there is nothing to be an ancestor
+  of. Every other guard holds. What goes out is all of `main` (§2), §8's push creates the branch at
+  `main`, and the report says so (§10). Never create the branch any other way: its first push
+  starts a build.
 
 ## 2. What goes out — new, resumed or nothing
 
@@ -74,24 +80,29 @@ change**, and keep the answer:
   it: an earlier run committed, then stopped before the build started. Keep its version and notes,
   skip §4–§6, and continue at §7 **after its commit**: the commit already exists, so never run
   `git add` or `git commit` again; push `main` (a no-op if it is already pushed), tag if the repo tags,
-  then §8.
+  run the companion deploy when the repo has one, then §8.
 - **Nothing new** if the range is empty: say "nothing new since the last build (`<sha>`)" and stop,
   unless Jean asks for a §11 step for that build (then do only that). If he
   explicitly wants the same commit rebuilt, make no empty commit: the `xcode-cloud` tool's
   `rebuild <number>` (see §11) starts it again, or "Start Build" in App Store Connect ▸ Xcode Cloud.
 - Otherwise it is a **new release** of that range.
 
+**On the first run** (§1) there is no `origin/testflight` and so no range to list: what goes out is
+all of `main`. It is a new release, or a resume when `HEAD` is already this skill's release commit;
+never "nothing new". §6 then writes the notes from what the app does, not from a commit list.
+
 ## 3. Preconditions
 
-No CloudKit: the app has no iCloud entitlement, so the CloudKit gate below never fires. If an
-entitlement for iCloud ever appears in `xFractal-MAS.entitlements` or the iOS target, apply it.
+**CloudKit Production.** TestFlight builds of an app that syncs through CloudKit run against the
+Production schema, which is deployed by hand in the CloudKit Console; such an app verifies it on
+every run, resumes included, before anything is committed or pushed. **CloudKit environment of the
+Release build:** such an app also checks that the archive signs the Production environment. Neither
+applies here.
 
-**CloudKit Production.** TestFlight builds sync against Production, which is deployed by hand in
-the CloudKit Console. When the check above finds a schema change (or cannot rule one out), ask
-Jean with `AskUserQuestion` whether the Production deploy is done; on anything but yes, stop. Where
-the repo can query the Production schema through the CloudKit API (`xcrun cktool export-schema`),
-verify it there rather than asking for a yes or no. A build that reaches a device before its
-schema is the one failure this skill must never automate.
+No CloudKit: the app has no iCloud entitlement (`xFractal-MAS.entitlements` holds only the App
+Sandbox; the iOS target has no entitlements file), so there is no schema to verify and no Release
+environment to check, and nothing is asked. Adding iCloud to either app is a change to this skill
+first: it then takes the CloudKit Production and Release-environment checks of the shared process.
 
 Ask the version question of §4 now, in one `AskUserQuestion` call, unless `$ARGUMENTS` gave it.
 
@@ -178,9 +189,13 @@ git push origin main
 
 No tag: the App Store release tags `v<version>` (RELEASING.md), not this skill.
 
-Push `main` and `testflight` (§8) together, right after the commit: Jean's approval of the notes
+Push `main` and `testflight` (§8) together, right after the commit, with only the companion deploy
+below between them: Jean's approval of the notes
 (§6) is the go. Never wait for an Xcode Cloud run — before the commit or after the push — and never
 ask again before §8.
+
+**Companion deploy:** none. (A companion deploy is something of the repo's own that must be live
+before the build exists; xFractal has none, so nothing runs between the two pushes.)
 
 ## 8. Start the build: fast-forward `testflight`
 
@@ -189,8 +204,8 @@ git push origin main:refs/heads/testflight
 git branch -f testflight main 2>/dev/null || true   # local copy; a worktree may have it checked out
 ```
 
-The push is a fast-forward by construction of §1. A refused push means the branch moved since;
-that is Jean's to resolve. Never `--force`, never push anything but `main` to `testflight`.
+The push is a fast-forward by construction of §1; on the first run it creates `testflight` at
+`main`. A refused push means the branch moved since; that is Jean's to resolve. Never `--force`, never push anything but `main` to `testflight`.
 
 ## 9. After the build starts
 
@@ -206,7 +221,7 @@ background watcher, no "still running" check-ins. Report right away:
 - that pushing `testflight` started the archive, and where to follow it: App Store Connect ▸ the
   app ▸ Xcode Cloud ▸ Builds shows the run and its build number (never predict it); the
   TestFlight group gets the build when processing ends, with the notes as "What to Test";
-- if the CloudKit gate of §3 fired, that Jean confirmed the Production deploy;
+- on a first run, that all of `main` went out and that this push created the `testflight` branch;
 - that the build is checked only once that run finishes: its tests and archive are the check;
 - how to ask for §11 later ("report Xcode Cloud build <n>", "remind me about <App>'s expiry").
 

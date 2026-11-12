@@ -264,7 +264,8 @@ version has no phased release.
 
 **Screenshots: you upload them, Jean only approves.** When §3 or §2b says screenshots need updating, render
 every set, show Jean all the renders in one go, and once he approves, upload them yourself with
-`app-store screenshots` (the Duo sets as §2b says); Jean never uploads by hand.
+`app-store screenshots --app xFractal-iOS` (`--platform IOS`: `APP_IPHONE_67`, `APP_IPAD_PRO_3GEN_129`;
+`--platform MAC_OS`: `APP_DESKTOP`; the Duo sets as §2b says); Jean never uploads by hand.
 
 `metadata` gets the keywords from `AppStore/keywords.txt` (one `--keywords` per line) and the names
 and subtitles from `AppStore/app-info.txt` (one `--name` and one `--subtitle` per line). `--add-locale` does nothing for a
@@ -288,9 +289,6 @@ Then list Jean's manual steps:
 - confirm the App Privacy label matches the build (the API cannot read it);
 - submit version `<version>` for review, each platform separately (the `IOS` and the `MAC_OS`
   version);
-- screenshots retaken (§3 answer 2): upload with `app-store screenshots --app xFractal-iOS`
-  (`--platform IOS`: `APP_IPHONE_67`, `APP_IPAD_PRO_3GEN_129`; `--platform MAC_OS`: `APP_DESKTOP`)
-  or in App Store Connect;
 - the privacy policy changed (§3 answer 4): `docs/privacy.html`, committed and pushed on `main`
   (GitHub Pages publishes it), and the App Privacy label in App Store Connect.
 

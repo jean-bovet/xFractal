@@ -225,6 +225,9 @@ The **full run** (the test gate and the full gallery) is not part of `/develop`:
   `--check --skip-build` ("catalog unchanged"); commit the catalog with the step. `--check` still
   builds, and `--skip-build` reuses a possibly stale build. catalog-sync builds into its own private folder and takes no `buildlock` slot, but it is still a build: never run it alongside another one. `LocalizationTests` (in the test gate)
   fails on a key missing a translation and on a stale key.
+- **Right-to-left:** Hebrew and Arabic are in the catalog, so a change to layout or strings also runs
+  through `docs/right-to-left.md`, next to the tools the global working agreement names (digits, the
+  minus sign, what must not mirror, the gallery's direction-aware tests).
 
 ## Deploy (only when Jean asks)
 
