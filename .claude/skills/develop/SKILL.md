@@ -90,29 +90,25 @@ rationale, or nothing.
 
 Two tiers. **Step gates** run after each plan step and each fix round: the build, the warnings check
 and the unit tests, never the preview gallery: a step that adds or changes scenarios only checks that they compile, and the
-final gate renders every scenario once.
+look is shown to Jean at the landing gate.
 Step gates never run the UI tests, not even for a step that touches what they drive (navigation,
-titles, accessibility identifiers, launch fixtures): they are slow, and the final gate catches what
+titles, accessibility identifiers, launch fixtures): they are slow, and the landing gate catches what
 they would. A brief that asks a step gate or a fix round for them is overruled: they wait for the
-final gate. The **final gate** runs **once per plan**, on the tree handed back: every gate
-below in full, the UI tests included, plus the full gallery when the plan touched UI. Step gates never replace it. It starts only once phase 5's last review round and its fixes are
-committed, never while a round may still change the code. After it
-passed on a commit G, every later tree (a fix round, the rebase, the squash on `main`) is classified
-by what changed since G and reruns only what its class requires, not the final gate again:
+landing gate. The **landing gate** runs **once per plan**, on the tree handed back, on a fresh `<dd>`: the
+quick tier (the test gate and the warnings gate below); xFractal has no UI test suites, so there are none to add
+and no device to pick for them; plus, before landing, the gallery shown to Jean (`scripts/snapshot-gallery.sh
+--only <scenarios>` for the scenarios concerned, or in full) when the look changes. The plan's test list names
+what runs. Step gates never replace it. It starts only once phase 5's last review round and its fixes are
+committed, never while a round may still change the code. A later tree (a fix round, the rebase, the squash on
+`main`) reruns the landing gate when it changed anything outside the docs-only paths of Context (`git diff
+--name-only <the commit the last landing gate passed on>` answers); a docs-only change runs the docs-only checks
+below.
 
-| Class | When (tracked paths changed since G) | What reruns |
-|---|---|---|
-| `none` | the same tree (a no-op rebase, the squash commit on `main`), or only docs-only paths | no build or test; for a docs edit, the docs-only checks below |
-| `quick` | only docs-only paths and test code that cannot change what ships | the step gate, plus the warnings check on its logs |
-| `full` | any other path | the whole final gate on a fresh `<dd>`; that tree becomes the new G |
-
-When in doubt, the class is `full`. The repo fills in the exact paths for `quick` and `none`, and a
-script that prints the class when it has one (see its gates facts); without a script, the parent
-reads `git diff --name-only G` and applies the table by hand. A script must refuse to classify
-while tracked changes are uncommitted or untracked files are not ignored: commit first.
+The **full run** (the test gate and the full gallery) is not part of `/develop`: it runs only in `/testflight`
+§ Test gate, before every build. Send TestFlight builds often, so a red full run spans few plans.
 
 - **Build folders.** Step gates reuse ONE build folder for the whole plan (`<dd>`, e.g.
-  `/private/tmp/<id-slug>-dd`, created once), so every build after the first is incremental. The final
+  `/private/tmp/<id-slug>-dd`, created once), so every build after the first is incremental. The landing
   gate uses a fresh `<dd>`, which also re-surfaces warnings an incremental build would not recompile.
   Logs go to a new scratch directory for every gate run.
 - **Build once, test without building.** Where the platform allows it, a gate builds the tests once
@@ -161,7 +157,7 @@ while tracked changes are uncommitted or untracked files are not ignored: commit
   fix first, revert only the fix's lines, run the test and see it fail, restore with
   `git checkout -- <file>` (never a hand-written inverse), then confirm `git status` is clean and grep
   the tree for any temporary marker. A red-proof run builds incrementally in the step gates' `<dd>` and
-  runs only the test class concerned (`xcodebuild test -only-testing:xFractalTests/<Class>`), never the whole suite: the step and final gates run the rest. No version bump during feature work.
+  runs only the test class concerned (`xcodebuild test -only-testing:xFractalTests/<Class>`), never the whole suite: the step and landing gates run the rest. No version bump during feature work.
 - **Warnings.** Fix every warning the branch touches or reveals, including ones that predate it.
   Deprecations are fixed, never silenced (`@available`, `#warning`, suppression flags); if the fix
   conflicts with a documented decision, update that decision's comment. A build-only warnings check uses
@@ -181,10 +177,6 @@ while tracked changes are uncommitted or untracked files are not ignored: commit
   then refactor with the suite green. A bug fix starts with a test that reproduces it. Logic that seems
   untestable (gestures, Metal) is first checked for pure math that can move into `FractalMath.swift`;
   what truly is not testable is named in the plan and verified by hand (an owed check).
-- **Gate scope:** `none` is a change to the docs-only paths of Context only; `quick` adds test code
-  that does not ship (`Tests/`, `GalleryTests/`); anything else (sources, `Shaders.metal`, `project.yml`,
-  the project, `scripts/`, `ci_scripts/`, `docs/`) is `full`. No script classifies it: the parent reads
-  `git diff --name-only G` and applies the table by hand.
 - **Project:** `xcodegen generate` after any `project.yml` change, and commit the regenerated
   `xFractal.xcodeproj` with it (the project is checked in). Settings Xcode applies go into `project.yml`.
 - **Test gate:** the command of `AGENTS.md` § Running the tests, with `<dd>` as the build folder:
@@ -208,8 +200,14 @@ while tracked changes are uncommitted or untracked files are not ignored: commit
 
   (each test target builds its host app: `xFractal-MAS`, `xFractal-iOS`). Read `grep -E '(warning|error):'`
   of each log, after checking the exit status.
-- **Gallery:** `scripts/snapshot-gallery.sh` (the `/preview-gallery` skill) in the final gate of a plan that
-  touched UI, never in a step gate (a step only checks that its scenarios compile); a new or changed screen state needs its scenario
+- **Landing gate:** the test gate and the warnings gate above on a fresh `<dd>`; no UI suites (xFractal has
+  none); the gallery when the look changes (below).
+- **Full run:** the test gate and the full `scripts/snapshot-gallery.sh`: `/testflight` § Test gate only. No
+  coverage command.
+- **Gallery:** `scripts/snapshot-gallery.sh` (the `/preview-gallery` skill), never in a step gate (a step only
+  checks that its scenarios compile); when the look changes, the landing gate renders the scenarios concerned
+  (`--only`, or in full: a fresh checkout needs one full run first) and shows them to Jean before landing; the
+  full gallery runs in `/testflight`. A new or changed screen state needs its scenario
   in `GalleryTests/GalleryFixtures.swift` and `GalleryScenarios.swift`. It leases its simulator from the
   pool and runs its builds under `buildlock` (its own DerivedData): never call `xcodebuild` or `simctl`
   around it. It keeps the Mac awake on its own (`caffeinate -dims -w $$`, bound to the script's process), so it
@@ -374,21 +372,21 @@ attach the whole design doc. Same `codex exec` command and the same "did it run"
 Send each accepted finding with `SendMessage` to the implementer of the step it concerns while that
 one is alive; otherwise spawn a fresh implementer with the finding, the plan and the commit. Rejected
 findings get a one-line rationale in the final report, not silence. After every fix round run the step gate (plus the
-class from § Gates for the changes since G, once G exists). Apply the Codex policy.
+landing gate again when it already ran and the fix touched more than docs). Apply the Codex policy.
 
 ## Phase 6 — Hand back (landing is Jean's call)
 
-The deliverable is a green, reviewed branch in the worktree — the final gate (fresh `<dd>`) passed
-once on the tree handed back (commit G), or the class from § Gates that the last tree requires —
-plus a report: G's commit, each gate class applied, what shipped (commits),
+The deliverable is a green, reviewed branch in the worktree — the landing gate (fresh `<dd>`) passed
+once on the tree handed back (suites, devices, gallery shown or not needed) —
+plus a report: what shipped (commits),
 plan revisions and review rounds with what each changed, findings rejected and why, gates run (the
 test summary lines, the warnings check, and each conditional gate — which ran and which did not),
 and what is owed (the owed checks in Context). Before the report, push the branch to origin (the
 global working agreement's branch rule; not in a repo whose `AGENTS.md` says the user pushes).
 Landing stays Jean's call. **When Jean says land, the feature lands as ONE squashed commit:**
 
-1. `git fetch && git rebase main` in the worktree, then classify the tree against G (§ Gates): the
-   whole final gate (fresh `<dd>`) reruns only on `full`.
+1. `git fetch && git rebase main` in the worktree, then rerun the landing gate when the rebase
+   brought in more than docs.
 2. On `main`: `git merge --squash <branch>` then ONE `git commit` whose subject is the plan id and a
    sentence and whose body carries the branch's commit subjects (`git log main..<branch>
    --format='- %s'`), each regression test's red proof in one line, every gate's summary line, the
@@ -396,8 +394,8 @@ Landing stays Jean's call. **When Jean says land, the feature lands as ONE squas
    the issue line (see the global working agreement: `Closes #N` when
    nothing is left, otherwise `Refs #N` and a comment on the issue naming what is owed), and the attribution trailer. Write
    the message before deleting anything.
-3. On `main`, classify against G again (a squash of the same tree is `none`); run what the class
-   requires, then `git push origin main`.
+3. On `main`, the squash tree equals the branch's tree (`git diff <branch> main` empty), then
+   `git push origin main`.
 4. Remove the worktree, `git worktree prune`, and `git branch -D` the branch (`-D`, because git never
    sees a squashed branch as merged); in an Orca worktree, skip this and leave both to Orca. Update the plan's index row to "Implemented on main <date>".
 

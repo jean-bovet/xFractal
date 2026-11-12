@@ -118,7 +118,20 @@ buildlock --folder "$PWD/.build/DerivedData" -- \
 ```
 
 macOS unit tests (82, one skipped), no simulator. Run `xcodegen generate` first if `project.yml` changed (and commit
-the regenerated project). Must end with `** TEST SUCCEEDED **`.
+the regenerated project). Must end with `** TEST SUCCEEDED **`. Then the full gallery:
+
+```bash
+scripts/snapshot-gallery.sh --no-open > <scratch>/gallery.log 2>&1; echo "exit $?"
+```
+
+It must end with `CHECK OK`; the gallery page is not shown unless Jean asks. xFractal has no UI test suites and no
+coverage command.
+
+This is the only full run: `/develop` lands plans on the quick tier (the test and warnings gates) plus the gallery
+shown to Jean when the look changes. On a red run, rerun only the failing stage or test class
+(`-only-testing:xFractalTests/<Class>`, or `scripts/snapshot-gallery.sh --only <scenarios>`); bisect across the
+plans landed since the last TestFlight build (`git log <last testflight>..HEAD`, each plan's squash commit) only
+when the cause is not obvious. The fix goes through `/develop`, then this gate reruns.
 
 Stop on failure. Never gate on an Xcode Cloud run here (see "How a build reaches TestFlight").
 
