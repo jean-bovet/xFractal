@@ -43,6 +43,23 @@ Optional `## Reading` section: the repo's readers that every new entity must flo
 reader included, not only the test-covered one), and which tests or previews actually cover each.
 <!-- /repo-specific -->
 
+## Environments
+Every CloudKit app separates its environments by build configuration (the CloudKit environments
+standard). A change holds it, and never weakens it:
+- **Debug** runs as `<id>.debug` (its own App Group, display name "X β") on **Development** iCloud;
+  **Production** (scheme "X (Production)", Debug compiler, no `DEBUG` condition) and **Release** run
+  as `<id>` on **Production**. The environment comes from the entitlements, filled from build
+  settings (`APP_ICLOUD_ENVIRONMENT`, `APP_APS_ENVIRONMENT`), never from a runtime switch.
+- Code that names the bundle ID or the App Group reads it from the Info.plist or a build setting,
+  never a literal. A new extension target follows its app (`.debug` suffix, same environment).
+- The environment banner (orange "Development iCloud", green "Production iCloud · Xcode") is
+  compiled in only under `CLOUDKIT_DEVELOPMENT || CLOUDKIT_PRODUCTION_XCODE`, call sites included;
+  never in Release, hidden in screenshot and gallery modes.
+- The schema is pushed to Development only from a Debug build; nothing reachable in Production or
+  Release initialises or deploys a schema.
+- A repo not yet on the standard: a change that touches identities, entitlements or schemes moves
+  toward it (the doc's status table says what is owed), never further away.
+
 ## Recovery — never on a device with live data
 - Never "delete and reinstall", reset the store, or create a new container to clear a sync error.
 - Never ⌘R a Debug build that pushes schema onto a device holding real data.

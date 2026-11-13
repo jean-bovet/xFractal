@@ -122,10 +122,15 @@ The **full run** (the test gate and the full gallery) is not part of `/develop`:
   xFractal's test gate runs on macOS (one destination, no simulator), so it builds once already;
   `xFractalTests` is hosted by the Mac app, so its reruns follow the app-hosted rule.
 - **One build at a time per build folder.** Use the repo's scripts or build wrapper when it has them
-  (never call `xcodebuild` around them); otherwise `buildlock --folder <dd> -- xcodebuild …`. The host's
+  (never call `xcodebuild` around them); otherwise `buildlock --folder <dd> -- xcodebuild …`. A `test-without-building` run takes the
+  folder's lock but no build slot: `buildlock --folder <dd> --no-slot -- xcodebuild test-without-building …`.
+  An app-hosted Mac test run also holds `buildlock --folder ~/Library/Containers/ch.arizonasoftware.xfractal --no-slot`
+  (`xFractalTests` is hosted by the sandboxed Mac app), so two worktrees never host the real app (its sandbox container)
+  at once. The host's
   build slots are shared with other sessions: wait for one, never kill another build.
 - **Simulators** (the global working agreement): lease one from the machine-wide pool for each gate run
-  (`simpool acquire`, or the repo's scripts do it) and release it when the run ends, also when it fails.
+  (`simpool acquire`, or the repo's scripts do it) and release it when the run ends, also when it fails:
+  `trap 'simpool release "$udid" --app ch.arizonasoftware.xfractal' EXIT`, so the next holder doesn't inherit the running app.
   Don't hold a lease across gates: the pool normally keeps a released simulator booted for the next gate. Never
   boot, shut down or touch a simulator by hand. One `-destination` per run and
   `-parallel-testing-enabled NO -collect-test-diagnostics never` on every simulator test run (without the second flag a failing test, so every red proof, makes xcodebuild collect a sysdiagnose-like simulator report for up to 10 minutes; the gates read the log, never that report. To debug a failure nobody can explain, rerun that one test without it). A repo whose scripts still boot their own
@@ -182,7 +187,8 @@ The **full run** (the test gate and the full gallery) is not part of `/develop`:
 - **Test gate:** the command of `AGENTS.md` § Running the tests, with `<dd>` as the build folder:
 
   ```sh
-  caffeinate -is buildlock --folder <dd> -- \
+  caffeinate -is buildlock --folder ~/Library/Containers/ch.arizonasoftware.xfractal --no-slot -- \
+    buildlock --folder <dd> -- \
     xcodebuild test -project xFractal.xcodeproj -scheme xFractal-MAS -configuration Debug \
     -destination 'platform=macOS' -derivedDataPath <dd>
   ```
@@ -425,6 +431,7 @@ Landing stays Jean's call. **When Jean says land, the feature lands as ONE squas
   minutes. Every review prompt names the exact plan section and the few source files (with line ranges) to
   read, says "read only these; no other commands, no builds or tests", and caps each section at a few
   one-line findings with a severity. A review not back within about 15 minutes is stopped and rerun
-  narrower; a large diff is reviewed per commit (`git diff <sha>^ <sha>`), not in one `main...HEAD` pass.
+  narrower; a large diff is reviewed one commit at a time (`git diff <sha>^ <sha>`, or `codex exec review --commit
+  <sha>`), not in one `main...HEAD` pass.
 - Adding a `#Preview`, or a screen state without its gallery scenario.
 - Logic left in a view or the Metal glue when it could be pure math in `FractalMath.swift` with a test.

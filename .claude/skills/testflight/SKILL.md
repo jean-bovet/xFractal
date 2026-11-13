@@ -174,6 +174,9 @@ Show Jean every notes file in full, with the commit list it came from, and ask
 (`AskUserQuestion`) for a yes or his edits. Apply edits and show again until approved. **Do not
 commit before that.**
 
+The question names everything his yes starts, since nothing asks again after it: the push of `main`
+and the push of `testflight` (xFractal has no tag here and no companion deploy).
+
 ## 7. Commit and push `main`
 
 Stage only the files this skill changed — never `git add -A` — and end the commit message with

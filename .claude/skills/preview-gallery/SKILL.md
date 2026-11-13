@@ -42,7 +42,8 @@ a full language pass to the gallery. Two exceptions share one `--lang` option of
   (truncation, overflow), and a right-to-left language (Hebrew, Arabic) must read right to left. The repo lists a
   **review set** (the store captures plus the screens whose words or direction the catalog changes) and renders it
   with `--only "<the review set>" --lang <languages>`; the scripts refuse `--lang` for a language other than English
-  without `--only`. Read the result as a contact sheet per language.
+  without `--only`. Read the result as a contact sheet per language. A string that does not fit: shorten the
+  string in the catalog, never the layout.
 The gallery page that counts, its gate and `CHECK OK [en]` stay English.
 xFractal: `--lang fr,de,it,es,pt-BR,ja,tr,ar,he` on `scripts/snapshot-gallery.sh` and `scripts/snapshot-mac.sh`
 renders into `previews/<lang>/` (`previews/ipad/<lang>/`, `previews/duo/<lang>/`, `previews/mac/<lang>/`). Its review set
@@ -173,7 +174,8 @@ One entry in the scenario list, and nothing in the app:
 - **Dark-only entries.** A platform with no light appearance (a Watch) may mark its entries dark-only: one
   `<slug>.dark.png`, no light slot and no pair rules, but the luminance rule still applies.
 - `scripts/preview-gallery.py --coverage` lists view types no scenario names (informational: most are parts
-  of other screens).
+  of other screens). The shared process names it `--coverage-views` and adds `--coverage XCRESULT` (the test run's
+  app coverage on the page): not yet in this repo's script: --coverage-views rename and --coverage XCRESULT.
 
 ## What a repo needs
 
@@ -185,10 +187,16 @@ One entry in the scenario list, and nothing in the app:
    Cloud skip it. It filters by the optional `ONLY` variable, renders each scenario in a `UIHostingController`
    inside a `UIWindow` on the app's scene at a fixed size, once with a light and once with a dark
    `overrideUserInterfaceStyle`, waits for `settle`, draws with `drawHierarchy` at 2x, writes `<slug>.png` and
-   `<slug>.dark.png`, releases the window, and writes `manifest.json` (name, group, slug, size of **every**
-   scenario) so the page script never parses Swift. It swaps the host app's own shared loader for the stub too.
+   `<slug>.dark.png`, releases the window, and writes `manifest.json` (name, group, slug, size, and the window in
+   points and the capture scale (`points`, `scale`) of **every** scenario) so the page script never parses Swift.
+   A scenario fails when its window's settled size differs from the requested one. It swaps the host app's own shared loader for the stub too.
+   Not yet in xFractal's scripts: the manifest holds the size only (no `points`, `scale`; `--check` derives the scale
+   from the size), and no settled-size failure.
 3. **`scripts/preview-gallery.py`**: `--import DIR [--partial]` (replace the gallery, or only the files of an
-   `--only` run), `--check`, `--coverage`; with `scripts/preview-luminance.swift` for the lit check.
+   `--only` run), `--check`, `--coverage` (the shared process: `--coverage-views`, `--coverage XCRESULT`; not yet
+   here, see above); with `scripts/preview-luminance.swift` for the lit check.
+   **A public repo** (xFractal is one): the manifest and the page hold no absolute path, and the PNGs are written
+   without metadata.
    **Output layout**: one folder per language (`previews/<lang>/`, English in `previews/en/`), the page at the top of it, everything else in subfolders:
    ```
    previews/en/
@@ -229,8 +237,9 @@ One entry in the scenario list, and nothing in the app:
      exits; `caffeinate` does not pass signals on to a command it runs): a run during which the Mac slept took
      three times as long.
    - Optional, when the hosted app shares state with the real one (a container, iCloud, defaults): build the gallery
-     hosts under their own bundle id (a `.gallery` suffix through a build setting that is empty in every other
-     build, no iCloud entitlement), so a run never touches the real app's data and the real app may stay open.
+     hosts under their own bundle id (a `.gallery` suffix through a bundle-id-suffix build setting the gallery's
+     xcodebuilds override, the app's other configurations keeping their own value, such as `.debug` in Debug; no
+     iCloud entitlement), so a run never touches the real app's data and the real app may stay open.
      xFractal does not: the iOS gallery runs in a leased simulator, and the Mac pass locks the app's container
      instead (item 5).
 5. **A Mac target**: an app-hosted macOS test renders each scenario with no simulator, **off screen**: a real
@@ -267,7 +276,8 @@ image (unless its entry is `skipped` with a reason), a stray PNG no scenario exp
 platform's folder, or of a skipped scenario), a duplicate slug, a light image that is dark or a dark one that is light
 (mean luminance against a threshold; a `documentCanvas` pair by the pair rule, an `imagery` pair by none), a dark
 image byte-identical to its light one, a light/dark pair whose images differ in pixel size, a blank image (every pixel one colour; unless `drawsNothing`), an image that
-cannot be decoded or is not at the render scale of its scenario's size (2x; 3x for the Duo's inner poses), and
+cannot be decoded or is not at the render scale of its scenario's size (2x; 3x for the Duo's inner poses; the
+shared process reads it from the manifest entry's `points` x `scale` and fails an entry without them: not yet here), and
 `.preferredColorScheme` or `\.locale` anywhere in the scenario files (xFractal's `--check` scans
 `GalleryScenarios.swift` and `GalleryFixtures.swift`; a `//` or `/* */` comment is ignored; a line marked
 `// gallery: allowed, <why>` passes). xFractal's render scale comes from the manifest size: the Duo's inner poses

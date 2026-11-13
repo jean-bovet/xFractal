@@ -125,7 +125,7 @@ Each prints `PROBLEM`, `CHECK` and `ok` lines. What they cover, and what to judg
 
 | Area | Watch for |
 |---|---|
-| Privacy manifest | Required-reason APIs (UserDefaults, file timestamps, boot time, disk space, keyboards) used without `PrivacyInfo.xcprivacy` declaring them: ITMS-91053, rejected |
+| Privacy manifest | Required-reason APIs (UserDefaults, file timestamps, boot time, disk space, keyboards) used without `PrivacyInfo.xcprivacy` declaring them: ITMS-91053, rejected. An app with extensions declares each one in the manifest of every bundle that compiles it (shared sources count for each); xFractal has no extensions, one `xFractal/PrivacyInfo.xcprivacy` |
 | Export compliance | No `ITSAppUsesNonExemptEncryption`: every build waits on "Missing Compliance" |
 | Description, keywords, promotional text | Still true of this build: an old description promising removed features (guideline 2.3), a retired domain, an old device ("iPod touch") |
 | Screenshots | A set at the required size for **every** device family the build supports, in every store locale (a newly added iPad needs iPad screenshots); old sets that show an outdated UI |
@@ -190,6 +190,12 @@ translations `-fr-FR.txt`, `-de-DE.txt`, `-it.txt`, `-es-ES.txt` (also used for 
 and Portuguese as *tu* / *você*, Turkish as *siz*, Japanese in polite form, Hebrew in gender-neutral forms, Arabic in Modern Standard Arabic with formal address). Plain text: a one-line lead, then short `- ` lines;
 match the previous file's tone once there is one (`app-store status` shows the live notes). Say when an
 item concerns only iPhone/iPad or only the Mac.
+
+**Every locale of the page.** One notes file per locale the App Store page carries (the eleven of `AGENTS.md`);
+no locale falls back to the English notes. The one shared file is es-MX, which uses the `es-ES` notes (both Spanish
+pages share the `es` text). Every locale but English is written, not machine-literal: the app's own strings where it
+speaks that language, the page's description elsewhere. Locales Jean doesn't read get translation checks (Apple's
+glossary, a blind back-translation).
 
 The rewrite already shipped as 2.0, so What's New describes the changes since the live version;
 `app-store status` shows its notes. The first release with the translated app (2.1) says so first:
@@ -262,10 +268,12 @@ already exists, and `prepare` would set a What's New a first version cannot carr
 `app-store metadata`, `age-rating` and `screenshots` instead, then `attach-build` and `check`. A first
 version has no phased release.
 
-**Screenshots: you upload them, Jean only approves.** When §3 or §2b says screenshots need updating, render
-every set, show Jean all the renders in one go, and once he approves, upload them yourself with
-`app-store screenshots --app xFractal-iOS` (`--platform IOS`: `APP_IPHONE_67`, `APP_IPAD_PRO_3GEN_129`;
-`--platform MAC_OS`: `APP_DESKTOP`; the Duo sets as §2b says); Jean never uploads by hand.
+**Screenshots: you upload them, Jean only approves.** When §3 or §2b says screenshots need updating, or `check`
+lists a device family with no set (an `IPHONE_DUO` set missing counts), render every set, show Jean all the renders
+in one go, and once he approves, upload them yourself with `app-store screenshots --app xFractal-iOS`
+(`--platform IOS`: `APP_IPHONE_67`, `APP_IPAD_PRO_3GEN_129`; `--platform MAC_OS`: `APP_DESKTOP`; the Duo sets as §2b
+says), for every locale the page carries: none falls back to the English set (es-MX shares the `es` captures). Jean
+never uploads by hand. Run `check` again afterwards, until every family has its set.
 
 `metadata` gets the keywords from `AppStore/keywords.txt` (one `--keywords` per line) and the names
 and subtitles from `AppStore/app-info.txt` (one `--name` and one `--subtitle` per line). `--add-locale` does nothing for a
