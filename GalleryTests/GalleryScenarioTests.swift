@@ -158,6 +158,16 @@ final class GalleryScenarioTests: XCTestCase {
         XCTAssertGreaterThan(large.sheetFrame!.intersection(large.window.bounds).height, large.window.bounds.height * 0.85)
     }
 
+    /// A window the system resized is reported as such, before any validation it would cause.
+    func testSettledSizeFailure() {
+        XCTAssertNil(GalleryHarness.settledSizeFailure(requested: CGSize(width: 402, height: 874),
+                                                       settled: CGSize(width: 402, height: 874)))
+        let reason = GalleryHarness.settledSizeFailure(requested: CGSize(width: 951, height: 669),
+                                                       settled: CGSize(width: 951, height: 600))
+        XCTAssertNotNil(reason)
+        XCTAssertTrue(reason?.contains("settled at 951 x 600, requested 951 x 669") ?? false, reason ?? "nil")
+    }
+
     func testDuoInnerTraits() async throws {
         let sizes: [(String, CGSize)] = [("duo-inner-landscape-board-julia", CGSize(width: 951, height: 669)),
                                          ("duo-inner-portrait-board-mandelbrot-deep-zoom", CGSize(width: 669, height: 951))]

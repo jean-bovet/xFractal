@@ -173,9 +173,11 @@ One entry in the scenario list, and nothing in the app:
   the fractal region has its own validation, see the extras below).
 - **Dark-only entries.** A platform with no light appearance (a Watch) may mark its entries dark-only: one
   `<slug>.dark.png`, no light slot and no pair rules, but the luminance rule still applies.
-- `scripts/preview-gallery.py --coverage` lists view types no scenario names (informational: most are parts
-  of other screens). The shared process names it `--coverage-views` and adds `--coverage XCRESULT` (the test run's
-  app coverage on the page): not yet in this repo's script: --coverage-views rename and --coverage XCRESULT.
+- `scripts/preview-gallery.py --coverage-views` lists view types no scenario names (informational: most are parts
+  of other screens). `--coverage XCRESULT [--lang en]` reads the xFractal.app target of a result bundle into
+  `previews/<lang>/coverage.json` (least covered file first) and adds an "App coverage" section to the page. The bundle
+  comes from the test gate of `AGENTS.md` run with `-enableCodeCoverage YES -resultBundlePath .build/app-coverage.xcresult`
+  (`snapshot-gallery.sh` collects none; see the docstring at the top of the script); a bundle without that target exits 2.
 
 ## What a repo needs
 
@@ -190,11 +192,8 @@ One entry in the scenario list, and nothing in the app:
    `<slug>.dark.png`, releases the window, and writes `manifest.json` (name, group, slug, size, and the window in
    points and the capture scale (`points`, `scale`) of **every** scenario) so the page script never parses Swift.
    A scenario fails when its window's settled size differs from the requested one. It swaps the host app's own shared loader for the stub too.
-   Not yet in xFractal's scripts: the manifest holds the size only (no `points`, `scale`; `--check` derives the scale
-   from the size), and no settled-size failure.
 3. **`scripts/preview-gallery.py`**: `--import DIR [--partial]` (replace the gallery, or only the files of an
-   `--only` run), `--check`, `--coverage` (the shared process: `--coverage-views`, `--coverage XCRESULT`; not yet
-   here, see above); with `scripts/preview-luminance.swift` for the lit check.
+   `--only` run), `--check`, `--coverage-views`, `--coverage XCRESULT` (see above); with `scripts/preview-luminance.swift` for the lit check.
    **A public repo** (xFractal is one): the manifest and the page hold no absolute path, and the PNGs are written
    without metadata.
    **Output layout**: one folder per language (`previews/<lang>/`, English in `previews/en/`), the page at the top of it, everything else in subfolders:
@@ -277,10 +276,10 @@ platform's folder, or of a skipped scenario), a duplicate slug, a light image th
 (mean luminance against a threshold; a `documentCanvas` pair by the pair rule, an `imagery` pair by none), a dark
 image byte-identical to its light one, a light/dark pair whose images differ in pixel size, a blank image (every pixel one colour; unless `drawsNothing`), an image that
 cannot be decoded or is not at the render scale of its scenario's size (2x; 3x for the Duo's inner poses; the
-shared process reads it from the manifest entry's `points` x `scale` and fails an entry without them: not yet here), and
+check reads it from the manifest entry's `points` x `scale` and fails an entry without them or whose `points` differ from its `size`), and
 `.preferredColorScheme` or `\.locale` anywhere in the scenario files (xFractal's `--check` scans
 `GalleryScenarios.swift` and `GalleryFixtures.swift`; a `//` or `/* */` comment is ignored; a line marked
-`// gallery: allowed, <why>` passes). xFractal's render scale comes from the manifest size: the Duo's inner poses
+`// gallery: allowed, <why>` passes). xFractal's harness writes the scale: the Duo's inner poses
 (951 x 669 and 669 x 951 pt) at 3x, every other size at 2x. An `--only` run replaces only its own images; the check still covers
 every scenario. The gallery is done only when `--check` [en] passes.
 

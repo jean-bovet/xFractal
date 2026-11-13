@@ -124,7 +124,7 @@ PY
             fail) exit 1 ;;
             noimport) mkdir -p "$TEST_RUNNER_XFRACTAL_SNAPSHOT_DIR" ;;
             badcheck) mkdir -p "$TEST_RUNNER_XFRACTAL_SNAPSHOT_DIR"
-                      echo '[{"name":"A","group":"G","slug":"a","size":{"w":4,"h":4},"kinds":[]}]' > "$TEST_RUNNER_XFRACTAL_SNAPSHOT_DIR/manifest.json" ;;
+                      echo '[{"name":"A","group":"G","slug":"a","size":{"w":4,"h":4},"points":[4,4],"scale":2,"kinds":[]}]' > "$TEST_RUNNER_XFRACTAL_SNAPSHOT_DIR/manifest.json" ;;
             *) mkdir -p "$TEST_RUNNER_XFRACTAL_SNAPSHOT_DIR"; echo '[]' > "$TEST_RUNNER_XFRACTAL_SNAPSHOT_DIR/manifest.json" ;;
         esac
         exit 0 ;;

@@ -7,7 +7,14 @@ with light and dark side by side, sections and cards in the manifest's order.
 
     scripts/preview-gallery.py --import DIR [--partial] [--lang en]   # replace the language's gallery (--partial: only DIR's files)
     scripts/preview-gallery.py --check [--lang en] [--measure]        # every scenario complete and correctly rendered
-    scripts/preview-gallery.py --coverage                             # views no scenario names (informational)
+    scripts/preview-gallery.py --coverage-views                       # views no scenario names (informational)
+    scripts/preview-gallery.py --coverage XCRESULT [--lang en]        # app line coverage of a test run onto the page
+
+--coverage reads the xFractal.app target of a result bundle (`xcrun xccov view --report --json`) into
+previews/<lang>/coverage.json (paths relative to the repo, least covered file first) and rebuilds the page with an
+"App coverage" section. Produce a bundle with the test gate of AGENTS.md plus `-enableCodeCoverage YES
+-resultBundlePath .build/app-coverage.xcresult`; snapshot-gallery.sh collects no coverage. A bundle without that target
+exits 2 and writes nothing. An import keeps coverage.json.
 
 Every language, English included, lives in its own folder: previews/en/, previews/fr/, ... Nothing sits at the root of
 previews/ (previews/artwork/ holds the store artwork). An import replaces its own folder and never touches another.
@@ -16,8 +23,8 @@ An English import also deletes the old layout's *.png, index.html and manifest.j
 
 --check rebuilds the page first, then fails on: a scenario missing either image, a stray PNG no scenario expects, a
 duplicate slug, a dark image byte-identical to its light one, an image that cannot be decoded, a blank render (every
-pixel one colour), an image not at the render scale of its scenario's size (RENDER_SCALE: 2x, 3x for the Duo's inner
-poses), an invalid or unmeasured region, the region rules (the fractal drawn, the sheet's background lit, the peek
+pixel one colour), an entry (skipped ones too) without `points` and `scale` or whose `points` differ from its `size`,
+an image not at the render scale of its entry (`points` times `scale`, written by the harness), an invalid or unmeasured region, the region rules (the fractal drawn, the sheet's background lit, the peek
 capsule found), and `.preferredColorScheme` or `\.locale` in a scenario file (comments excluded: the light and dark
 passes and -testLanguage set them; a `\.locale` line marked `// gallery: allowed, <why>` passes: a locale forced for
 its region, not its language). A skipped scenario's image on disk is stray. The fractal fills most of a screen and is legitimately bright or dark,
@@ -79,10 +86,6 @@ DOCUMENT_CANVAS_DELTA = 0.05
 SCENARIO_FILES = [ROOT / "GalleryTests" / "GalleryScenarios.swift", ROOT / "GalleryTests" / "GalleryFixtures.swift"]
 # A locale forced for its region, not its language (`en_US` for a 12-hour clock), says so in its line's comment.
 ALLOWED_MARKER = re.compile(r"//\s*gallery:\s*allowed,\s*\S")
-# The capture scale of a scenario's size (GallerySize.scale): the Duo's inner display poses at 3x, everything else at 2x.
-RENDER_SCALE = 2
-DUO_INNER_SIZES = {(951, 669), (669, 951)}
-DUO_INNER_RENDER_SCALE = 3
 LOCALE_PATTERN = r"\\\.locale\b"
 FORBIDDEN_IN_SCENARIOS = [(r"\.preferredColorScheme\b", ".preferredColorScheme (the light and dark passes set the appearance)"),
                           (LOCALE_PATTERN, r"\.locale (-testLanguage sets the language)")]
@@ -92,12 +95,17 @@ def slugify(text):
     return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
 
 
-def render_scale(entry):
-    """The scale a scenario's images are captured at, from its size in points."""
-    size = entry.get("size") or {}
-    if (round(size.get("w", 0)), round(size.get("h", 0))) in DUO_INNER_SIZES:
-        return DUO_INNER_RENDER_SCALE
-    return RENDER_SCALE
+def positive_number(value):
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value) and value > 0
+
+
+def expected_pixels(entry):
+    """The pixel size a scenario's images are captured at: its `points` times its `scale` (both written by the harness from
+    GallerySize), or None when either is missing or not a finite positive number (points: a list of two)."""
+    points, scale = entry.get("points"), entry.get("scale")
+    if not (isinstance(points, list) and len(points) == 2 and all(positive_number(v) for v in points) and positive_number(scale)):
+        return None
+    return round(points[0] * scale), round(points[1] * scale)
 
 
 def output_dir(lang):
@@ -258,6 +266,7 @@ figcaption {{ padding:0 4px 8px; font-weight:600; }}
 .shot .tag {{ display:block; text-align:center; font-size:11px; color:var(--muted); margin-top:4px; }}
 .skipped {{ width:100%; aspect-ratio:9/9; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; text-align:center;
   padding:12px; box-sizing:border-box; color:var(--muted); font-size:12px; border:1px dashed var(--line); border-radius:16px; background:var(--missing-bg); }}
+table {{ border-collapse:collapse; font-size:13px; }} td, th {{ padding:3px 12px 3px 0; text-align:left; }}
 .skipped small {{ font-size:11px; }}
 html[data-mode="light"] .shot-dark, html[data-mode="dark"] .shot-light {{ display:none; }}
 html[data-mode="light"] figure, html[data-mode="dark"] figure {{ width:256px; }}
@@ -274,6 +283,7 @@ html[data-mode="light"] .wide .shot, html[data-mode="dark"] .wide .shot {{ width
 <p class="meta">{len(manifest)} screens · light and dark side by side · sections and cards in the order of the scenario list.</p>
 <nav aria-label="Gallery themes">{''.join(links)}</nav>
 {''.join(sections)}
+{coverage_section(out)}
 <script>
 (function(){{
   var root = document.documentElement;
@@ -399,6 +409,14 @@ def do_check(lang, measure=False, check_render_scale=True):
     slugs = [e["slug"] for e in manifest]
     for slug in sorted({s for s in slugs if slugs.count(s) > 1}):
         problems.append(f"duplicate slug: {slug}")
+    # Every entry, skipped or without images, carries the geometry the harness wrote: points equal to size, and a scale.
+    for e in manifest:
+        size, points = e.get("size") or {}, e.get("points")
+        if expected_pixels(e) is None:
+            problems.append(f"no points and scale in the manifest: {e['slug']} (run the full gallery)")
+        elif not (positive_number(size.get("w")) and positive_number(size.get("h"))
+                  and abs(points[0] - size["w"]) <= 0.5 and abs(points[1] - size["h"]) <= 0.5):
+            problems.append(f"points do not match size: {e['slug']}")
     # A skipped scenario (not rendered on this pass, with its reason) may miss its pair; nothing else may.
     skipped = {e["slug"] for e in manifest if e.get("skipped")}
     # A skipped scenario expects no image: one on disk is stray (an earlier pass's capture).
@@ -459,11 +477,12 @@ def do_check(lang, measure=False, check_render_scale=True):
             problems.append(f"image does not match the manifest size: {slug} ({light[0]} x {light[1]} for {want['w']} x {want['h']} pt)")
             sizes[f"{slug}.png"] = sizes[f"{slug}.dark.png"] = None
             continue
-        if check_render_scale and want.get("w") and want.get("h"):
-            scale = render_scale(e)
-            if abs(light[0] - want["w"] * scale) > 1 or abs(light[1] - want["h"] * scale) > 1:
-                problems.append(f"image not at the render scale: {slug} ({light[0]} x {light[1]} for {want['w']:g} x {want['h']:g} pt"
-                                f" at {scale}x: {round(want['w'] * scale)} x {round(want['h'] * scale)} expected)")
+        pixels_wanted = expected_pixels(e)
+        if check_render_scale and pixels_wanted:
+            if abs(light[0] - pixels_wanted[0]) > 1 or abs(light[1] - pixels_wanted[1]) > 1:
+                (pw, ph), scale = e["points"], e["scale"]
+                problems.append(f"image not at the render scale: {slug} ({light[0]} x {light[1]} for {pw:g} x {ph:g} pt"
+                                f" at {scale:g}x: {pixels_wanted[0]} x {pixels_wanted[1]} expected)")
                 sizes[f"{slug}.png"] = sizes[f"{slug}.dark.png"] = None
     for e in manifest:
         slug, kinds = e["slug"], e.get("kinds", [])
@@ -615,7 +634,7 @@ def do_check(lang, measure=False, check_render_scale=True):
           + (" (measure mode: peek and sheet thresholds not enforced)" if measure else ""))
 
 
-def do_coverage():
+def do_coverage_views():
     """View types under xFractal/ that neither GalleryScenarios nor GalleryFixtures mentions."""
     views = set()
     for file in (ROOT / "xFractal").rglob("*.swift"):
@@ -629,13 +648,71 @@ def do_coverage():
         print("  " + view)
 
 
+def do_coverage(xcresult, lang):
+    """Writes previews/<lang>/coverage.json from the xFractal.app target of an xcresult bundle and rebuilds the page."""
+    def fail(why):
+        print(f"no app coverage in {xcresult}: {why}", file=sys.stderr)
+        sys.exit(2)
+
+    try:
+        done = subprocess.run(["xcrun", "xccov", "view", "--report", "--json", str(xcresult)],
+                              capture_output=True, text=True)
+    except OSError as error:
+        fail(str(error))
+    if done.returncode != 0:
+        fail(f"xccov failed ({done.stderr.strip() or 'exit ' + str(done.returncode)})")
+    try:
+        report = json.loads(done.stdout)
+        target = next((t for t in report["targets"] if t.get("name") == "xFractal.app"), None)
+        if target is None:
+            fail("no xFractal.app target")
+
+        def relative(path):
+            try:
+                return str(Path(path).relative_to(ROOT))
+            except ValueError:
+                return Path(path).name
+
+        files = [{"path": relative(f["path"]), "covered": int(f["coveredLines"]), "executable": int(f["executableLines"])}
+                 for f in target["files"]]
+        covered, executable = int(target["coveredLines"]), int(target["executableLines"])
+    except (ValueError, KeyError, TypeError) as error:
+        fail(f"unreadable report ({error!r})")
+    files.sort(key=lambda f: (f["covered"] / f["executable"] if f["executable"] else 1.0, f["path"]))
+    out = output_dir(lang)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "coverage.json").write_text(
+        json.dumps({"covered": covered, "executable": executable, "files": files}, indent=2), encoding="utf-8")
+    if (out / "manifest.json").exists():
+        build_page(load_manifest(out), out, lang)
+    print(f"app coverage {percent(covered, executable)} ({covered} of {executable} lines) into {out}/coverage.json")
+
+
+def percent(covered, executable):
+    return f"{100 * covered / executable:.1f}%" if executable else "n/a"
+
+
+def coverage_section(out):
+    """The page's "App coverage" section from coverage.json, empty when the folder has none."""
+    path = out / "coverage.json"
+    if not path.exists():
+        return ""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    rows = "".join(f"<tr><td>{html.escape(f['path'])}</td><td>{percent(f['covered'], f['executable'])}</td>"
+                   f"<td>{f['covered']} / {f['executable']}</td></tr>" for f in data["files"])
+    return (f'<section id="app-coverage"><h2>App coverage</h2><p class="meta">{percent(data["covered"], data["executable"])} '
+            f'of {data["executable"]} executable lines, least covered files first.</p>'
+            f'<table><tr><th>File</th><th>Covered</th><th>Lines</th></tr>{rows}</table></section>')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--import", dest="source", type=Path)
     parser.add_argument("--partial", action="store_true")
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--measure", action="store_true")
-    parser.add_argument("--coverage", action="store_true")
+    parser.add_argument("--coverage-views", action="store_true")
+    parser.add_argument("--coverage", type=Path, metavar="XCRESULT")
     parser.add_argument("--lang", default="en")
     opts = parser.parse_args()
     if opts.source:
@@ -643,8 +720,10 @@ def main():
     if opts.check:
         do_check(opts.lang, opts.measure)
     if opts.coverage:
-        do_coverage()
-    if not (opts.source or opts.check or opts.coverage):
+        do_coverage(opts.coverage, opts.lang)
+    if opts.coverage_views:
+        do_coverage_views()
+    if not (opts.source or opts.check or opts.coverage or opts.coverage_views):
         parser.print_help()
 
 

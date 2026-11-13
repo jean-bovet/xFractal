@@ -93,7 +93,8 @@ def sheet_images(light_sheet=gray(246), dark_sheet=gray(20)):
 
 
 def entry(name, group, slug, kinds=(), regions=None):
-    e = {"name": name, "group": group, "slug": slug, "size": {"w": W, "h": H}, "kinds": list(kinds)}
+    e = {"name": name, "group": group, "slug": slug, "size": {"w": W, "h": H},
+         "points": [W, H], "scale": 2, "kinds": list(kinds)}
     if regions is not None:
         e["regions"] = regions
     return e
@@ -177,6 +178,75 @@ class GalleryTestCase(unittest.TestCase):
         both = {"light": [region("sheet", SHEET), region("fractal", (0, 60, W, 200))],
                 "dark": [region("sheet", SHEET), region("fractal", (0, 60, W, 200))]}
         return self.one(["sheet", "fractal"], regions or both, (light, dark), measure=measure, flags=flags)
+
+
+ROOT = SCRIPT.parent.parent
+
+
+class CoverageTests(GalleryTestCase):
+    def stub_xcrun(self, payload=None, exit_code=0):
+        """A fake `xcrun` first on PATH: prints `payload` (a dict, as xccov would) and exits `exit_code`."""
+        bin_dir = self.root / "bin"
+        bin_dir.mkdir(exist_ok=True)
+        (self.root / "report.json").write_text(json.dumps(payload) if payload is not None else "")
+        stub = bin_dir / "xcrun"
+        stub.write_text(f"#!/bin/sh\ncat '{self.root / 'report.json'}'\nexit {exit_code}\n")
+        stub.chmod(0o755)
+        self.env = {**self.env, "PATH": f"{bin_dir}{os.pathsep}{self.env['PATH']}"}
+
+    def report(self):
+        return {"targets": [
+            {"name": "xFractalTests.xctest", "coveredLines": 1, "executableLines": 2,
+             "files": [{"path": str(ROOT / "Tests" / "T.swift"), "coveredLines": 1, "executableLines": 2}]},
+            {"name": "xFractal.app", "coveredLines": 30, "executableLines": 40, "files": [
+                {"path": str(ROOT / "xFractal" / "Well.swift"), "coveredLines": 20, "executableLines": 20},
+                {"path": str(ROOT / "xFractal" / "Poor.swift"), "coveredLines": 10, "executableLines": 20},
+                {"path": "/private/elsewhere/Other.swift", "coveredLines": 15, "executableLines": 20}]}]}
+
+    def test_coverage_views_lists_view_types(self):
+        done = self.run_script("--coverage-views")
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        self.assertIn("view types appear", done.stdout)
+
+    def test_coverage_without_bundle_is_an_error(self):
+        done = self.run_script("--coverage")
+        self.assertEqual(done.returncode, 2, done.stdout + done.stderr)
+
+    def test_coverage_stores_app_coverage_and_shows_it(self):
+        self.stub_xcrun(self.report())
+        self.imported()
+        done = self.run_script("--coverage", str(self.root / "app.xcresult"))
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        text = (self.en / "coverage.json").read_text()
+        data = json.loads(text)
+        self.assertEqual((data["covered"], data["executable"]), (30, 40))
+        self.assertEqual([f["path"] for f in data["files"]], ["xFractal/Poor.swift", "Other.swift", "xFractal/Well.swift"])
+        page = (self.en / "index.html").read_text()
+        self.assertIn("App coverage", page)
+        self.assertIn("75.0%", page)
+        for content in (text, page):
+            self.assertNotIn(str(ROOT), content)
+            self.assertNotIn("/private/elsewhere", content)
+
+    def test_page_without_coverage_has_no_section(self):
+        self.imported()
+        self.assertNotIn("App coverage", (self.en / "index.html").read_text())
+
+    def test_bad_bundle_writes_nothing(self):
+        for payload, code in ((self.report(), 1), ({"targets": [{"name": "Other.app", "files": []}]}, 0), (None, 0)):
+            self.stub_xcrun(payload, code)
+            done = self.run_script("--coverage", str(self.root / "app.xcresult"))
+            self.assertEqual(done.returncode, 2, done.stdout + done.stderr)
+            self.assertIn("no app coverage in", done.stderr)
+            self.assertFalse((self.en / "coverage.json").exists())
+
+    def test_full_import_keeps_coverage(self):
+        self.stub_xcrun(self.report())
+        self.imported()
+        self.assertEqual(self.run_script("--coverage", str(self.root / "app.xcresult")).returncode, 0)
+        self.imported()
+        self.assertTrue((self.en / "coverage.json").exists())
+        self.assertIn("App coverage", (self.en / "index.html").read_text())
 
 
 class CheckTests(GalleryTestCase):
@@ -582,7 +652,7 @@ class ScenarioFileTests(GalleryTestCase):
 
 
 class RenderScaleTests(GalleryTestCase):
-    """--check fails an image not at its scenario's render scale: 2x, 3x for the Duo's inner display poses."""
+    """--check fails an image not at its scenario's render scale, read from the manifest's points and scale."""
 
     def setUp(self):
         super().setUp()
@@ -591,7 +661,11 @@ class RenderScaleTests(GalleryTestCase):
     def scaled(self, w_pt, h_pt, scale):
         w, h = round(w_pt * scale), round(h_pt * scale)
         pair = (Image(w, h, gray(240)).stripes(0, 0, w, 8), Image(w, h, gray(20)).stripes(0, 0, w, 8))
-        manifest = [{**plain("Screen", "Group", "screen"), "size": {"w": w_pt, "h": h_pt}}]
+        return self.scaled_entry(w_pt, h_pt, scale, pair)
+
+    def scaled_entry(self, w_pt, h_pt, entry_scale, pair):
+        manifest = [{**plain("Screen", "Group", "screen"), "size": {"w": w_pt, "h": h_pt},
+                     "points": [w_pt, h_pt], "scale": entry_scale}]
         self.imported(manifest=manifest, images={"screen": pair})
         return self.check()
 
@@ -601,13 +675,15 @@ class RenderScaleTests(GalleryTestCase):
 
     def test_the_old_variable_does_not_turn_the_check_off(self):
         self.env["PREVIEW_GALLERY_RENDER_SCALE"] = "off"
-        done = self.scaled(23, 50, 1)
+        done = self.scaled_entry(23, 50, 2, (Image(23, 50, gray(240)).stripes(0, 0, 23, 8), Image(23, 50, gray(20)).stripes(0, 0, 23, 8)))
         self.assertEqual(done.returncode, 1, done.stdout + done.stderr)
         self.assertIn("image not at the render scale: screen", done.stdout)
 
     def test_phone_at_1x_and_3x_fail(self):
         for scale in (1, 3):
-            done = self.scaled(23, 50, scale)
+            w, h = 23 * scale, 50 * scale
+            pair = (Image(w, h, gray(240)).stripes(0, 0, w, 8), Image(w, h, gray(20)).stripes(0, 0, w, 8))
+            done = self.scaled_entry(23, 50, 2, pair)
             self.assertEqual(done.returncode, 1, scale)
             self.assertIn("image not at the render scale: screen", done.stdout)
             self.assertIn("at 2x: 46 x 100 expected", done.stdout)
@@ -615,9 +691,51 @@ class RenderScaleTests(GalleryTestCase):
     def test_duo_inner_pose_at_3x_passes_and_at_2x_fails(self):
         done = self.scaled(951, 669, 3)
         self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
-        done = self.scaled(669, 951, 2)
+        w, h = 669 * 2, 951 * 2
+        pair = (Image(w, h, gray(240)).stripes(0, 0, w, 8), Image(w, h, gray(20)).stripes(0, 0, w, 8))
+        done = self.scaled_entry(669, 951, 3, pair)
         self.assertEqual(done.returncode, 1)
         self.assertIn("at 3x: 2007 x 2853 expected", done.stdout)
+
+    def test_scale_comes_from_the_manifest_not_the_size(self):
+        done = self.scaled(951, 669, 2)
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+
+
+class ManifestGeometryTests(GalleryTestCase):
+    """--check wants points equal to size and a scale in every manifest entry, skipped ones included."""
+
+    BAD = {"no points": {"points": None}, "no scale": {"scale": None}, "one number": {"points": [W]},
+           "zero scale": {"scale": 0}, "string scale": {"scale": "2"}}
+
+    def broken(self, change, skipped=False):
+        e = plain("Screen", "Group", "screen")
+        e.update(change)
+        for key in [k for k, v in e.items() if v is None]:
+            del e[key]
+        if skipped:
+            e["skipped"] = "the folded simulator cannot show this pose"
+        self.imported(manifest=[e], only=set() if skipped else None)
+        return self.check()
+
+    def test_entry_without_points_or_scale_fails(self):
+        for label, change in self.BAD.items():
+            for skipped in (False, True):
+                for with_scale_check in (False, True):
+                    self.render_scale_check = with_scale_check
+                    done = self.broken(change, skipped)
+                    with self.subTest(label=label, skipped=skipped, render_scale_check=with_scale_check):
+                        self.assertEqual(done.returncode, 1, done.stdout + done.stderr)
+                        self.assertIn("no points and scale in the manifest: screen", done.stdout)
+
+    def test_points_disagreeing_with_size_fails(self):
+        e = {**plain("Screen", "Group", "screen"), "points": [804, 1748], "scale": 1}
+        pair = (Image(804, 1748, gray(240)).stripes(0, 0, 804, 8), Image(804, 1748, gray(20)).stripes(0, 0, 804, 8))
+        self.render_scale_check = True
+        self.imported(manifest=[e], images={"screen": pair})
+        done = self.check()
+        self.assertEqual(done.returncode, 1, done.stdout + done.stderr)
+        self.assertIn("points do not match size: screen", done.stdout)
 
 
 class RegionTests(GalleryTestCase):

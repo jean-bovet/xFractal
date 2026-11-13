@@ -22,6 +22,9 @@ final class SnapshotGalleryTests: XCTestCase {
         var group: String
         var slug: String
         var size: Size
+        /// The size in points and the capture scale, from `GallerySize` (`--check` derives the image size from them).
+        var points: [Double]
+        var scale: Double
         var kinds: [String]
         var regions: Regions?
         var diagnostics: Diagnostics?
@@ -77,6 +80,8 @@ final class SnapshotGalleryTests: XCTestCase {
             let selected = only.isEmpty || only.contains { scenario.name.lowercased().contains($0) || scenario.slug.contains($0) }
             var entry = ManifestEntry(name: scenario.name, group: scenario.group, slug: scenario.slug,
                                       size: .init(w: scenario.fixture.size.points.width, h: scenario.fixture.size.points.height),
+                                      points: [scenario.fixture.size.points.width, scenario.fixture.size.points.height],
+                                      scale: Double(scenario.fixture.size.scale),
                                       kinds: scenario.fixture.regions.map(\.rawValue), regions: nil, diagnostics: nil,
                                       fold: scenario.fixture.foldRegion.map { .init(x: $0.minX, y: $0.minY, w: $0.width, h: $0.height) },
                                       documentCanvas: scenario.fixture.documentCanvas ? true : nil,

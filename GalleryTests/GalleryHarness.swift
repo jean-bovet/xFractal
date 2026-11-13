@@ -790,6 +790,13 @@ enum GalleryHarness {
         return mount
     }
 
+    /// Why a window that settled at another size than the one requested fails, or nil when the sizes agree.
+    static func settledSizeFailure(requested: CGSize, settled: CGSize) -> String? {
+        guard requested != settled else { return nil }
+        func points(_ size: CGSize) -> String { "\(Int(size.width.rounded())) x \(Int(size.height.rounded()))" }
+        return "the window settled at \(points(settled)), requested \(points(requested))"
+    }
+
     /// One render: mount, settle, scroll, our frame, capture, validate, regions. Throws with the reason.
     static func render(_ scenario: GalleryScenario, _ appearance: GalleryAppearance) async throws -> RenderResult {
         let t0 = Date()
@@ -813,6 +820,9 @@ enum GalleryHarness {
             }
             if readyMs == 0 { readyMs = Int(Date().timeIntervalSince(t0) * 1000) }
             image = mount.capture()
+            if let reason = settledSizeFailure(requested: fixture.size.points, settled: mount.window.bounds.size) {
+                throw GalleryFailure(reason)
+            }
             if let region = mount.fractalRegion() {
                 let c = try mount.validate(image, expected: fixture.expectedState, region: region)
                 check = c
