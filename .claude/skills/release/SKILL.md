@@ -263,10 +263,19 @@ app-store check --app xFractal-iOS --platform MAC_OS --version <version> --famil
 for processing, or see "App Store eligible" in §2.
 
 `prepare --release-type` sets the type only when it creates the version; one that already existed keeps
-its type (`app-store status` prints `releaseType=`). **On a first release skip `prepare`**: the version
+its type (`app-store status` prints `releaseType=`), and no subcommand changes it: a wrong type is
+Jean's manual step in App Store Connect (App Store Version Release), listed below and verified with
+`status` before the §8 report. **On a first release skip `prepare`**: the version
 already exists, and `prepare` would set a What's New a first version cannot carry; fill the page with
 `app-store metadata`, `age-rating` and `screenshots` instead, then `attach-build` and `check`. A first
 version has no phased release.
+
+**A new page locale** is added with `app-store metadata --add-locale <l> --name <l>=xFractal` (each new
+locale needs its name, as in the `metadata` call above), then `prepare` runs again so it gets its What's New.
+
+**Known URLs.** The support and privacy URLs are recorded above: when `check` finds one missing, set it
+with `app-store metadata --app xFractal-iOS --platform <P> --version <version> --support-url … --privacy-url …`
+(a bare URL serves every locale; `<l>=URL` sets one) without asking Jean.
 
 **Screenshots: you upload them, Jean only approves.** When §3 or §2b says screenshots need updating, or `check`
 lists a device family with no set (an `IPHONE_DUO` set missing counts), render every set, show Jean all the renders
@@ -297,6 +306,7 @@ Then list Jean's manual steps:
 - confirm the App Privacy label matches the build (the API cannot read it);
 - submit version `<version>` for review, each platform separately (the `IOS` and the `MAC_OS`
   version);
+- switch the release type when `app-store status` shows the wrong `releaseType=` (above);
 - the privacy policy changed (§3 answer 4): `docs/privacy.html`, committed and pushed on `main`
   (GitHub Pages publishes it), and the App Privacy label in App Store Connect.
 

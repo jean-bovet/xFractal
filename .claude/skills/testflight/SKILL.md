@@ -80,7 +80,8 @@ change**, and keep the answer:
   it: an earlier run committed, then stopped before the build started. Keep its version and notes,
   skip §4–§6, and continue at §7 **after its commit**: the commit already exists, so never run
   `git add` or `git commit` again; push `main` (a no-op if it is already pushed), tag if the repo tags,
-  run the companion deploy when the repo has one, then §8.
+  run the companion deploy when the repo has one, then §8. Every §3 check (here the "No CloudKit"
+  check) runs again first: a resume never rests on the earlier run's checks.
 - **Nothing new** if the range is empty: say "nothing new since the last build (`<sha>`)" and stop,
   unless Jean asks for a §11 step for that build (then do only that). If he
   explicitly wants the same commit rebuilt, make no empty commit: the `xcode-cloud` tool's
@@ -99,10 +100,21 @@ every run, resumes included, before anything is committed or pushed. **CloudKit 
 Release build:** such an app also checks that the archive signs the Production environment. Neither
 applies here.
 
-No CloudKit: the app has no iCloud entitlement (`xFractal-MAS.entitlements` holds only the App
-Sandbox; the iOS target has no entitlements file), so there is no schema to verify and no Release
-environment to check, and nothing is asked. Adding iCloud to either app is a change to this skill
-first: it then takes the CloudKit Production and Release-environment checks of the shared process.
+**No CloudKit is a check, not a statement.** The app has no iCloud entitlement
+(`xFractal-MAS.entitlements` holds only the App Sandbox; the iOS target has no entitlements file), so
+there is no schema to verify and no Release environment to check, and nothing is asked. But every run,
+first runs and resumes included, confirms it on the tree of the commit to ship (not a range: no
+`origin/testflight` needed):
+
+```bash
+git ls-tree -r --name-only <commit> | grep -i '\.entitlements$'      # exactly xFractal-MAS.entitlements
+git grep -h CODE_SIGN_ENTITLEMENTS <commit> -- project.yml xFractal.xcodeproj   # only xFractal-MAS.entitlements
+git grep -i -E 'icloud|cloudkit|ubiquity' <commit> -- '*.entitlements' project.yml xFractal.xcodeproj '*.xcconfig'   # empty
+```
+
+Any other entitlements file or entitlements setting, or any hit of the last command: stop and tell
+Jean this section must be rewritten for CloudKit (the Production schema check, the Release
+environment check and the CloudKit environments standard of the shared process) before a build.
 
 Ask the version question of §4 now, in one `AskUserQuestion` call, unless `$ARGUMENTS` gave it.
 
@@ -122,14 +134,23 @@ TestFlight build until `/release` shares that version. `/release` tags the versi
 
 ## 5. Test gate
 
+Built once, then run without building (`xFractalTests` is hosted by the Mac app: a plain `xcodebuild test`
+re-links and relaunches it on every run):
+
 ```bash
-caffeinate -is buildlock --folder "$PWD/.build/DerivedData" -- \
-  xcodebuild test -project xFractal.xcodeproj -scheme xFractal-MAS -configuration Debug \
-  -destination 'platform=macOS' -derivedDataPath "$PWD/.build/DerivedData"
+dd="$PWD/.build/DerivedData"
+caffeinate -is buildlock --folder "$dd" -- \
+  xcodebuild build-for-testing -project xFractal.xcodeproj -scheme xFractal-MAS -configuration Debug \
+  -destination 'platform=macOS' -derivedDataPath "$dd"
+caffeinate -is buildlock --folder ~/Library/Containers/ch.arizonasoftware.xfractal --no-slot -- \
+  buildlock --folder "$dd" --no-slot -- \
+  xcodebuild test-without-building -project xFractal.xcodeproj -scheme xFractal-MAS -configuration Debug \
+  -destination 'platform=macOS' -derivedDataPath "$dd"
 ```
 
 macOS unit tests (82, one skipped), no simulator. Run `xcodegen generate` first if `project.yml` changed (and commit
-the regenerated project). Must end with `** TEST SUCCEEDED **`. Then the full gallery:
+the regenerated project). The build must end with `** TEST BUILD SUCCEEDED **` and the run with
+`** TEST EXECUTE SUCCEEDED **` and the full count. Then the full gallery:
 
 ```bash
 scripts/snapshot-gallery.sh --no-open > <scratch>/gallery.log 2>&1; echo "exit $?"
@@ -140,7 +161,7 @@ coverage command.
 
 This is the only full run: `/develop` lands plans on the quick tier (the test and warnings gates) plus the gallery
 shown to Jean when the look changes. On a red run, rerun only the failing stage or test class
-(`-only-testing:xFractalTests/<Class>`, or `scripts/snapshot-gallery.sh --only <scenarios>`); bisect across the
+(the `test-without-building` command with `-only-testing:xFractalTests/<Class>`, or `scripts/snapshot-gallery.sh --only <scenarios>`); bisect across the
 plans landed since the last TestFlight build (`git log <last testflight>..HEAD`, each plan's squash commit) only
 when the cause is not obvious. The fix goes through `/develop`, then this gate reruns.
 
@@ -225,6 +246,7 @@ background watcher, no "still running" check-ins. Report right away:
   app ▸ Xcode Cloud ▸ Builds shows the run and its build number (never predict it); the
   TestFlight group gets the build when processing ends, with the notes as "What to Test";
 - on a first run, that all of `main` went out and that this push created the `testflight` branch;
+- that the §3 "No CloudKit" check passed on the commit that went out;
 - that the build is checked only once that run finishes: its tests and archive are the check;
 - how to ask for §11 later ("report Xcode Cloud build <n>", "remind me about <App>'s expiry").
 

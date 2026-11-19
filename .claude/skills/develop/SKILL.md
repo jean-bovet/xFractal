@@ -46,7 +46,9 @@ Flags: `--no-worktree` (only when Jean said so), `--plan-only` (stop after phase
   precision at deep zoom (double-float split, Mandelbrot perturbation) and agreement between the Swift
   math and `Shaders.metal`; saved state written by earlier versions (`Codable` state in `UserDefaults`)
   still loading; the generated project and Xcode Cloud (`ci_scripts/ci_post_clone.sh`); public-repo
-  hygiene (no team id or personal data in tracked files).
+  hygiene (no team id or personal data in tracked files). xFractal has no CloudKit and no Core Data: its
+  state is `Codable` in `UserDefaults`, so the shared CloudKit + Core Data checklist does not apply (this
+  skill carries no copy of it).
 - **Owed checks:** gestures and Metal rendering, which no unit test covers: a run on the Mac and on a
   real iPhone or iPad; the preview gallery when a screen changed.
 
@@ -56,7 +58,7 @@ Do not paste the working agreement into prompts — point at the file. This skil
 
 **Skip Codex** for work that is not `/develop` work:
 
-UI-only view tweaks and docs-only edits.
+UI-only view tweaks, String Catalog translations, and docs-only edits.
 
 **The reviewer is always a different vendor from the planner and implementer**: Codex
 (`codex exec`, below).
@@ -118,9 +120,13 @@ The **full run** (the test gate and the full gallery) is not part of `/develop`:
   reuses those products. An app-hosted test target (a test bundle that runs inside the app, on the Mac
   too) follows the same rule: `build-for-testing` once per step, every rerun and red proof through
   `test-without-building -only-testing:<Target>/<Class>`; a plain `xcodebuild test` re-links, re-signs
-  and relaunches the host app for every single run.
-  xFractal's test gate runs on macOS (one destination, no simulator), so it builds once already;
-  `xFractalTests` is hosted by the Mac app, so its reruns follow the app-hosted rule.
+  and relaunches the host app for every single run. **A scheme with several test plans** names the gate's
+  plan on both commands (`-testPlan <Plan>`): without it `build-for-testing` builds every plan, a later
+  plan's build of the same host app can leave it without the gate's test bundle, and
+  `test-without-building` fails with "Failed to create a bundle instance" before any test runs.
+  xFractal's test gate runs on macOS (one destination, no simulator) and `xFractalTests` is hosted by the
+  Mac app: every gate builds once with `build-for-testing` and runs with `test-without-building`
+  (Gates below), every rerun and red proof too.
 - **One build at a time per build folder.** Use the repo's scripts or build wrapper when it has them
   (never call `xcodebuild` around them); otherwise `buildlock --folder <dd> -- xcodebuild …`. A `test-without-building` run takes the
   folder's lock but no build slot: `buildlock --folder <dd> --no-slot -- xcodebuild test-without-building …`.
@@ -156,13 +162,20 @@ The **full run** (the test gate and the full gallery) is not part of `/develop`:
 - **Reading results.** Read the **exit status** and the summary line of every command; an empty grep
   is clean only if the command succeeded. The number of tests run is part of the result: zero is red,
   and a count that shrinks needs an explanation (a conditionally disabled test counts as skipped).
+  Swift Testing app tests run through xcodebuild print `Executed 0 tests, with 0 failures`, which means
+  nothing: read `Test run with N tests in M suites passed`. Only XCTest bundles print a real `Executed N tests`.
   A gate that refuses to run (Mac UI tests on a locked screen, say) is reported as not run, an owed
   check, never as green.
 - **Red proof.** A regression test is proven red without its fix before it goes green: commit the
   fix first, revert only the fix's lines, run the test and see it fail, restore with
   `git checkout -- <file>` (never a hand-written inverse), then confirm `git status` is clean and grep
   the tree for any temporary marker. A red-proof run builds incrementally in the step gates' `<dd>` and
-  runs only the test class concerned (`xcodebuild test -only-testing:xFractalTests/<Class>`), never the whole suite: the step and landing gates run the rest. No version bump during feature work.
+  runs only the test class concerned, never the whole suite: the step and landing gates run the rest.
+  Build once applies: an Xcode test target is rebuilt with `build-for-testing` and run with
+  `test-without-building -only-testing:<Target>/<Class>`; plain `xcodebuild test -only-testing:…` only
+  where the platform does not allow building once; a Swift package runs `swift test --filter <Class>`.
+  In xFractal: the test gate's `build-for-testing` command, then its `test-without-building` command with
+  `-only-testing:xFractalTests/<Class>` added. No version bump during feature work.
 - **Warnings.** Fix every warning the branch touches or reveals, including ones that predate it.
   Deprecations are fixed, never silenced (`@available`, `#warning`, suppression flags); if the fix
   conflicts with a documented decision, update that decision's comment. A build-only warnings check uses
@@ -184,17 +197,23 @@ The **full run** (the test gate and the full gallery) is not part of `/develop`:
   what truly is not testable is named in the plan and verified by hand (an owed check).
 - **Project:** `xcodegen generate` after any `project.yml` change, and commit the regenerated
   `xFractal.xcodeproj` with it (the project is checked in). Settings Xcode applies go into `project.yml`.
-- **Test gate:** the command of `AGENTS.md` § Running the tests, with `<dd>` as the build folder:
+- **Test gate:** the scheme, project and destination of `AGENTS.md` § Running the tests, built once and run
+  without building (that section shows a plain `xcodebuild test`, which re-links and relaunches the host app
+  on every run), with `<dd>` as the build folder:
 
   ```sh
+  caffeinate -is buildlock --folder <dd> -- \
+    xcodebuild build-for-testing -project xFractal.xcodeproj -scheme xFractal-MAS -configuration Debug \
+    -destination 'platform=macOS' -derivedDataPath <dd>
   caffeinate -is buildlock --folder ~/Library/Containers/ch.arizonasoftware.xfractal --no-slot -- \
-    buildlock --folder <dd> -- \
-    xcodebuild test -project xFractal.xcodeproj -scheme xFractal-MAS -configuration Debug \
+    buildlock --folder <dd> --no-slot -- \
+    xcodebuild test-without-building -project xFractal.xcodeproj -scheme xFractal-MAS -configuration Debug \
     -destination 'platform=macOS' -derivedDataPath <dd>
   ```
 
-  Green is `** TEST SUCCEEDED **` with the test count (82 today, one of them skipped, more with each new test); `** TEST
-  FAILED **`, a lower count or zero tests is red. macOS only, no simulator. Without a signing team the
+  The build is green on `** TEST BUILD SUCCEEDED **`; the run is green on `** TEST EXECUTE SUCCEEDED **` with
+  the test count (82 today, one of them skipped, more with each new test); a `FAILED`
+  line, a lower count or zero tests is red. macOS only, no simulator. Without a signing team the
   app is signed ad hoc; if signing still fails, add `CODE_SIGNING_ALLOWED=NO`.
 - **Warnings gate:** zero warnings in our own sources (Swift and `Shaders.metal`), both platforms, each
   target built with `-target` (never a scheme):
