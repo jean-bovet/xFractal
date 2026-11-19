@@ -1,6 +1,6 @@
 ---
 name: app-store-screenshots
-description: Render xFractal's iPhone App Store screenshots (tilted phones, a headline in each of the eleven store languages, a pair of screenshots sharing one phone) from the preview-gallery captures with the `app-store-screenshots` command, review them, and upload them once approved. Use when Jean asks for new or updated App Store screenshots, to change a headline, a slide or a phone's angle, or when `/release` says the screenshots must be retaken.
+description: "App Store screenshots", "change a headline", "retake the screenshots": render xFractal's iPhone store screenshots from the gallery captures with `app-store-screenshots`, review, upload once approved.
 allowed-tools: Read, Edit, Bash, AskUserQuestion
 ---
 

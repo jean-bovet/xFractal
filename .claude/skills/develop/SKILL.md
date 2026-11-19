@@ -1,6 +1,6 @@
 ---
 name: develop
-description: The standard way a feature or fix is built in xFractal — plan it in a worktree with a planning subagent, one Codex review of the plan (the plan goes ahead on its own when the review found no blocker and nothing is left open for Jean), implement test-first in Sonnet subagents, one Codex review of the code, and hand back a green, pushed branch. Use for any change that touches business logic — the fractal math, state, persistence, rendering, gestures ("add X", "fix Y", "implement planning/<slug>-plan.md") — unless the user says to skip the process. Not for docs-only edits or UI-only view tweaks.
+description: "add X", "fix Y", "implement planning/<slug>-plan.md": any change to xFractal's business logic. Plan in a worktree, Codex reviews, Sonnet subagents implement, Codex reviews the code, hand back a green pushed branch.
 argument-hint: <what to build, or planning/<slug>-plan.md> [--no-worktree] [--plan-only] [--execute]
 allowed-tools: Read, Glob, Grep, Bash, Agent, SendMessage, AskUserQuestion, EnterWorktree, ExitWorktree
 ---
@@ -22,6 +22,10 @@ Jean's three standing requirements:
 
 Flags: `--no-worktree` (only when Jean said so), `--plan-only` (stop after phase 3),
 `--execute` (the argument is an already-accepted plan file; start at phase 4).
+
+Next to this file: [`gates.md`](gates.md) (the build and test gates, red proof, warnings: the only
+file of this skill an implementer reads) and [`codex-review.md`](codex-review.md) (the review command,
+prompts and the "did it run" protocol).
 
 ## Context
 
@@ -61,7 +65,7 @@ Do not paste the working agreement into prompts — point at the file. This skil
 UI-only view tweaks, String Catalog translations, and docs-only edits.
 
 **The reviewer is always a different vendor from the planner and implementer**: Codex
-(`codex exec`, below).
+(`codex exec`, [`codex-review.md`](codex-review.md)).
 
 **When Codex is unavailable** (usage limit, missing CLI, failed after one restart): do not skip the
 review and do not wait for Jean. Spawn a fresh read-only subagent with `model: "opus"` that saw
@@ -78,8 +82,7 @@ from the Swift math it mirrors, compatibility of saved state, macOS and iOS beha
 
 **Implementation phase: a second round only for a blocker.** Should-fix, simpler and already-exists
 findings are fixed and pass the step gate without another round; when round 1 found a blocker, round 2
-reviews only the fix's diff. (A second round on should-fix fixes cost Departure #41 a whole second final
-gate, about 45 minutes.)
+reviews only the fix's diff.
 
 A third round only if a blocker is still open. Hard cap of **three rounds per phase**. A substitute
 review counts as a round. Always report how many rounds ran, who ran each, and what each changed. A
@@ -87,172 +90,6 @@ round that finds nothing is a good result, not a reason to run another.
 
 Stop when a round yields only nits, style, restatements of points already decided with a written
 rationale, or nothing.
-
-## Gates (run in the worktree)
-
-Two tiers. **Step gates** run after each plan step and each fix round: the build, the warnings check
-and the unit tests, never the preview gallery: a step that adds or changes scenarios only checks that they compile, and the
-look is shown to Jean at the landing gate.
-Step gates never run the UI tests, not even for a step that touches what they drive (navigation,
-titles, accessibility identifiers, launch fixtures): they are slow, and the landing gate catches what
-they would. A brief that asks a step gate or a fix round for them is overruled: they wait for the
-landing gate. The **landing gate** runs **once per plan**, on the tree handed back, on a fresh `<dd>`: the
-quick tier (the test gate and the warnings gate below); xFractal has no UI test suites, so there are none to add
-and no device to pick for them; plus, before landing, the gallery shown to Jean (`scripts/snapshot-gallery.sh
---only <scenarios>` for the scenarios concerned, or in full) when the look changes. The plan's test list names
-what runs. Step gates never replace it. It starts only once phase 5's last review round and its fixes are
-committed, never while a round may still change the code. A later tree (a fix round, the rebase, the squash on
-`main`) reruns the landing gate when it changed anything outside the docs-only paths of Context (`git diff
---name-only <the commit the last landing gate passed on>` answers); a docs-only change runs the docs-only checks
-below.
-
-The **full run** (the test gate and the full gallery) is not part of `/develop`: it runs only in `/testflight`
-§ Test gate, before every build. Send TestFlight builds often, so a red full run spans few plans.
-
-- **Build folders.** Step gates reuse ONE build folder for the whole plan (`<dd>`, e.g.
-  `/private/tmp/<id-slug>-dd`, created once), so every build after the first is incremental. The landing
-  gate uses a fresh `<dd>`, which also re-surfaces warnings an incremental build would not recompile.
-  Logs go to a new scratch directory for every gate run.
-- **Build once, test without building.** Where the platform allows it, a gate builds the tests once
-  for a generic destination (`xcodebuild build-for-testing`) and runs them with `test-without-building`
-  on the leased simulator: a `build` followed by a `test` compiles twice (two destinations), and the
-  lease is held only while tests run. Any later run on the same tree (another test plan, a rerun)
-  reuses those products. An app-hosted test target (a test bundle that runs inside the app, on the Mac
-  too) follows the same rule: `build-for-testing` once per step, every rerun and red proof through
-  `test-without-building -only-testing:<Target>/<Class>`; a plain `xcodebuild test` re-links, re-signs
-  and relaunches the host app for every single run. **A scheme with several test plans** names the gate's
-  plan on both commands (`-testPlan <Plan>`): without it `build-for-testing` builds every plan, a later
-  plan's build of the same host app can leave it without the gate's test bundle, and
-  `test-without-building` fails with "Failed to create a bundle instance" before any test runs.
-  xFractal's test gate runs on macOS (one destination, no simulator) and `xFractalTests` is hosted by the
-  Mac app: every gate builds once with `build-for-testing` and runs with `test-without-building`
-  (Gates below), every rerun and red proof too.
-- **One build at a time per build folder.** Use the repo's scripts or build wrapper when it has them
-  (never call `xcodebuild` around them); otherwise `buildlock --folder <dd> -- xcodebuild …`. A `test-without-building` run takes the
-  folder's lock but no build slot: `buildlock --folder <dd> --no-slot -- xcodebuild test-without-building …`.
-  An app-hosted Mac test run also holds `buildlock --folder ~/Library/Containers/ch.arizonasoftware.xfractal --no-slot`
-  (`xFractalTests` is hosted by the sandboxed Mac app), so two worktrees never host the real app (its sandbox container)
-  at once. The host's
-  build slots are shared with other sessions: wait for one, never kill another build.
-- **Simulators** (the global working agreement): lease one from the machine-wide pool for each gate run
-  (`simpool acquire`, or the repo's scripts do it) and release it when the run ends, also when it fails:
-  `trap 'simpool release "$udid" --app ch.arizonasoftware.xfractal' EXIT`, so the next holder doesn't inherit the running app.
-  Don't hold a lease across gates: the pool normally keeps a released simulator booted for the next gate. Never
-  boot, shut down or touch a simulator by hand. One `-destination` per run and
-  `-parallel-testing-enabled NO -collect-test-diagnostics never` on every simulator test run (without the second flag a failing test, so every red proof, makes xcodebuild collect a sysdiagnose-like simulator report for up to 10 minutes; the gates read the log, never that report. To debug a failure nobody can explain, rerun that one test without it). A repo whose scripts still boot their own
-  simulator follows the global agreement's rule for those.
-- **Keep the Mac awake.** Every long gate run holds a *system* sleep assertion (`caffeinate -s`; `-i` alone is
-  not enough). A gate script does it itself, in either form: it re-executes itself once under `caffeinate -is`
-  (a guard variable such as `<REPO>_CAFFEINATED` so it happens once; `"$@"` and the exit status kept; no re-exec,
-  one notice line, when `caffeinate` is missing), or it starts `caffeinate -dims -w $$` in the background for its
-  own lifetime. Where the gate is a list of commands rather than a script, or a script that does neither, each long
-  command runs as `caffeinate -is <command>` (`caffeinate -is buildlock --folder <dd> -- xcodebuild test …`).
-  xcodebuild's own "running tests" assertion is only `PreventUserIdleSystemSleep`, which lets a Mac in Maintenance
-  Sleep / DarkWake drop off mid-run: a night gate then stalls for minutes at a time inside XCTest steps and fails
-  with "Timed out while synthesizing event" (measured 2026-10-30: 2 h 45 min instead of 42 min, every gap matching
-  `pmset -g log`). A script that re-executes itself has script tests for the re-exec, argument boundaries, the
-  missing tool and signals.
-- **Wait in slices.** A subagent's prompt cache lives five minutes (the parent's, one hour). Inside a
-  subagent, no blocking call runs longer than four minutes: a build, a test run, the gallery or a Codex
-  round starts in the background with its output in a log, and the agent checks that log every four
-  minutes at most (a `Monitor` until-loop with that timeout, or a background command looked at on that
-  cadence), reading the summary lines only. One wait that outlives the cache re-writes the agent's whole
-  context at cache-write price; measured over five days, such re-writes were two thirds of everything
-  subagents wrote to the cache.
-- **Reading results.** Read the **exit status** and the summary line of every command; an empty grep
-  is clean only if the command succeeded. The number of tests run is part of the result: zero is red,
-  and a count that shrinks needs an explanation (a conditionally disabled test counts as skipped).
-  Swift Testing app tests run through xcodebuild print `Executed 0 tests, with 0 failures`, which means
-  nothing: read `Test run with N tests in M suites passed`. Only XCTest bundles print a real `Executed N tests`.
-  A gate that refuses to run (Mac UI tests on a locked screen, say) is reported as not run, an owed
-  check, never as green.
-- **Red proof.** A regression test is proven red without its fix before it goes green: commit the
-  fix first, revert only the fix's lines, run the test and see it fail, restore with
-  `git checkout -- <file>` (never a hand-written inverse), then confirm `git status` is clean and grep
-  the tree for any temporary marker. A red-proof run builds incrementally in the step gates' `<dd>` and
-  runs only the test class concerned, never the whole suite: the step and landing gates run the rest.
-  Build once applies: an Xcode test target is rebuilt with `build-for-testing` and run with
-  `test-without-building -only-testing:<Target>/<Class>`; plain `xcodebuild test -only-testing:…` only
-  where the platform does not allow building once; a Swift package runs `swift test --filter <Class>`.
-  In xFractal: the test gate's `build-for-testing` command, then its `test-without-building` command with
-  `-only-testing:xFractalTests/<Class>` added. No version bump during feature work.
-- **Warnings.** Fix every warning the branch touches or reveals, including ones that predate it.
-  Deprecations are fixed, never silenced (`@available`, `#warning`, suppression flags); if the fix
-  conflicts with a documented decision, update that decision's comment. A build-only warnings check uses
-  `xcodebuild -target <target>` with its own `SYMROOT` — never a scheme, so the shared build (or a running
-  app the scheme drives) stays untouched — and `COMPILER_INDEX_STORE_ENABLE=NO` on the command line:
-  without a derived-data path Xcode emits an empty `-index-store-path` and clang's hardening flag turns
-  into a bare warning. Keep that flag off the project files, so Xcode still indexes.
-  The warnings check compiles **every platform target that compiles the changed sources**, not only the
-  target whose folder changed: a shared package or framework change also builds the iOS (or other) target,
-  because a platform-conditional member called outside its `#if` passes every Mac gate and fails only the CI
-  archive of the other platform.
-- **Docs-only changes** (no code) skip the build gates: `git diff --check`, every link and citation
-  still resolves, and the working agreement, plans index and README stay consistent.
-
-- **Tests first (TDD, `AGENTS.md`):** red → green → refactor. A failing XCTest in `Tests/` (the macOS
-  `xFractalTests` target) first, run and seen failing for the right reason, then the smallest change,
-  then refactor with the suite green. A bug fix starts with a test that reproduces it. Logic that seems
-  untestable (gestures, Metal) is first checked for pure math that can move into `FractalMath.swift`;
-  what truly is not testable is named in the plan and verified by hand (an owed check).
-- **Project:** `xcodegen generate` after any `project.yml` change, and commit the regenerated
-  `xFractal.xcodeproj` with it (the project is checked in). Settings Xcode applies go into `project.yml`.
-- **Test gate:** the scheme, project and destination of `AGENTS.md` § Running the tests, built once and run
-  without building (that section shows a plain `xcodebuild test`, which re-links and relaunches the host app
-  on every run), with `<dd>` as the build folder:
-
-  ```sh
-  caffeinate -is buildlock --folder <dd> -- \
-    xcodebuild build-for-testing -project xFractal.xcodeproj -scheme xFractal-MAS -configuration Debug \
-    -destination 'platform=macOS' -derivedDataPath <dd>
-  caffeinate -is buildlock --folder ~/Library/Containers/ch.arizonasoftware.xfractal --no-slot -- \
-    buildlock --folder <dd> --no-slot -- \
-    xcodebuild test-without-building -project xFractal.xcodeproj -scheme xFractal-MAS -configuration Debug \
-    -destination 'platform=macOS' -derivedDataPath <dd>
-  ```
-
-  The build is green on `** TEST BUILD SUCCEEDED **`; the run is green on `** TEST EXECUTE SUCCEEDED **` with
-  the test count (82 today, one of them skipped, more with each new test); a `FAILED`
-  line, a lower count or zero tests is red. macOS only, no simulator. Without a signing team the
-  app is signed ad hoc; if signing still fails, add `CODE_SIGNING_ALLOWED=NO`.
-- **Warnings gate:** zero warnings in our own sources (Swift and `Shaders.metal`), both platforms, each
-  target built with `-target` (never a scheme):
-
-  ```sh
-  caffeinate -is buildlock --folder <dd> -- xcodebuild -project xFractal.xcodeproj -target xFractalTests -configuration Debug SYMROOT=<dd>/build-mac COMPILER_INDEX_STORE_ENABLE=NO build
-  caffeinate -is buildlock --folder <dd> -- xcodebuild -project xFractal.xcodeproj -target xFractalGalleryTests -sdk iphonesimulator -configuration Debug SYMROOT=<dd>/build-ios COMPILER_INDEX_STORE_ENABLE=NO build
-  ```
-
-  (each test target builds its host app: `xFractal-MAS`, `xFractal-iOS`). Read `grep -E '(warning|error):'`
-  of each log, after checking the exit status.
-- **Landing gate:** the test gate and the warnings gate above on a fresh `<dd>`; no UI suites (xFractal has
-  none); the gallery when the look changes (below).
-- **Full run:** the test gate and the full `scripts/snapshot-gallery.sh`: `/testflight` § Test gate only. No
-  coverage command.
-- **Gallery:** `scripts/snapshot-gallery.sh` (the `/preview-gallery` skill), never in a step gate (a step only
-  checks that its scenarios compile); when the look changes, the landing gate renders the scenarios concerned
-  (`--only`, or in full: a fresh checkout needs one full run first) and shows them to Jean before landing; the
-  full gallery runs in `/testflight`. A new or changed screen state needs its scenario
-  in `GalleryTests/GalleryFixtures.swift` and `GalleryScenarios.swift`. It leases its simulator from the
-  pool and runs its builds under `buildlock` (its own DerivedData): never call `xcodebuild` or `simctl`
-  around it. It keeps the Mac awake on its own (`caffeinate -dims -w $$`, bound to the script's process), so it
-  runs without a `caffeinate` prefix. Must end with `CHECK OK`. Never add a `#Preview`.
-- **Script tests:** a change under `scripts/` also runs
-  `python3 -m unittest discover -s scripts -p 'test_preview_gallery.py'` and
-  `scripts/test_snapshot_gallery.sh`.
-- **Frozen appcast:** `git diff --exit-code main -- docs/appcast.xml` must be clean.
-- **String Catalog:** a change to user-facing strings syncs `xFractal/Localizable.xcstrings` (one
-  catalog for both apps) headless with `catalog-sync` (the commands in `AGENTS.md` § Languages) instead
-  of an Xcode GUI build: `--delete-stale`, then the French, German, Italian, Spanish, Brazilian Portuguese, Japanese, Turkish, Hebrew and Arabic
-  translations via the
-  Xcode MCP `StringCatalogEdit` (open the worktree's project in Xcode first, not the main checkout's),
-  then `catalog-sync --skip-build` once (it re-sorts the keys the editor wrote) and
-  `--check --skip-build` ("catalog unchanged"); commit the catalog with the step. `--check` still
-  builds, and `--skip-build` reuses a possibly stale build. catalog-sync builds into its own private folder and takes no `buildlock` slot, but it is still a build: never run it alongside another one. `LocalizationTests` (in the test gate)
-  fails on a key missing a translation and on a stale key.
-- **Right-to-left:** Hebrew and Arabic are in the catalog, so a change to layout or strings also runs
-  through `docs/right-to-left.md`, next to the tools the global working agreement names (digits, the
-  minus sign, what must not mirror, the gallery's direction-aware tests).
 
 ## Deploy (only when Jean asks)
 
@@ -268,11 +105,10 @@ installed 1.0 DMG copies still read it.
 
 Unless `--no-worktree`, or the change touches only the docs-only paths in Context: `git fetch`, then
 create `.claude/worktrees/<id-slug>` on a new branch `<id-slug>` from `main` (`EnterWorktree` when
-available, else `git worktree add`). If the session already runs in an Orca worktree (under
-`~/orca/workspaces/`), use it and its branch instead of creating one. Everything below — the plan, the code, the subagent, the
-reviews — happens in that path. Leave unrelated changes in the main checkout alone. The worktree
-guard refuses compound Bash commands (variables, `$(…)`, heredocs): write scripts to the scratchpad
-and run them.
+available, else `git worktree add`); a session already in an Orca worktree works there (the global
+rules). Everything below — the plan, the code, the subagent, the reviews — happens in that path.
+Leave unrelated changes in the main checkout alone. The worktree guard refuses compound Bash
+commands (variables, `$(…)`, heredocs): write scripts to the scratchpad and run them.
 
 ## Phase 1 — Understand and reuse (before writing a line of plan)
 
@@ -300,7 +136,8 @@ section, file:line), **design** (the smallest change that is correct, with what 
 the line that writes it, the screen line that shows it, and the test or preview that covers the
 path between them through the production reader — not a parallel test-only path; fixtures carry
 real data shapes — tombstones, empty and removed entries, multi-item records; when a data source is
-replaced, the plan diffs its contents, not just its reader),
+replaced, the plan diffs its contents, not just its reader; the UI suites and devices the landing
+gate runs, `gates.md`),
 **invariants** (each one: holds / at risk and how it is held / not applicable), **risks and
 rollout** (the plan risks in Context), **decision left open for Jean**. Large work is split into
 numbered steps, one commit each, listed under a `## Steps` heading as `1. **<title>** — <what>`
@@ -313,47 +150,12 @@ speculative generality. If the honest plan is "twenty lines in one file plus two
 ## Phase 3 — Codex reviews the plan (one round by default)
 
 Give the reviewer the plan and the invariants, not your agent's notes and not the whole design doc.
-Write the prompt to a scratchpad file and start, in the background, from the worktree:
-
-```sh
-codex exec --sandbox read-only -C <worktree> -o <scratch>/<round>-result.md - < <scratch>/<round>-prompt.md > <scratch>/<round>.log 2>&1
-```
-
-The prompt comes from stdin (`-`); a background `codex exec` with an open terminal stdin blocks
-forever on "Reading additional input from stdin...". Read-only always; never `--write`:
-
-> Review `<plan file>` against the code in this worktree and the invariants (`<invariants file>`).
-> Return, in order: BLOCKERS (the plan is wrong or breaks an invariant — name the input or state),
-> SHOULD-FIX (a real gap in the design or the test plan — including any new entity or field
-> without a traced path from the line that writes it to the screen that shows it, covered by a
-> test or preview that uses the production read path), SIMPLER (a smaller design that meets the
-> same goal), ALREADY-EXISTS (code the plan reimplements — file and symbol). Say "none" for an empty
-> section. End with one line `substantive: yes|no`. Do not praise the plan.
-
-**Catching a review that did not run.** A review exists only when its result file holds the four
-sections and the closing `substantive:` line. Nothing else counts. Every Codex round, both phases:
-
-1. **Liveness at 2 minutes.** `<round>.log` must be growing or `~/.codex/sessions/` must show a new
-   session. If neither, `ps` for a `codex` process; if none, start it again (once). A non-zero exit,
-   or a result file that is empty or lacks the sections, is the same failure.
-2. **Progress every 10 minutes**, never sleep-and-hope. A log untouched for 15 minutes with the
-   process alive is a stall: kill it (and a stalled broker, whose pid is in the plugin state's
-   `broker.json`) and restart the round.
-3. **The `codex:codex-rescue` wrapper is the fallback, not the default** — it can fork a job with an
-   empty prompt and wait forever. If used, its only evidence is the job log under
-   `~/.claude/plugins/data/codex-openai-codex/state/<repo-or-worktree>-*/jobs/` — check every state
-   dir, a worktree gets its own. No job log within 2 minutes means it forked with an empty prompt:
-   run `codex exec` directly.
-4. **Never report a round that did not run as a round.** If Codex is down after one restart, run
-   the same prompt through the substitute reviewer (Codex policy), label it "substitute review",
-   and continue.
-5. **Long results get truncated in delivery**: read the result FILE, never the message; if only a
-   message exists, ask for the remainder from the last line you saw.
+Run the round as [`codex-review.md`](codex-review.md) says (the command, the plan prompt, the "did it
+run" protocol).
 
 Fold each finding in: **accept** (edit the plan in place — the lines the finding changes, never a
-rewrite of the file: a rewritten plan costs its whole length in output tokens every round — and bump
-"revision N" in its header with a one-line changelog) or **reject** (write the rationale into the
-plan, so the next round does not re-raise it).
+rewrite of the file — and bump "revision N" in its header with a one-line changelog) or **reject**
+(write the rationale into the plan, so the next round does not re-raise it).
 Then apply the Codex policy. When it says stop, the plan **goes ahead on its own** when all three
 hold: the last round found no blocker, the plan's "decision left open for Jean" is empty, and it
 touches none of the plan risks in Context. Say so in one line (plan path, revision, rounds run) and
@@ -367,14 +169,11 @@ logs or the diff body. **One implementer per plan step**: spawn it with the plan
 and `git log main..HEAD --oneline`, so its context starts from the plan and the commits, not from the
 previous step's build logs; it lives for that step and the fix rounds that concern it, then the next
 step gets a fresh one. A plan of one step keeps one implementer throughout. The parent never
-implements. (Measured over five days: implementers that lived for a whole plan ran 400 to 640 calls at
-235k tokens of context each, the largest single cost of a `/develop` run.)
+implements.
 
 Before spawning, when the repo's gates host tests inside the app (an app-hosted test target or a Mac
-gallery), run the repo's running-app check (a repo fact). If the app is running — Jean's own Xcode debug run
-included — tell Jean and wait for him to quit it; never kill it. Found at the first hosted gate instead,
-it costs the implementer the wait and Jean the surprise. xFractal's test gate (`xFractalTests`) and
-`scripts/snapshot-mac.sh` are hosted by the Mac app: the check is `pgrep -x xFractal`.
+gallery), run the repo's running-app check (a repo fact, `gates.md`). If the app is running — Jean's
+own Xcode debug run included — tell Jean and wait for him to quit it; never kill it.
 
 ```
 Agent(model: "sonnet", name: "<id-slug>-impl-<step>", prompt: …)
@@ -383,49 +182,46 @@ Agent(model: "sonnet", name: "<id-slug>-impl-<step>", prompt: …)
 The prompt carries: the **absolute worktree path** (every command runs there — state it twice), the
 plan path ("implement this plan; where it is silent, choose the smallest correct option and list it
 as a deviation"), and "follow the working agreement; run the gates in
-`.claude/skills/develop/SKILL.md`". Do not paste the gates. One commit per plan step, subject `<ID> step N: <summary>`, with the
-session's attribution trailer. Its report must list: what was built (commit list), every deviation
-from the plan and why, the test summary lines verbatim, the warnings check and its result, and
-anything left unfinished. Treat "done" claims as claims: check `git log main..HEAD --oneline` and the
-test summary yourself before phase 5.
+`.claude/skills/develop/gates.md` (read only that file of this skill)". Do not paste the gates. One
+commit per plan step, subject `<ID> step N: <summary>`, with the session's attribution trailer. Its
+report must list: what was built (commit list), every deviation from the plan and why, the test
+summary lines verbatim, the warnings check and its result, and anything left unfinished. Treat
+"done" claims as claims: check `git log main..HEAD --oneline` and the test summary yourself before
+phase 5.
 
 ## Phase 5 — Codex reviews the implementation (one round by default)
 
-Same prompt shape as phase 3, against `git diff main...HEAD` **and the plan** — does the code do
-what the plan says, do the tests prove what they claim (would each fail without its change?), which
-invariant is most at risk, what is more complex than its job requires, what is duplicated, and
-whether every new entity or field reaches its screen through the production read path. Do not
-attach the whole design doc. Same `codex exec` command and the same "did it run" protocol.
+The implementation prompt of [`codex-review.md`](codex-review.md), against `git diff main...HEAD`
+**and the plan**. Do not attach the whole design doc. Same command and the same "did it run" protocol.
 
 Send each accepted finding with `SendMessage` to the implementer of the step it concerns while that
 one is alive; otherwise spawn a fresh implementer with the finding, the plan and the commit. Rejected
-findings get a one-line rationale in the final report, not silence. After every fix round run the step gate (plus the
-landing gate again when it already ran and the fix touched more than docs). Apply the Codex policy.
+findings get a one-line rationale in the final report, not silence. After every fix round run the step
+gate (plus the landing gate again when it already ran and the fix touched more than docs). Apply the
+Codex policy.
 
 ## Phase 6 — Hand back (landing is Jean's call)
 
-The deliverable is a green, reviewed branch in the worktree — the landing gate (fresh `<dd>`) passed
-once on the tree handed back (suites, devices, gallery shown or not needed) —
-plus a report: what shipped (commits),
-plan revisions and review rounds with what each changed, findings rejected and why, gates run (the
-test summary lines, the warnings check, and each conditional gate — which ran and which did not),
-and what is owed (the owed checks in Context). Before the report, push the branch to origin (the
-global working agreement's branch rule; not in a repo whose `AGENTS.md` says the user pushes).
-Landing stays Jean's call. **When Jean says land, the feature lands as ONE squashed commit:**
+The deliverable is a green, reviewed branch in the worktree — the landing gate (`gates.md`, fresh
+`<dd>`) passed once on the tree handed back (suites, devices, gallery shown or not needed) — plus a
+report: what shipped (commits), plan revisions and review rounds with what each changed, findings
+rejected and why, gates run (the test summary lines, the warnings check, and each conditional gate —
+which ran and which did not), and what is owed (the owed checks in Context). Before the report, push
+the branch to origin per the global rules. Landing stays Jean's call. **When Jean says land, the
+feature lands as ONE squashed commit:**
 
 1. `git fetch && git rebase main` in the worktree, then rerun the landing gate when the rebase
    brought in more than docs.
 2. On `main`: `git merge --squash <branch>` then ONE `git commit` whose subject is the plan id and a
    sentence and whose body carries the branch's commit subjects (`git log main..<branch>
    --format='- %s'`), each regression test's red proof in one line, every gate's summary line, the
-   plan revisions and review rounds, the plan's index-row text,
-   the issue line (see the global working agreement: `Closes #N` when
-   nothing is left, otherwise `Refs #N` and a comment on the issue naming what is owed), and the attribution trailer. Write
-   the message before deleting anything.
+   plan revisions and review rounds, the plan's index-row text, the issue line (`Closes`/`Refs`, per
+   the global rules), and the attribution trailer. Write the message before deleting anything.
 3. On `main`, the squash tree equals the branch's tree (`git diff <branch> main` empty), then
    `git push origin main`.
 4. Remove the worktree, `git worktree prune`, and `git branch -D` the branch (`-D`, because git never
-   sees a squashed branch as merged); in an Orca worktree, skip this and leave both to Orca. Update the plan's index row to "Implemented on main <date>".
+   sees a squashed branch as merged); in an Orca worktree, skip this and leave both to Orca. Update the
+   plan's index row to "Implemented on main <date>".
 
 ## Anti-patterns
 
@@ -440,17 +236,9 @@ Landing stays Jean's call. **When Jean says land, the feature lands as ONE squas
 - Reading the implementation diff or a build log into the main context.
 - Spawning a fresh implementer for a fix round of the step just built instead of messaging the one
   that built it — or keeping one implementer alive across every step of a long plan.
-- A blocking wait longer than four minutes inside a subagent: its prompt cache expires at five.
 - Rewriting a plan file to fold in a finding instead of editing the lines concerned.
 - Restating the working agreement in the implementer prompt.
 - Bumping the version or landing without being asked.
-- Calling `xcodebuild` without `buildlock`, or creating, booting or shutting down a simulator instead of
-  leasing one from `simpool`.
-- Broad Codex prompts: they make Codex read much of the repo and run commands, and often stall past 30
-  minutes. Every review prompt names the exact plan section and the few source files (with line ranges) to
-  read, says "read only these; no other commands, no builds or tests", and caps each section at a few
-  one-line findings with a severity. A review not back within about 15 minutes is stopped and rerun
-  narrower; a large diff is reviewed one commit at a time (`git diff <sha>^ <sha>`, or `codex exec review --commit
-  <sha>`), not in one `main...HEAD` pass.
+- Broad Codex prompts (`codex-review.md`).
 - Adding a `#Preview`, or a screen state without its gallery scenario.
 - Logic left in a view or the Metal glue when it could be pure math in `FractalMath.swift` with a test.

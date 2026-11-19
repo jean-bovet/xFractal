@@ -1,6 +1,6 @@
 ---
 name: release
-description: Publish the xFractal build testers already have on TestFlight to the App Store — the iPhone/iPad app (xFractal-iOS) and the Mac App Store app (xFractal-MAS), one universal purchase. Use when Jean says "release", "App Store", "submit xFractal", "ship to the public". Sending a build to TestFlight is `/testflight`, not this skill.
+description: "release", "App Store", "submit xFractal", "ship to the public": publish the xFractal build testers have on TestFlight to the App Store (iOS and Mac, one purchase). A TestFlight build is `/testflight`.
 allowed-tools: Read, Edit, Write, Bash, AskUserQuestion
 ---
 
@@ -27,17 +27,12 @@ allowed-tools: Read, Edit, Write, Bash, AskUserQuestion
   skill tags it. Fixing a rejected or broken candidate is therefore another `/testflight` at the same
   version, then `/release` again.
 - The `app-store` tool creates the App Store version, sets What's New on every locale, configures
-  the phased release and attaches the candidate's build (`attach-build`). It and the `release-check`
-  tool (§2b) live where the global working agreement says, and load their own credentials; never open
-  or source them. Submitting for review is Jean's, in App Store Connect.
+  the phased release and attaches the candidate's build (`attach-build`), per the global rules on the
+  App Store tools (as does `release-check`, §2b). Submitting for review is Jean's, in App Store Connect.
 - Three hard stops: the readiness audit (§2b) when it finds a problem, the notes review (§4) and App
   Review (§6). Never continue past one without an explicit answer from Jean.
-- **Retired domains** (the global working agreement's list, e.g. arizona-software.ch → jean-bovet.ch)
-  must appear nowhere: not in shipped files, not in any App Store URL, description or notes. Both
-  checkers in §2b flag them; new pages go on the replacement domain.
-- **Email addresses** (the global working agreement's contacts): the `apple-review` address only in
-  the App Review contact; the `public` one everywhere public or external — support and privacy pages,
-  the description, in-app text. Both checkers flag the Apple-only address where it doesn't belong.
+- **Retired domains and email addresses** follow the global rules, everywhere: shipped files, every
+  App Store URL, description and notes. Both checkers in §2b flag them.
 - It runs in the main conversation — no subagent. Stop on the first failure, say which step failed
   and why, and leave the rest undone. Never fake a check that is Jean's to make.
 
