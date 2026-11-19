@@ -17,8 +17,9 @@ The `/testflight` skill (`.claude/skills/testflight/SKILL.md`) is the only path 
 - pushing `main` to the `testflight` branch makes Xcode Cloud archive both apps (`Archive - iOS`,
   `Archive - macOS`) and hand them to the internal testers.
 
-Xcode Cloud numbers the builds; `CFBundleVersion` is never bumped by hand. `ci_scripts/ci_post_clone.sh` generates the
-git-ignored `xFractal.xcodeproj` with XcodeGen and writes the signing team from `$CI_TEAM_ID`.
+Xcode Cloud numbers the builds; `CFBundleVersion` is never bumped by hand. `xFractal.xcodeproj` is checked into git
+(generated from `project.yml` by XcodeGen and committed with it); `ci_scripts/ci_post_clone.sh` writes the signing
+team from `$CI_TEAM_ID`.
 
 ## 2. App Store (`/release`)
 
